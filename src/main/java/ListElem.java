@@ -51,7 +51,7 @@ class ListElem {
   /**
    * Constructor, allows setting data.
    *
-   * @param HalfEdgeVoronoi elem 	The data elem
+   * @param elem 	The data elem
    */
   ListElem(HalfEdgeVoronoi elem) {
     left = right = null;

@@ -216,7 +216,7 @@ class ListGNG {
   /**
    * Same as delete.
    *
-   * @param p 		The position.
+   * @param elem 		The position.
    */
   public void PQdelete(HalfEdgeVoronoi elem) {
     // Find the right position

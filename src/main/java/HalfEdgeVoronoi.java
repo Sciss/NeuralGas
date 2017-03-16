@@ -49,7 +49,7 @@ class HalfEdgeVoronoi {
   /**
    * Returns whether this edge is greater than the passed edge.
    *
-   * @param HalfEdgeVoronoi he	 	The edge to compare this edge to.
+   * @param he	 	The edge to compare this edge to.
    */
   public boolean greaterThan(HalfEdgeVoronoi he) {
     return ystar > he.ystar;
@@ -58,7 +58,7 @@ class HalfEdgeVoronoi {
   /**
    * Returns whether this edge is equal to the passed edge.
    *
-   * @param HalfEdgeVoronoi he	 	The edge to compare this edge to.
+   * @param he	 	The edge to compare this edge to.
    */
   public boolean equal(HalfEdgeVoronoi he) {
     return ystar == he.ystar;

@@ -47,7 +47,7 @@ import javax.swing.event.ChangeListener;
  * 
  */
 @SuppressWarnings("serial")
-class ComputeGNG extends JPanel implements 
+class ComputeGNG extends JPanel implements
 Runnable, 
 MouseMotionListener, 
 MouseListener, 
@@ -1021,7 +1021,7 @@ ChangeListener
 	/**
 	 * Delete an edge.
 	 * 
-	 * @param from          The index of the edge
+	 * @param edgeNr          The index of the edge
 	 */
 	protected void deleteEdge(int edgeNr) {
 		nodes[edges[edgeNr].from].deleteNeighbor(edges[edgeNr].to);
@@ -1096,10 +1096,10 @@ ChangeListener
 	 * Generate discrete signals for the given distribution.
 	 *  The result goes into the global arrays <TT> discreteSignalsX </TT>
 	 *  and <TT> discreteSignalsY </TT>.
+	 *
+	 *  With and height are taken from <TT>getSize</TT>.
 	 * 
-	 * @param distrib          The specified distribution
-	 * @param w          		 The width of the drawing area
-	 * @param h          		 The height of the drawing area
+	 * @param pd          The specified distribution
 	 */
 	protected void initDiscreteSignals(PD pd) {
 		Dimension d = getSize();
@@ -3096,12 +3096,12 @@ ChangeListener
 	}
 
 // repaint --> update() ---> paintComponent()
-	/**
-	 * Update the drawing area.
-	 * 
-	 * @param g          The graphic context
-	 */
-	static int paintCouter=0; 
+//	/**
+//	 * Update the drawing area.
+//	 *
+//	 * @param g          The graphic context
+//	 */
+	static int paintCouter=0;
 	static int prevSigs=0; 
 	
 	// helper function to compute mapspace coordinates for SOM-like networks

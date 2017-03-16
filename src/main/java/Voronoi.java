@@ -32,7 +32,6 @@ import java.awt.Dimension;
 public class Voronoi {
 	ComputeGNG cgng;
 	Voronoi() {
-		;
 	}
 	
 	Voronoi(ComputeGNG cgng) {
@@ -59,6 +58,15 @@ public class Voronoi {
 	HalfEdgeVoronoi ELleftend, ELrightend;
 	float pxmin, pymin, pxmax, pymax;
 	// Vars for Voronoi diagram (end).
+
+	/**
+	 * Sort the array of nodes. The result is in the <TT> vsite</TT>-array.
+	 *  The implemented sorting algorithm is heapsort.
+	 *
+	 * @param n          The number of nodes to be sorted
+	 * @see Voronoi#vsites
+	 * @see Voronoi#reheapVoronoi
+	 */
 	protected void sortSites(int n) {
 		SiteVoronoi exchange;
 		int i;
@@ -93,8 +101,8 @@ public class Voronoi {
 	 * 
 	 * @param i          The start of the intervall
 	 * @param k          The end of the intervall
-	 * @see ComputeGNG#vsites
-	 * @see ComputeGNG#sortSites
+	 * @see Voronoi#vsites
+	 * @see Voronoi#sortSites
 	 */
 	protected void reheapVoronoi(int i, int k) {
 		int j = i;
@@ -173,7 +181,7 @@ public class Voronoi {
 	 * A sweepline algorithm is implemented (Steven Fortune, 1987).
 	 * Input: nodes[], Output: lines[] (global).
 	 * 
-	 * @see ComputeGNG#computeVoronoi
+	 * @see Voronoi#computeVoronoi
 	 */
 	public void doVoronoi() {
 		SiteVoronoi newsite, bot, top, temp, p, v;
@@ -479,7 +487,7 @@ public class Voronoi {
 
 	public void endpoint(EdgeVoronoi e, int lr, SiteVoronoi s) {
 		e.ep[lr] = s;
-		s.refcnt++;;
+		s.refcnt++;
 		if (e.ep[RE-lr] == null)
 			return;
 		if (cgng.voronoiB)
@@ -598,14 +606,4 @@ public class Voronoi {
 			return(null);
 		return(vsites[siteidx]);
 	}
-	/**
-	 * Sort the array of nodes. The result is in the <TT> vsite</TT>-array.
-	 *  The implemented sorting algorithm is heapsort.
-	 * 
-	 * @param n          The number of nodes to be sorted
-	 * @see ComputeGNG#vsites
-	 * @see ComputeGNG#reheapVoronoi
-	 */
-
-
 }
