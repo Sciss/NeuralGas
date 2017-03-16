@@ -1,19 +1,39 @@
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.applet.AppletContext;
 import java.applet.AppletStub;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 
-public class Main implements Runnable, AppletStub {
-    private Main() {}
+/**
+ * @author Hanns Holger Rutz
+ */
+public final class Main implements Runnable, AppletStub {
+    private final BufferedImage img;
+    private final boolean   hasImage;
 
-    public static void main(String[] args) {
-        EventQueue.invokeLater(new Main());
+    private Main(BufferedImage img) {
+        this.img  = img;
+        hasImage  = img != null;
+    }
+
+    public static void main(String[] args) throws IOException {
+        final BufferedImage img;
+
+        if (args.length >= 2 && args[0].equals("--image")) {
+            img = ImageIO.read(new File(args[1]));
+        } else {
+            img = null;
+        }
+        EventQueue.invokeLater(new Main(img));
     }
 
     public void run() {
         final JFrame f = new JFrame("Demo GNG");
-        final JApplet applet = new DemoGNG();
+        final JApplet applet = hasImage ? new ImageDemoGNG(img) : new DemoGNG();
         f.getContentPane().add(applet);
         f.setMinimumSize(new Dimension(768, 768));
         f.pack();
@@ -25,33 +45,25 @@ public class Main implements Runnable, AppletStub {
         applet.start();
     }
 
-    @Override
     public boolean isActive() {
         return false;
     }
 
-    @Override
     public URL getDocumentBase() {
         return null;
     }
 
-    @Override
     public URL getCodeBase() {
         return null;
     }
 
-    @Override
     public String getParameter(String name) {
         return null;
     }
 
-    @Override
     public AppletContext getAppletContext() {
         return null;
     }
 
-    @Override
-    public void appletResize(int width, int height) {
-
-    }
+    public void appletResize(int width, int height) {}
 }

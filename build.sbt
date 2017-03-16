@@ -1,6 +1,6 @@
 name              := "DemoGNG"
 organization      := "de.sciss"
-version           := "0.1.0-SNAPSHOT"
+version           := "2.2.0-SNAPSHOT"
 scalaVersion      := "2.12.1"
 licenses          := Seq("GPL v2+" -> url("https://www.gnu.org/licenses/gpl-2.0.txt"))
 crossPaths        := false

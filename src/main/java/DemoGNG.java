@@ -144,6 +144,8 @@ public class DemoGNG extends JApplet {
 					compute.rndInitB = val;
 				} else if (cb.getText().equals(NODES)) {
 					compute.nodesB = val;
+				} else if (cb.getText().equals(PROB_DIST)) {
+					compute.probDistB = val;
 				} else if (cb.getText().equals(TRACES)) {
 					compute.tracesB = val;
 				} else if (cb.getText().equals(EDGES)) {
@@ -857,6 +859,10 @@ public class DemoGNG extends JApplet {
 	 */
 	protected final static String TRACES   	= " traces";
 	/**
+	 * The name of the probability distribution checkbox.
+	 */
+	protected final static String PROB_DIST   = " prob dist";
+	/**
 	 * The name of the error graph checkbox.
 	 */
 	protected final static String ERRORGRAPH   = " error graph";
@@ -1261,6 +1267,10 @@ public class DemoGNG extends JApplet {
 		algo_choice.setSelectedIndex(x.ordinal());
 	}
 
+	protected ComputeGNG createComputation() {
+		return new ComputeGNG(this);
+	}
+
 	/* (non-Javadoc)
 	 * @see java.applet.Applet#init()
 	 * (builds up the GUI)
@@ -1293,7 +1303,7 @@ public class DemoGNG extends JApplet {
 		//
 		
 		// Create the GNG-MyPanel and center it
-		compute = new ComputeGNG(this);
+		compute = createComputation();
 		add("Center", compute);
 
 		// Create a MyPanel for the Buttons
@@ -1351,6 +1361,7 @@ public class DemoGNG extends JApplet {
 		errorGraph_cb = new MyCheckBox(ERRORGRAPH, compute.errorGraphB);
 		pAllS.add(errorGraph_cb);
 		pAllS.add(nodes_cb = new MyCheckBox(NODES, compute.nodesB, "display reference vectors as green circles"));
+		pAllS.add(new MyCheckBox(PROB_DIST, compute.probDistB, "display probability distribution"));
 		pAllS.add(new MyCheckBox(TRACES, compute.tracesB, "display (motion) traces"));
 		pAllS.add(new MyCheckBox(EDGES, compute.edgesB,"display neighborhood edges"));
 		pAllS.add(new MyCheckBox(RNDINIT, compute.rndInitB,"init ref. vectors from rectangular distribution instead of chosen one"));

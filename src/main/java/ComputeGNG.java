@@ -20,26 +20,16 @@
 // ========================================================================== ;
 
 //import java.awt.*;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.Point;
-import java.awt.Polygon;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
-
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 /**
  * A class which implements the network algorithms.
  * It implements many functions/algorithms.
@@ -61,15 +51,6 @@ ChangeListener
 	}
 	void log(String txt) {
 		log("####### ", txt);
-	}
-	void syslog(String txt) {
-		log("####### ", txt);
-	}
-	public void wasResized() {
-		Dimension d = getSize();
-		panelWidth = d.width;
-		panelHeight = d.height;
-		log("Compute:wasResized()"+String.format("w: %d h: %d", d.width, d.height));
 	}
 	public void setSize(Dimension d) {
 		log("COM: setsize");
@@ -122,10 +103,7 @@ ChangeListener
 	 * The maximum y size of the grid array.
 	 */
 	protected final int MAX_GRID_Y = 100;
-	/**
-	 * The number of errors added for the mean square error.
-	 */
-	protected final int NUM_GLOBAL_GRAPH = 500;
+
 	/**
 	 * The factor for the ring-thickness (distribution).
 	 */
@@ -133,7 +111,7 @@ ChangeListener
 	/**
 	 * The version of the Growing Neural Gas Demo.
 	 */
-	protected final String DGNG_VERSION = "v2.1"; // Version
+	protected final String DGNG_VERSION = "v2.2.0-SNAPSHOT"; // Version
 	/**
 	 * The current maximum number of nodes.
 	 */
@@ -146,9 +124,6 @@ ChangeListener
 	 * The current number of input signals used for adaptation.
 	 */
 	protected int sigs = 0;
-	public int getSigs() {
-		return sigs;
-	}
 
 	/**
 	 * The temporal backup of a run.
@@ -275,14 +250,7 @@ ChangeListener
 	 * stop the algo when max number of nodes is reached
 	 */
 	protected boolean autoStopB = true;
-	/**
-	 * stop the GG algo when max number of nodes is reached
-	 */
-	protected boolean autoStopGGB = false;
-	/**
-	 * stop the GNG algo when max number of nodes is reached
-	 */
-	protected boolean autoStopGNGB = false;
+
 	/**
 	 * display GG network in mapSpace
 	 */
@@ -361,11 +329,14 @@ ChangeListener
 	 *  This variable can be set by the user. 
 	 */
 	protected boolean errorGraphB = false;
+
 	/**
-	 * The flag for the global error (more signals).
-	 *  This variable can be set by the user. 
+	 * The flag for displaying the probability distribution
+	 *  This variable can be set by the user.
 	 */
-	protected boolean globalGraphB = true;
+	protected boolean probDistB = true;
+
+
 	/**
 	 * The flag for displaying the Voronoi diagram.
 	 *  This variable can be set by the user. 
@@ -389,10 +360,7 @@ ChangeListener
 	 * The flag for changed number of nodes.
 	 */
 	protected boolean nNodesChangedB = true;
-	/**
-	 * The flag for only discrete signals
-	 */
-	protected boolean discreteSigB = true;
+
 	/**
 	 * The flag for LBG-U method
 	 */
@@ -2950,8 +2918,6 @@ ChangeListener
 	 * The flag for mouse-selected node.
 	 */
 	protected boolean pickfixed;
-	Image offscreen;
-	Dimension offscreensize;
 	Graphics g;
 
 	/**
@@ -2991,10 +2957,6 @@ ChangeListener
 	 */
 	protected final Color signalColor = Color.black;
 	/**
-	 * The color of the mouse-selected node.
-	 */
-	protected final Color selectColor = Color.pink;
-	/**
 	 * The color of the edges.
 	 */
 	protected final Color edgeColor = Color.black;
@@ -3011,10 +2973,6 @@ ChangeListener
 	 */
 	protected final Color nodeColor = Color.green;
 	/**
-	 * The color for debug information.
-	 */
-	protected final Color debugColor = Color.gray;
-	/**
 	 * The color of the distribution.
 	 */
 	protected final Color distribColor = new Color(203, 205, 252);
@@ -3027,17 +2985,6 @@ ChangeListener
 	 */
 	protected final Color highDistribColor = new Color(152, 161, 250);
 
-	public Color mixColor(Color a, Color b, float aa){
-		log(String.valueOf(aa));
-		Color x;
-		float bb=(1.0f-aa)/2;
-		aa = aa/2;
-		x = new Color(
-				(int) Math.min(a.getRed()*aa+b.getRed()*bb,255), 
-				(int) Math.min((int)a.getGreen()*aa+b.getGreen()*bb,255),
-				(int) Math.min((int)a.getBlue()*aa+b.getBlue()*bb,255));
-		return x;
-	}
 	/**
 	 * Paint a node.
 	 * 
@@ -3113,12 +3060,8 @@ ChangeListener
 		Dimension d = getSize();
 		return (int) (gy *d.height*0.9f/(gridHeight-1)+0.05*d.height);
 	}
-	public synchronized void paintComponent(Graphics g) {
 
-		//log("paintComponent() CGNG " + String.valueOf(paintCouter)+" signals:"+String.valueOf(sigs) + "delta-sig:"+String.valueOf(sigs - prevSigs));
-		paintCouter+=1;
-		prevSigs = sigs;
-		Dimension d = getSize();
+	protected void drawPD(final Graphics g, final Dimension d) {
 		int ll,lr,r2,l2;
 		int xA[] = new int[MAX_COMPLEX];
 		int yA[] = new int[MAX_COMPLEX];
@@ -3127,7 +3070,410 @@ ChangeListener
 		int mindim;
 		int ringRadius;
 		int i, x, y;
-        mindim = (d.width < d.height) ? d.width : d.height;
+		mindim = (d.width < d.height) ? d.width : d.height;
+
+		switch (pd) {
+			case Rectangle: // Rectangle
+				ll = d.width/20;
+				lr = d.height/20;
+				r2 = d.width*9/10;
+				l2 = d.height*9/10;
+				g.fillRect(ll, lr, r2, l2);
+				break;
+			case Circle: // Circle
+
+				l2 = mindim*9/10; // Diameter is proportional to the smallest panel dimension
+
+				ll = d.width/2 -l2/2;
+				lr = d.height/2 -l2/2;
+
+				g.fillOval(ll, lr, l2, l2);
+				break;
+			case TwoCircles: // Circle
+				// circle space circle (3x1)
+				if (d.width/3 < d.height){
+					// limiting dimension is width
+					l2=(int) (d.width/2.6);
+				} else {
+					// limiting dimension is height
+					l2=(int) (d.height*0.95);
+				}
+
+				ll = d.width/2 -l2*5/4;
+				lr = d.height/2 -l2/2;
+				g.fillOval(ll, lr, l2, l2);
+
+				ll = d.width/2 +l2/4;
+				g.fillOval(ll, lr, l2, l2);
+
+				break;
+			case Ring: // Ring
+				int cx = d.width/2; // horizontal center of panel
+				int cy = d.height/2;// vertical center of panel
+				l2 = (cx < cy) ? cx : cy; // Diameter
+
+				ll = cx - l2;
+				lr = cy - l2;
+				ringRadius = (int) (l2 * RING_FACTOR);
+
+				g.fillOval(ll, lr, 2*l2, 2*l2);
+				if (whiteB)
+					g.setColor(Color.white);
+				else
+					g.setColor(getBackground());
+				g.fillOval(ll + ringRadius,
+						lr+ringRadius,
+						2*l2-2*ringRadius,
+						2*l2-2*ringRadius);
+				break;
+			case UNI: // Complex (1)
+				w = d.width/9;
+				h = d.height/5;
+				xA[0] = w;
+				yA[0] = h;
+				xA[1] = w;
+				yA[1] = 2*h;
+				xA[2] = w;
+				yA[2] = 3*h;
+				xA[3] = 2*w;
+				yA[3] = 3*h;
+				xA[4] = 3*w;
+				yA[4] = 3*h;
+				xA[5] = 3*w;
+				yA[5] = 2*h;
+				xA[6] = 3*w;
+				yA[6] = h;
+				xA[7] = 4*w;
+				yA[7] = h;
+				xA[8] = 5*w;
+				yA[8] = h;
+				xA[9] = 5*w;
+				yA[9] = 2*h;
+				xA[10] = 5*w;
+				yA[10] = 3*h;
+				xA[11] = 7*w;
+				yA[11] = h;
+				xA[12] = 7*w;
+				yA[12] = 2*h;
+				xA[13] = 7*w;
+				yA[13] = 3*h;
+
+				for (i = 0; i < 14; i++)
+					g.fillRect(xA[i], yA[i], w, h);
+				break;
+			case SmallSpirals: // Complex (2)
+				w = d.width/9;
+				h = d.height/7;
+				xA[0] = w;
+				yA[0] = 5*h;
+				xA[1] = w;
+				yA[1] = 4*h;
+				xA[2] = w;
+				yA[2] = 3*h;
+				xA[3] = w;
+				yA[3] = 2*h;
+				xA[4] = 1*w;
+				yA[4] = h;
+				xA[5] = 2*w;
+				yA[5] = h;
+				xA[6] = 3*w;
+				yA[6] = h;
+				xA[7] = 4*w;
+				yA[7] = h;
+				xA[8] = 5*w;
+				yA[8] = 1*h;
+				xA[9] = 5*w;
+				yA[9] = 2*h;
+				xA[10] = 5*w;
+				yA[10] = 3*h;
+				xA[11] = 3*w;
+				yA[11] = 3*h;
+				xA[12] = 3*w;
+				yA[12] = 4*h;
+				xA[13] = 3*w;
+				yA[13] = 5*h;
+				xA[14] = 4*w;
+				yA[14] = 5*h;
+				xA[15] = 5*w;
+				yA[15] = 5*h;
+				xA[16] = 6*w;
+				yA[16] = 5*h;
+				xA[17] = 7*w;
+				yA[17] = 5*h;
+				xA[18] = 7*w;
+				yA[18] = 4*h;
+				xA[19] = 7*w;
+				yA[19] = 3*h;
+				xA[20] = 7*w;
+				yA[20] = 2*h;
+				xA[21] = 7*w;
+				yA[21] = 1*h;
+
+				for (i = 0; i < 22; i++)
+					g.fillRect(xA[i], yA[i], w, h);
+				break;
+			case LargeSpirals: // Complex (3)
+				w = d.width/13;
+				h = d.height/11;
+				xA[0] = w;
+				yA[0] = h;
+				xA[1] = w;
+				yA[1] = 2*h;
+				xA[2] = w;
+				yA[2] = 3*h;
+				xA[3] = w;
+				yA[3] = 4*h;
+				xA[4] = 1*w;
+				yA[4] = 5*h;
+				xA[5] = 1*w;
+				yA[5] = 6*h;
+				xA[6] = 1*w;
+				yA[6] = 7*h;
+				xA[7] = 1*w;
+				yA[7] = 8*h;
+				xA[8] = 1*w;
+				yA[8] = 9*h;
+				xA[9] = 2*w;
+				yA[9] = 1*h;
+				xA[10] = 3*w;
+				yA[10] = 1*h;
+				xA[11] = 4*w;
+				yA[11] = 1*h;
+				xA[12] = 5*w;
+				yA[12] = 1*h;
+				xA[13] = 6*w;
+				yA[13] = 1*h;
+				xA[14] = 7*w;
+				yA[14] = 1*h;
+				xA[15] = 8*w;
+				yA[15] = 1*h;
+				xA[16] = 9*w;
+				yA[16] = 1*h;
+				xA[17] = 9*w;
+				yA[17] = 2*h;
+				xA[18] = 9*w;
+				yA[18] = 3*h;
+				xA[19] = 9*w;
+				yA[19] = 4*h;
+				xA[20] = 9*w;
+				yA[20] = 5*h;
+				xA[21] = 9*w;
+				yA[21] = 6*h;
+				xA[22] = 9*w;
+				yA[22] = 7*h;
+				xA[23] = 8*w;
+				yA[23] = 7*h;
+				xA[24] = 7*w;
+				yA[24] = 7*h;
+				xA[25] = 6*w;
+				yA[25] = 7*h;
+				xA[26] = 5*w;
+				yA[26] = 7*h;
+				xA[27] = 5*w;
+				yA[27] = 6*h;
+				xA[28] = 5*w;
+				yA[28] = 5*h;
+				xA[29] = 3*w;
+				yA[29] = 3*h;
+				xA[30] = 3*w;
+				yA[30] = 4*h;
+				xA[31] = 3*w;
+				yA[31] = 5*h;
+				xA[32] = 3*w;
+				yA[32] = 6*h;
+				xA[33] = 3*w;
+				yA[33] = 7*h;
+				xA[34] = 3*w;
+				yA[34] = 8*h;
+				xA[35] = 3*w;
+				yA[35] = 9*h;
+				xA[36] = 4*w;
+				yA[36] = 3*h;
+				xA[37] = 5*w;
+				yA[37] = 3*h;
+				xA[38] = 6*w;
+				yA[38] = 3*h;
+				xA[39] = 7*w;
+				yA[39] = 3*h;
+				xA[40] = 7*w;
+				yA[40] = 4*h;
+				xA[41] = 7*w;
+				yA[41] = 5*h;
+				xA[42] = 4*w;
+				yA[42] = 9*h;
+				xA[43] = 5*w;
+				yA[43] = 9*h;
+				xA[44] = 6*w;
+				yA[44] = 9*h;
+				xA[45] = 7*w;
+				yA[45] = 9*h;
+				xA[46] = 8*w;
+				yA[46] = 9*h;
+				xA[47] = 9*w;
+				yA[47] = 9*h;
+				xA[48] =10*w;
+				yA[48] = 9*h;
+				xA[49] =11*w;
+				yA[49] = 9*h;
+				xA[50] =11*w;
+				yA[50] = 8*h;
+				xA[51] =11*w;
+				yA[51] = 7*h;
+				xA[52] =11*w;
+				yA[52] = 6*h;
+				xA[53] =11*w;
+				yA[53] = 5*h;
+				xA[54] =11*w;
+				yA[54] = 4*h;
+				xA[55] =11*w;
+				yA[55] = 3*h;
+				xA[56] =11*w;
+				yA[56] = 2*h;
+				xA[57] =11*w;
+				yA[57] = 1*h;
+
+				for (i = 0; i < 58; i++)
+					g.fillRect(xA[i], yA[i], w, h);
+				break;
+
+			case HiLoDensity: // HiLo-Density
+				w = d.width/10;
+				h = d.height/10;
+				xA[0] = 2 * w;
+				yA[0] = 4 * h;
+				xA[1] = 5 * w;
+				yA[1] = 1 * h;
+
+				if (!algo.isDiscrete())
+					g.setColor(highDistribColor);
+				g.fillRect(xA[0], yA[0], w, h);
+				if (!algo.isDiscrete())
+					g.setColor(lowDistribColor);
+				g.fillRect(xA[1], yA[1], 4 * w, 8 * h);
+				break;
+
+			case DiscreteMixture: // discrete
+				//int RADIUS = 2;
+				for (i = 0; i < numDiscreteSignals; i++) {
+					x = Math.round(discreteSignalsX[i]);
+					y = Math.round(discreteSignalsY[i]);
+
+					g.setColor(distribColor);
+					g.fillOval(x - 1, y - 1, 2, 2);
+					g.setColor(Color.black);
+					g.drawOval(x - 1, y - 1, 2, 2);
+				}
+				break;
+
+			case UNIT: // Complex (4)
+				w = d.width/17;
+				h = d.height/8;
+				xA[0] = w;
+				yA[0] = 2*h;
+				xA[1] = w;
+				yA[1] = 3*h;
+				xA[2] = w;
+				yA[2] = 4*h;
+				xA[3] = w;
+				yA[3] = 5*h;
+				xA[4] = 2*w;
+				yA[4] = 5*h;
+				xA[5] = 3*w;
+				yA[5] = 5*h;
+				xA[6] = 3*w;
+				yA[6] = 4*h;
+				xA[7] = 3*w;
+				yA[7] = 3*h;
+				xA[8] = 3*w;
+				yA[8] = 2*h;
+				xA[9] = 4*w;
+				yA[9] = 2*h;
+				xA[10] = 5*w;
+				yA[10] = 2*h;
+				xA[11] = 6*w;
+				yA[11] = 2*h;
+				xA[12] = 7*w;
+				yA[12] = 2*h;
+				xA[13] = 7*w;
+				yA[13] = 3*h;
+				xA[14] = 7*w;
+				yA[14] = 4*h;
+				xA[15] = 7*w;
+				yA[15] = 5*h;
+				xA[16] = 8*w;
+				yA[16] = 5*h;
+				xA[17] = 9*w;
+				yA[17] = 5*h;
+				xA[18] = 10*w;
+				yA[18] = 5*h;
+				xA[19] = 11*w;
+				yA[19] = 5*h;
+				xA[20] = 11*w;
+				yA[20] = 4*h;
+				xA[21] = 11*w;
+				yA[21] = 3*h;
+				xA[22] = 11*w;
+				yA[22] = 2*h;
+				xA[23] = 14*w;
+				yA[23] = 2*h;
+				xA[24] = 15*w;
+				yA[24] = 2*h;
+				xA[25] = 15*w;
+				yA[25] = 3*h;
+				xA[26] = 15*w;
+				yA[26] = 4*h;
+				xA[27] = 15*w;
+				yA[27] = 5*h;
+
+				for (i = 0; i < 28; i++)
+					g.fillRect(xA[i], yA[i], w, h);
+				break;
+			case MoveJump: // Moving and Jumping Rectangle
+				r2 = d.width/4;
+				l2 = d.height/4;
+				ll = (int) (0.75 * (d.width/2 +
+						Math.IEEEremainder(0.2 * sigs,(d.width))));
+				lr = (int) (0.75 * (d.height/2 +
+						Math.IEEEremainder(0.2 * sigs,(d.height))));
+
+				g.fillRect(ll, lr, r2, l2);
+				break;
+			case Move: // Moving Rectangle
+				r2 = d.width/4;
+				l2 = d.height/4;
+				ll = (int) (0.75 * (d.width/2 +
+						bounceX * Math.IEEEremainder(0.2 * sigs,
+								(d.width))));
+				lr = (int) (0.75 * (d.height/2 +
+						bounceY * Math.IEEEremainder(0.2 * sigs,
+								(d.height))));
+
+				g.fillRect(ll, lr, r2, l2);
+				break;
+
+			case Jump: // Jumping Rectangle
+				r2 = d.width/4;
+				l2 = d.height/4;
+
+				g.fillRect(jumpX, jumpY, r2, l2);
+				break;
+
+			case RightMouseB: // R.Mouse Rectangle
+				r2 = d.width/4;
+				l2 = d.height/4;
+
+				g.fillRect(jumpX, jumpY, r2, l2);
+				break;
+		}
+	}
+
+	public synchronized void paintComponent(Graphics g) {
+
+		//log("paintComponent() CGNG " + String.valueOf(paintCouter)+" signals:"+String.valueOf(sigs) + "delta-sig:"+String.valueOf(sigs - prevSigs));
+		paintCouter+=1;
+		prevSigs = sigs;
+		Dimension d = getSize();
+		int i, x, y;
 
 		if (whiteB)
 			g.setColor(Color.white);
@@ -3151,399 +3497,7 @@ ChangeListener
 		if (!algo.isDiscrete()) 
 			g.setColor(distribColor);
 
-		switch (pd) {
-		case Rectangle: // Rectangle
-			ll = d.width/20;
-			lr = d.height/20;
-			r2 = d.width*9/10;
-			l2 = d.height*9/10;
-			g.fillRect(ll, lr, r2, l2);
-			break;
-		case Circle: // Circle
-
-			l2 = mindim*9/10; // Diameter is proportional to the smallest panel dimension 
-
-			ll = d.width/2 -l2/2;
-			lr = d.height/2 -l2/2;
-
-			g.fillOval(ll, lr, l2, l2);
-			break;
-		case TwoCircles: // Circle
-            // circle space circle (3x1)
-			if (d.width/3 < d.height){
-				// limiting dimension is width
-				l2=(int) (d.width/2.6);
-			} else {
-				// limiting dimension is height
-				l2=(int) (d.height*0.95);
-			}
-			
-			ll = d.width/2 -l2*5/4;
-			lr = d.height/2 -l2/2;
-			g.fillOval(ll, lr, l2, l2);
-
-			ll = d.width/2 +l2/4;
-			g.fillOval(ll, lr, l2, l2);
-
-			break;
-		case Ring: // Ring
-			int cx = d.width/2; // horizontal center of panel
-			int cy = d.height/2;// vertical center of panel
-			l2 = (cx < cy) ? cx : cy; // Diameter
-
-			ll = cx - l2;
-			lr = cy - l2;
-			ringRadius = (int) (l2 * RING_FACTOR);
-
-			g.fillOval(ll, lr, 2*l2, 2*l2);
-			if (whiteB)
-				g.setColor(Color.white);
-			else
-				g.setColor(getBackground());
-			g.fillOval(ll + ringRadius,
-					lr+ringRadius,
-					2*l2-2*ringRadius,
-					2*l2-2*ringRadius);
-			break;
-		case UNI: // Complex (1)
-			w = d.width/9;
-			h = d.height/5;
-			xA[0] = w;
-			yA[0] = h;
-			xA[1] = w;
-			yA[1] = 2*h;
-			xA[2] = w;
-			yA[2] = 3*h;
-			xA[3] = 2*w;
-			yA[3] = 3*h;
-			xA[4] = 3*w;
-			yA[4] = 3*h;
-			xA[5] = 3*w;
-			yA[5] = 2*h;
-			xA[6] = 3*w;
-			yA[6] = h;
-			xA[7] = 4*w;
-			yA[7] = h;
-			xA[8] = 5*w;
-			yA[8] = h;
-			xA[9] = 5*w;
-			yA[9] = 2*h;
-			xA[10] = 5*w;
-			yA[10] = 3*h;
-			xA[11] = 7*w;
-			yA[11] = h;
-			xA[12] = 7*w;
-			yA[12] = 2*h;
-			xA[13] = 7*w;
-			yA[13] = 3*h;
-
-			for (i = 0; i < 14; i++)
-				g.fillRect(xA[i], yA[i], w, h);
-			break;
-		case SmallSpirals: // Complex (2)
-			w = d.width/9;
-			h = d.height/7;
-			xA[0] = w;
-			yA[0] = 5*h;
-			xA[1] = w;
-			yA[1] = 4*h;
-			xA[2] = w;
-			yA[2] = 3*h;
-			xA[3] = w;
-			yA[3] = 2*h;
-			xA[4] = 1*w;
-			yA[4] = h;
-			xA[5] = 2*w;
-			yA[5] = h;
-			xA[6] = 3*w;
-			yA[6] = h;
-			xA[7] = 4*w;
-			yA[7] = h;
-			xA[8] = 5*w;
-			yA[8] = 1*h;
-			xA[9] = 5*w;
-			yA[9] = 2*h;
-			xA[10] = 5*w;
-			yA[10] = 3*h;
-			xA[11] = 3*w;
-			yA[11] = 3*h;
-			xA[12] = 3*w;
-			yA[12] = 4*h;
-			xA[13] = 3*w;
-			yA[13] = 5*h;
-			xA[14] = 4*w;
-			yA[14] = 5*h;
-			xA[15] = 5*w;
-			yA[15] = 5*h;
-			xA[16] = 6*w;
-			yA[16] = 5*h;
-			xA[17] = 7*w;
-			yA[17] = 5*h;
-			xA[18] = 7*w;
-			yA[18] = 4*h;
-			xA[19] = 7*w;
-			yA[19] = 3*h;
-			xA[20] = 7*w;
-			yA[20] = 2*h;
-			xA[21] = 7*w;
-			yA[21] = 1*h;
-
-			for (i = 0; i < 22; i++)
-				g.fillRect(xA[i], yA[i], w, h);
-			break;
-		case LargeSpirals: // Complex (3)
-			w = d.width/13;
-			h = d.height/11;
-			xA[0] = w;
-			yA[0] = h;
-			xA[1] = w;
-			yA[1] = 2*h;
-			xA[2] = w;
-			yA[2] = 3*h;
-			xA[3] = w;
-			yA[3] = 4*h;
-			xA[4] = 1*w;
-			yA[4] = 5*h;
-			xA[5] = 1*w;
-			yA[5] = 6*h;
-			xA[6] = 1*w;
-			yA[6] = 7*h;
-			xA[7] = 1*w;
-			yA[7] = 8*h;
-			xA[8] = 1*w;
-			yA[8] = 9*h;
-			xA[9] = 2*w;
-			yA[9] = 1*h;
-			xA[10] = 3*w;
-			yA[10] = 1*h;
-			xA[11] = 4*w;
-			yA[11] = 1*h;
-			xA[12] = 5*w;
-			yA[12] = 1*h;
-			xA[13] = 6*w;
-			yA[13] = 1*h;
-			xA[14] = 7*w;
-			yA[14] = 1*h;
-			xA[15] = 8*w;
-			yA[15] = 1*h;
-			xA[16] = 9*w;
-			yA[16] = 1*h;
-			xA[17] = 9*w;
-			yA[17] = 2*h;
-			xA[18] = 9*w;
-			yA[18] = 3*h;
-			xA[19] = 9*w;
-			yA[19] = 4*h;
-			xA[20] = 9*w;
-			yA[20] = 5*h;
-			xA[21] = 9*w;
-			yA[21] = 6*h;
-			xA[22] = 9*w;
-			yA[22] = 7*h;
-			xA[23] = 8*w;
-			yA[23] = 7*h;
-			xA[24] = 7*w;
-			yA[24] = 7*h;
-			xA[25] = 6*w;
-			yA[25] = 7*h;
-			xA[26] = 5*w;
-			yA[26] = 7*h;
-			xA[27] = 5*w;
-			yA[27] = 6*h;
-			xA[28] = 5*w;
-			yA[28] = 5*h;
-			xA[29] = 3*w;
-			yA[29] = 3*h;
-			xA[30] = 3*w;
-			yA[30] = 4*h;
-			xA[31] = 3*w;
-			yA[31] = 5*h;
-			xA[32] = 3*w;
-			yA[32] = 6*h;
-			xA[33] = 3*w;
-			yA[33] = 7*h;
-			xA[34] = 3*w;
-			yA[34] = 8*h;
-			xA[35] = 3*w;
-			yA[35] = 9*h;
-			xA[36] = 4*w;
-			yA[36] = 3*h;
-			xA[37] = 5*w;
-			yA[37] = 3*h;
-			xA[38] = 6*w;
-			yA[38] = 3*h;
-			xA[39] = 7*w;
-			yA[39] = 3*h;
-			xA[40] = 7*w;
-			yA[40] = 4*h;
-			xA[41] = 7*w;
-			yA[41] = 5*h;
-			xA[42] = 4*w;
-			yA[42] = 9*h;
-			xA[43] = 5*w;
-			yA[43] = 9*h;
-			xA[44] = 6*w;
-			yA[44] = 9*h;
-			xA[45] = 7*w;
-			yA[45] = 9*h;
-			xA[46] = 8*w;
-			yA[46] = 9*h;
-			xA[47] = 9*w;
-			yA[47] = 9*h;
-			xA[48] =10*w;
-			yA[48] = 9*h;
-			xA[49] =11*w;
-			yA[49] = 9*h;
-			xA[50] =11*w;
-			yA[50] = 8*h;
-			xA[51] =11*w;
-			yA[51] = 7*h;
-			xA[52] =11*w;
-			yA[52] = 6*h;
-			xA[53] =11*w;
-			yA[53] = 5*h;
-			xA[54] =11*w;
-			yA[54] = 4*h;
-			xA[55] =11*w;
-			yA[55] = 3*h;
-			xA[56] =11*w;
-			yA[56] = 2*h;
-			xA[57] =11*w;
-			yA[57] = 1*h;
-
-			for (i = 0; i < 58; i++)
-				g.fillRect(xA[i], yA[i], w, h);
-			break;
-
-		case HiLoDensity: // HiLo-Density
-			w = d.width/10;
-			h = d.height/10;
-			xA[0] = 2 * w;
-			yA[0] = 4 * h;
-			xA[1] = 5 * w;
-			yA[1] = 1 * h;
-
-			if (!algo.isDiscrete())
-				g.setColor(highDistribColor);
-			g.fillRect(xA[0], yA[0], w, h);
-			if (!algo.isDiscrete())
-				g.setColor(lowDistribColor);
-			g.fillRect(xA[1], yA[1], 4 * w, 8 * h);
-			break;
-
-		case DiscreteMixture: // discrete
-			//int RADIUS = 2;
-			for (i = 0; i < numDiscreteSignals; i++) {
-				x = Math.round(discreteSignalsX[i]);
-				y = Math.round(discreteSignalsY[i]);
-
-				g.setColor(distribColor);
-				g.fillOval(x - 1, y - 1, 2, 2);
-				g.setColor(Color.black);
-				g.drawOval(x - 1, y - 1, 2, 2);
-			}
-			break;
-
-		case UNIT: // Complex (4)
-			w = d.width/17;
-			h = d.height/8;
-			xA[0] = w;
-			yA[0] = 2*h;
-			xA[1] = w;
-			yA[1] = 3*h;
-			xA[2] = w;
-			yA[2] = 4*h;
-			xA[3] = w;
-			yA[3] = 5*h;
-			xA[4] = 2*w;
-			yA[4] = 5*h;
-			xA[5] = 3*w;
-			yA[5] = 5*h;
-			xA[6] = 3*w;
-			yA[6] = 4*h;
-			xA[7] = 3*w;
-			yA[7] = 3*h;
-			xA[8] = 3*w;
-			yA[8] = 2*h;
-			xA[9] = 4*w;
-			yA[9] = 2*h;
-			xA[10] = 5*w;
-			yA[10] = 2*h;
-			xA[11] = 6*w;
-			yA[11] = 2*h;
-			xA[12] = 7*w;
-			yA[12] = 2*h;
-			xA[13] = 7*w;
-			yA[13] = 3*h;
-			xA[14] = 7*w;
-			yA[14] = 4*h;
-			xA[15] = 7*w;
-			yA[15] = 5*h;
-			xA[16] = 8*w;
-			yA[16] = 5*h;
-			xA[17] = 9*w;
-			yA[17] = 5*h;
-			xA[18] = 10*w;
-			yA[18] = 5*h;
-			xA[19] = 11*w;
-			yA[19] = 5*h;
-			xA[20] = 11*w;
-			yA[20] = 4*h;
-			xA[21] = 11*w;
-			yA[21] = 3*h;
-			xA[22] = 11*w;
-			yA[22] = 2*h;
-			xA[23] = 14*w;
-			yA[23] = 2*h;
-			xA[24] = 15*w;
-			yA[24] = 2*h;
-			xA[25] = 15*w;
-			yA[25] = 3*h;
-			xA[26] = 15*w;
-			yA[26] = 4*h;
-			xA[27] = 15*w;
-			yA[27] = 5*h;
-
-			for (i = 0; i < 28; i++)
-				g.fillRect(xA[i], yA[i], w, h);
-			break;
-		case MoveJump: // Moving and Jumping Rectangle
-			r2 = d.width/4;
-			l2 = d.height/4;
-			ll = (int) (0.75 * (d.width/2 +
-					Math.IEEEremainder(0.2 * sigs,(d.width))));
-			lr = (int) (0.75 * (d.height/2 +
-					Math.IEEEremainder(0.2 * sigs,(d.height))));
-
-			g.fillRect(ll, lr, r2, l2);
-			break;
-		case Move: // Moving Rectangle
-			r2 = d.width/4;
-			l2 = d.height/4;
-			ll = (int) (0.75 * (d.width/2 +
-					bounceX * Math.IEEEremainder(0.2 * sigs,
-							(d.width))));
-			lr = (int) (0.75 * (d.height/2 +
-					bounceY * Math.IEEEremainder(0.2 * sigs,
-							(d.height))));
-
-			g.fillRect(ll, lr, r2, l2);
-			break;
-
-		case Jump: // Jumping Rectangle
-			r2 = d.width/4;
-			l2 = d.height/4;
-
-			g.fillRect(jumpX, jumpY, r2, l2);
-			break;
-
-		case RightMouseB: // R.Mouse Rectangle
-			r2 = d.width/4;
-			l2 = d.height/4;
-
-			g.fillRect(jumpX, jumpY, r2, l2);
-			break;
-		}      
+		if (probDistB) drawPD(g, d);
 
 		// Draw the edges
 		if (edgesB) {
