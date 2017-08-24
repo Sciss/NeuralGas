@@ -19,56 +19,33 @@
 //                                                                            ;
 // ========================================================================== ;
 
+package de.sciss.demogng;
+
 /**
- * A class representing a halfedge in the Voronoi diagram
- *
+ * @author B. Fritzke
+ * enum for all probability distributions
  */
-class HalfEdgeVoronoi {
-  public HalfEdgeVoronoi ELleft;
-  public HalfEdgeVoronoi ELright;
-  public EdgeVoronoi ELedge = null;
-  public SiteVoronoi vertex = null;
-  public int ELpm = -1;
-  public int ELrefcnt = -1;
-  public float ystar = -1.0f;
-
-  public HalfEdgeVoronoi() {
-    ELedge = new EdgeVoronoi();
-    vertex = new SiteVoronoi();
-    ELpm = 0;
-    ystar = 0.0f;
-  }
-
-  public HalfEdgeVoronoi(EdgeVoronoi e, int pm) {
-    ELedge = e;
-    ELpm = pm;
-    vertex = null;
-    ELrefcnt = 0;
-  }
-
-  /**
-   * Returns whether this edge is greater than the passed edge.
-   *
-   * @param he	 	The edge to compare this edge to.
-   */
-  public boolean greaterThan(HalfEdgeVoronoi he) {
-    return ystar > he.ystar;
-  }
-  
-  /**
-   * Returns whether this edge is equal to the passed edge.
-   *
-   * @param he	 	The edge to compare this edge to.
-   */
-  public boolean equal(HalfEdgeVoronoi he) {
-    return ystar == he.ystar;
-  }
-  
-  /**
-   * Prints this edge.
-   */
-  public void print() {
-    System.out.println("HE: ystar = " + ystar + ", ELpm = " + ELpm);
-  }
+public enum PD {
+    Rectangle("Rectangle"),
+    Circle("Circle"),
+    TwoCircles("Two Circles"),
+    Ring("Ring"),
+    UNI("UNI"),
+    SmallSpirals("Small Spirals"),
+    LargeSpirals("Large Spirals"),
+    HiLoDensity("HiLo Density"),
+    DiscreteMixture("DiscreteMixture"),
+    UNIT("UNIT"),
+    MoveJump("Move & Jump"),
+    Move("Move"),
+    Jump("Jump"),
+    RightMouseB("Right Mouse-Btn");
+    private String name;
+    public String getName() {
+        return name;
+    }
+    private PD(String name){
+        this.name=name;
+    }
 
 }

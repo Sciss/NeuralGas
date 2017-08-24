@@ -1,3 +1,5 @@
+package de.sciss.demogng;
+
 import java.awt.image.BufferedImage;
 
 /**

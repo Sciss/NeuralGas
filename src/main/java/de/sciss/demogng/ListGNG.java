@@ -19,6 +19,8 @@
 //                                                                            ;
 // ========================================================================== ;
 
+package de.sciss.demogng;
+
 /**
  * A class which implements a double linked list and a priority queue.
  *
@@ -134,7 +136,7 @@ class ListGNG {
 
     while (p != null) {
       if (p.elem == elem)
-	return(p);
+    return(p);
       p = next(p);
     }
     return(null);
@@ -200,14 +202,14 @@ class ListGNG {
       p = head;
     else {
       while (p != null) {
-		if (p.elem.greaterThan(elem)) 
-		  break;
-		p = next(p);
+        if (p.elem.greaterThan(elem))
+          break;
+        p = next(p);
       }
       if (p == null)
-		p = last();
+        p = last();
       else
-		p = previous(p);
+        p = previous(p);
     }
 
     insert(elem, p);

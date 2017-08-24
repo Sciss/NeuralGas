@@ -19,40 +19,48 @@
 //                                                                            ;
 // ========================================================================== ;
 
+package de.sciss.demogng;
+
 /**
- * A class representing a Voronoi line. 
+ * A class representing an edge. 
+ *  For example:
+ * <pre>
+ *    EdgeGNG e = new EdgeGNG();
+ *    e.from(Node1);
+ *    e.to(Node2);
+ * </pre>
  *
  */
-class LineGNG {
+class EdgeGNG {
   /**
-   * The first point (x) of the line
+   * The starting point of the edge
+   * @see EdgeGNG
    */
-  protected int x1 = -1;
+  protected int from = -1;
   /**
-   * The first point (y) of the line
+   * The end point of the edge
+   * @see EdgeGNG
    */
-  protected int y1 = -1;
+  protected int to = -1;
   /**
-   * The last point (x) of the line
+   * The age of this edge.
+   * @see EdgeGNG
    */
-  protected int x2 = -1;
-  /**
-   * The last point (y) of the line
-   */
-  protected int y2 = -1;
+  protected int age = 0;
 
   /**
-   * Constructor, allows setting the coordinates.
+   * Replace a node with a new one. This is necessary after deleting a node
+   *  in the static array. In most cases the deleted node will be replaced by
+   *  the last node in the static array.
    * 
-   * @param x1        The first x coordinate
-   * @param y1        The first y coordinate
-   * @param x2        The second x coordinate
-   * @param y2        The second y coordinate
+   * @param old        The index of a node
+   * @param newN       The index of a node
+   * @see ComputeGNG#deleteNode
    */
-  public LineGNG (int x1, int y1, int x2, int y2) {
-    this.x1 = x1;
-    this.y1 = y1;
-    this.x2 = x2;
-    this.y2 = y2;
+  protected void replace(int old, int newN) {
+    if (from == old)
+      from = newN;
+    if (to == old)
+      to = newN;
   }
 }

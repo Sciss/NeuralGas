@@ -19,73 +19,29 @@
 //                                                                            ;
 // ========================================================================== ;
 
+package de.sciss.demogng;
+
 /**
- * A class representing a float point in the plane.
+ * A class representing a node in the grid.
  *
  */
-class FPoint {
-  /**
-   * The x coordinate
-   */
-  public float x;
-  /**
-   * The y coordinate
-   */
-  public float y;
+class GridNodeGNG {
+  NodeGNG node;
+  int index;
 
   /**
-   * Constructor.
-   * 
+   * Construct the default grid node.
    */
-  public FPoint() {
-    this.x = -1.0f;
-    this.y = -1.0f;
+  GridNodeGNG() {
+    index = -1;
   }
 
   /**
-   * Constructor, allows setting the coordinates.
-   * 
-   * @param x        The x coordinate
-   * @param y        The y coordinate
+   * Construct the grid node and sets the index and node.
    */
-  public FPoint(float x, float y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  /**
-   * Set the member variables.
-   * 
-   * @param x        The x coordinate
-   * @param y        The y coordinate
-   */
-  public void set(float x, float y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  /**
-   * Set the member variables.
-   * 
-   * @param p        The coordinates
-   */
-  public void set(FPoint p) {
-    x = p.x;
-    y = p.y;
-  }
-
-  /**
-   * Test the member variables.
-   * 
-   * @param x        The x coordinate
-   * @param y        The y coordinate
-   * @return	     Equal?
-   */
-  public boolean equal(float x, float y) {
-    if ( (this.x == x) && (this.y == y) )
-      return(true);
-    else
-      return(false);
+  GridNodeGNG(int index, NodeGNG node) {
+    this.index = index;
+    this.node = node;
   }
 
 }

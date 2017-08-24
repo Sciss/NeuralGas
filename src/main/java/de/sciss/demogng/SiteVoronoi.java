@@ -19,47 +19,51 @@
 //                                                                            ;
 // ========================================================================== ;
 
+package de.sciss.demogng;
 
 /**
- * A class representing an edge. 
- *  For example:
- * <pre>
- *    EdgeGNG e = new EdgeGNG();
- *    e.from(Node1);
- *    e.to(Node2);
- * </pre>
+ * A class representing a site in the Voronoi diagram
  *
  */
-class EdgeGNG {
+class SiteVoronoi {
   /**
-   * The starting point of the edge
-   * @see EdgeGNG
+   * The coordinate
    */
-  protected int from = -1;
+  public FPoint coord = null;
   /**
-   * The end point of the edge
-   * @see EdgeGNG
+   * The number of the site
    */
-  protected int to = -1;
+  public int sitenbr = 0;
   /**
-   * The age of this edge.
-   * @see EdgeGNG
+   * The reference counter of the site
    */
-  protected int age = 0;
+  public int refcnt = 0;
 
   /**
-   * Replace a node with a new one. This is necessary after deleting a node
-   *  in the static array. In most cases the deleted node will be replaced by
-   *  the last node in the static array.
+   * The constructor of the SiteVoronoi class.
    * 
-   * @param old        The index of a node
-   * @param newN       The index of a node
-   * @see ComputeGNG#deleteNode
    */
-  protected void replace(int old, int newN) {
-    if (from == old)
-      from = newN;
-    if (to == old)
-      to = newN;
+  public SiteVoronoi() {
+    coord = new FPoint();
+    sitenbr = -1;
+    refcnt = 0;
   }
+  /**
+   * The constructor of the SiteVoronoi class.
+   * 
+   * @param p        The coordinates
+   * @param sitenbr  The identifier of the site
+   */
+  public SiteVoronoi(FPoint p, int sitenbr) {
+    coord = p;
+    this.sitenbr = sitenbr;
+    refcnt = 0;
+  }
+
+  public void print() {
+    System.out.println("Site: (Nr. " + sitenbr + "):" + 
+               coord.x + ", " + coord.y +
+               " (refcnt = " + refcnt + ")");
+  }
+
 }

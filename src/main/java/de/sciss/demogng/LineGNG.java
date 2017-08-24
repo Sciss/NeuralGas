@@ -1,11 +1,3 @@
-import java.awt.BorderLayout;
-import java.awt.Button;
-import java.awt.Event;
-import java.awt.Frame;
-import java.awt.Label;
-import java.awt.Panel;
-import java.awt.TextField;
-
 // ========================================================================== ;
 //                                                                            ;
 // Copyright 1996-1998 Hartmut S. Loos, Instit. f. Neuroinformatik, Bochum    ;
@@ -27,53 +19,42 @@ import java.awt.TextField;
 //                                                                            ;
 // ========================================================================== ;
 
+package de.sciss.demogng;
 
 /**
- * A class implementing the error graph.
+ * A class representing a Voronoi line. 
  *
  */
-class GraphGNG extends Frame {
+class LineGNG {
   /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-DemoGNG demo;
-  SelGraphics graph;
-  TextField error;
-
-  /**
-   * The name of the clear button.
+   * The first point (x) of the line
    */
-  protected final static String CLEAR = "Clear";
+  protected int x1 = -1;
   /**
-   * The name of the close button.
+   * The first point (y) of the line
    */
-  protected final static String CLOSE = "Close";
+  protected int y1 = -1;
+  /**
+   * The last point (x) of the line
+   */
+  protected int x2 = -1;
+  /**
+   * The last point (y) of the line
+   */
+  protected int y2 = -1;
 
-  GraphGNG(DemoGNG demo) {
-	this.demo = demo;
-	graph = new SelGraphics();
-	setTitle("ErrorGraph");
-
-	setLayout(new BorderLayout());
-	add("North",new Label("  Error Graph"));
-	add("Center",graph);
-	Panel pSouth = new Panel();
-	pSouth.add(new Button(CLEAR));
-	pSouth.add(new Button(CLOSE));
-	add("South", pSouth);
-	pack();
+  /**
+   * Constructor, allows setting the coordinates.
+   * 
+   * @param x1        The first x coordinate
+   * @param y1        The first y coordinate
+   * @param x2        The second x coordinate
+   * @param y2        The second y coordinate
+   */
+  public LineGNG (int x1, int y1, int x2, int y2) {
+    this.x1 = x1;
+    this.y1 = y1;
+    this.x2 = x2;
+    this.y2 = y2;
   }
-
-  public boolean handleEvent(Event evt) {
-	if (CLEAR.equals(evt.arg)) {
-	  graph.clear();
-	  return true;
-	} else if (CLOSE.equals(evt.arg)) {
-	  demo.graphClose();
-	  return true;
-	}
-	return super.handleEvent(evt);
-  }
-
 }

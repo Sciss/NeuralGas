@@ -19,38 +19,58 @@
 //                                                                            ;
 // ========================================================================== ;
 
+package de.sciss.demogng;
+
 /**
- * A class representing an edge in the Voronoi diagram
+ * A class representing a halfedge in the Voronoi diagram
  *
  */
-class EdgeVoronoi {
-  /**
-   * One part of line equation.
-   * (equation: ax + by = c)
-   */
-  public float a;
-  /**
-   * One part of line equation.
-   * (equation: ax + by = c)
-   */
-  public float b;
-  /**
-   * One part of line equation.
-   * (equation: ax + by = c)
-   */
-  public float c;
-  /**
-   * The number of the edge
-   */
-  public int edgenbr = 0;
+class HalfEdgeVoronoi {
+  public HalfEdgeVoronoi ELleft;
+  public HalfEdgeVoronoi ELright;
+  public EdgeVoronoi ELedge = null;
+  public SiteVoronoi vertex = null;
+  public int ELpm = -1;
+  public int ELrefcnt = -1;
+  public float ystar = -1.0f;
+
+  public HalfEdgeVoronoi() {
+    ELedge = new EdgeVoronoi();
+    vertex = new SiteVoronoi();
+    ELpm = 0;
+    ystar = 0.0f;
+  }
+
+  public HalfEdgeVoronoi(EdgeVoronoi e, int pm) {
+    ELedge = e;
+    ELpm = pm;
+    vertex = null;
+    ELrefcnt = 0;
+  }
 
   /**
-   * The sites of the edge
+   * Returns whether this edge is greater than the passed edge.
+   *
+   * @param he	 	The edge to compare this edge to.
    */
-  public SiteVoronoi ep[] = new SiteVoronoi[2];
+  public boolean greaterThan(HalfEdgeVoronoi he) {
+    return ystar > he.ystar;
+  }
+  
   /**
-   * The next region
+   * Returns whether this edge is equal to the passed edge.
+   *
+   * @param he	 	The edge to compare this edge to.
    */
-  public SiteVoronoi reg[] = new SiteVoronoi[2];
+  public boolean equal(HalfEdgeVoronoi he) {
+    return ystar == he.ystar;
+  }
+  
+  /**
+   * Prints this edge.
+   */
+  public void print() {
+    System.out.println("HE: ystar = " + ystar + ", ELpm = " + ELpm);
+  }
 
 }

@@ -1,12 +1,14 @@
 name              := "DemoGNG"
 organization      := "de.sciss"
 version           := "2.2.0-SNAPSHOT"
-scalaVersion      := "2.12.1"
+scalaVersion      := "2.12.3"
 licenses          := Seq("GPL v2+" -> url("https://www.gnu.org/licenses/gpl-2.0.txt"))
 crossPaths        := false
 autoScalaLibrary  := false
 
 libraryDependencies ++= Seq(
+  "org.scala-lang" %  "scala-library" % scalaVersion.value % "test",
+  "de.sciss"       %% "pdflitz"       % "1.2.2"            % "test"
 )
 
 homepage          := Some(url(s"https://github.com/Sciss/${name.value.toLowerCase}"))

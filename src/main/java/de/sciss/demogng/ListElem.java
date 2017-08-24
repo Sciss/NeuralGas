@@ -19,32 +19,65 @@
 //                                                                            ;
 // ========================================================================== ;
 
+package de.sciss.demogng;
 
 /**
- * @author B. Fritzke
- * enum for all probability distributions
+ * A class which represents the elements of the double linked list class
+ *  ListGNG.
+ *
  */
-public enum PD {
-	Rectangle("Rectangle"),
-	Circle("Circle"),
-	TwoCircles("Two Circles"),
-	Ring("Ring"),
-	UNI("UNI"),
-	SmallSpirals("Small Spirals"),
-	LargeSpirals("Large Spirals"),
-	HiLoDensity("HiLo Density"),
-	DiscreteMixture("DiscreteMixture"),
-	UNIT("UNIT"),
-	MoveJump("Move & Jump"),
-	Move("Move"),
-	Jump("Jump"),
-	RightMouseB("Right Mouse-Btn");
-	private String name;
-	public String getName() {
-		return name;
-	}
-	private PD(String name){
-		this.name=name;
-	}
+class ListElem {
 
+  /**
+   * The left neighbour.
+   */
+  ListElem		left;
+  /**
+   * The right neighbour.
+   */
+  ListElem		right;
+  /**
+   * The element is a halfedge.
+   */
+  HalfEdgeVoronoi	elem;
+
+  /**
+   * Constructor, initializes member data.
+   */
+  ListElem() {
+    left = null;
+    right = null;
+    elem = null;
+  }
+
+  /**
+   * Constructor, allows setting data.
+   *
+   * @param elem 	The data elem
+   */
+  ListElem(HalfEdgeVoronoi elem) {
+    left = right = null;
+    this.elem = elem;
+  }
+
+  /**
+   * Constructor, allows setting neighbors and data.
+   *
+   * @param l 		Left neighbor
+   * @param r 		Right neighbor
+   * @param elem 	The data elem
+   */
+  ListElem(ListElem l, ListElem r, HalfEdgeVoronoi elem) {
+    left = l;
+    right = r;
+    this.elem = elem;
+  }
+
+  /**
+   * Print the element.
+   */
+  public void print() {
+    if(elem != null)
+      elem.print();
+  }
 }

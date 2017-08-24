@@ -32,6 +32,8 @@
 //                                                                            ;
 // ========================================================================== ;
 
+package de.sciss.demogng;
+
 import java.awt.*;
 import java.util.*;
 
@@ -43,9 +45,9 @@ import java.util.*;
  */
 public class SelGraphics extends Canvas {
   /**
-	 * 
-	 */
-	private static final long serialVersionUID = 2485433876057152641L;
+     *
+     */
+    private static final long serialVersionUID = 2485433876057152641L;
 /**
    * The initial maximum value for the x-axis.
    */
@@ -68,8 +70,8 @@ public class SelGraphics extends Canvas {
   public SelGraphics() {
     super();
 
-	// The initial size of the frame
-	setSize(400,200);
+    // The initial size of the frame
+    setSize(400,200);
     data = new Vector<Vector<Double>>(1,1);
     data.addElement( new Vector<Double>(100,20) );
     setVisible(true);
@@ -89,7 +91,7 @@ public class SelGraphics extends Canvas {
    * @param g	The drawing area
    */
   public void paint(Graphics g) {
-	int i;
+    int i;
     int lx = 30;
     int ly = 30;
     double sx,sy;
@@ -125,63 +127,63 @@ public class SelGraphics extends Canvas {
     
     da.setColor( new Color(255, 200, 100) );
 
-	int x;
+    int x;
     for (i = 1; i < (ScaleMaxX/5); i++) {
-	  x = (int)(sx * i * 5);
+      x = (int)(sx * i * 5);
 
-	  if (x > lx)	{
-	    da.setColor(Color.orange);
-	    da.drawLine(x, 0, x, Diagram.height);
-	    da.setColor(Color.red);
-	    da.drawString(Integer.toString(i * 5), x - 10, Diagram.height + 15);
-	    lx = x + 30;
-	  }
-	}
+      if (x > lx)	{
+        da.setColor(Color.orange);
+        da.drawLine(x, 0, x, Diagram.height);
+        da.setColor(Color.red);
+        da.drawString(Integer.toString(i * 5), x - 10, Diagram.height + 15);
+        lx = x + 30;
+      }
+    }
 
-	int y;
+    int y;
     for (i = 1; i < (ScaleMaxY/10); i++) {
-	  y = (int)(sy * i * 10);
+      y = (int)(sy * i * 10);
 
-	  if ( y > ly ) {
-	    int ry = Diagram.height - y;
+      if ( y > ly ) {
+        int ry = Diagram.height - y;
 
-	    da.setColor(Color.orange);
-	    da.drawLine(0, ry, Diagram.width, ry);
-	    da.setColor(Color.red);
-	    da.drawString(Integer.toString(i * 10), -35, ry + 5);
-	    ly = y + 30;
-	  }
-	} 
+        da.setColor(Color.orange);
+        da.drawLine(0, ry, Diagram.width, ry);
+        da.setColor(Color.red);
+        da.drawString(Integer.toString(i * 10), -35, ry + 5);
+        ly = y + 30;
+      }
+    }
 
     // paint traces
     Traces = data.elements();
-	Double cur;
+    Double cur;
     while ( Traces.hasMoreElements() ) {
-	  Enumeration<Double> Current_Trace = null;
+      Enumeration<Double> Current_Trace = null;
 
-	  try {
-	    Current_Trace=Traces.nextElement().elements();
-	  }	catch( NoSuchElementException e ) {}
+      try {
+        Current_Trace=Traces.nextElement().elements();
+      }	catch( NoSuchElementException e ) {}
 
-	  if ( Traces.hasMoreElements() )	
-		da.setColor(Color.magenta);
-	  else
-		da.setColor(Color.black);
+      if ( Traces.hasMoreElements() )
+        da.setColor(Color.magenta);
+      else
+        da.setColor(Color.black);
 
-	  if (Current_Trace != null) {
-	    int nx, ny, ox = -1, oy = -1;
-	   
-	    for (i = 0; Current_Trace.hasMoreElements(); i++) {
-		  cur = (Double)(Current_Trace.nextElement());
-		  nx = (int)(sx * i);
-		  ny = Diagram.height - (int)(cur.doubleValue() * sy);
-		  if (oy > 0)
-			da.drawLine(ox, oy, nx, ny);
-		  ox = nx;
-		  oy = ny;
-		}
-	  }
-	}
+      if (Current_Trace != null) {
+        int nx, ny, ox = -1, oy = -1;
+
+        for (i = 0; Current_Trace.hasMoreElements(); i++) {
+          cur = (Double)(Current_Trace.nextElement());
+          nx = (int)(sx * i);
+          ny = Diagram.height - (int)(cur.doubleValue() * sy);
+          if (oy > 0)
+            da.drawLine(ox, oy, nx, ny);
+          ox = nx;
+          oy = ny;
+        }
+      }
+    }
     
   }
     
@@ -195,36 +197,36 @@ public class SelGraphics extends Canvas {
     data.lastElement().addElement( new Double(value) );
 
     if ( value > ScaleMaxY) {
-	  ScaleMaxY = (int)(1.05 * value);
-	  paint(this.getGraphics());
-	}
+      ScaleMaxY = (int)(1.05 * value);
+      paint(this.getGraphics());
+    }
 
     if (data.lastElement().size() > ScaleMaxX) {
-	  ScaleMaxX = data.lastElement().size() + 20;
-	  paint(this.getGraphics());
-	}
+      ScaleMaxX = data.lastElement().size() + 20;
+      paint(this.getGraphics());
+    }
 
     // paint its value in the diagram
 
     int anz = data.lastElement().size() - 1;
     if (anz > 0) {
-	  Graphics da = this.getGraphics();
-	  Rectangle size = this.getBounds();
-	  Rectangle Diagram = new Rectangle(40, 5, size.width - 45,
-										size.height - 25);
-	  da.translate(Diagram.x, Diagram.y);
-	  da.setColor(Color.black);
-	  double sx = ((double) Diagram.width) / ScaleMaxX;
-	  double sy = ((double) Diagram.height) / ScaleMaxY;
-	  Double lastValue = (Double)
-		(double)(data.lastElement().elementAt(anz - 1).intValue());
-	  int ox = (int)(sx * (anz - 1));
-	  int oy = Diagram.height - (int)(sy * lastValue.doubleValue());
-	  int nx = (int)(sx * anz);
-	  int ny = Diagram.height - (int)(sy * value);
-	
-	  da.drawLine(ox, oy, nx, ny);
-	}
+      Graphics da = this.getGraphics();
+      Rectangle size = this.getBounds();
+      Rectangle Diagram = new Rectangle(40, 5, size.width - 45,
+                                        size.height - 25);
+      da.translate(Diagram.x, Diagram.y);
+      da.setColor(Color.black);
+      double sx = ((double) Diagram.width) / ScaleMaxX;
+      double sy = ((double) Diagram.height) / ScaleMaxY;
+      Double lastValue = (Double)
+        (double)(data.lastElement().elementAt(anz - 1).intValue());
+      int ox = (int)(sx * (anz - 1));
+      int oy = Diagram.height - (int)(sy * lastValue.doubleValue());
+      int nx = (int)(sx * anz);
+      int ny = Diagram.height - (int)(sy * value);
+
+      da.drawLine(ox, oy, nx, ny);
+    }
   }  
 
   /**

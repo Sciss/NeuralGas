@@ -19,63 +19,62 @@
 //                                                                            ;
 // ========================================================================== ;
 
+package de.sciss.demogng;
+
+import java.awt.BorderLayout;
+import java.awt.Button;
+import java.awt.Event;
+import java.awt.Frame;
+import java.awt.Label;
+import java.awt.Panel;
+import java.awt.TextField;
+
 /**
- * A class which represents the elements of the double linked list class
- *  ListGNG.
+ * A class implementing the error graph.
  *
  */
-class ListElem {
+class GraphGNG extends Frame {
+  /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+DemoGNG demo;
+  SelGraphics graph;
+  TextField error;
 
   /**
-   * The left neighbour.
+   * The name of the clear button.
    */
-  ListElem		left;
+  protected final static String CLEAR = "Clear";
   /**
-   * The right neighbour.
+   * The name of the close button.
    */
-  ListElem		right;
-  /**
-   * The element is a halfedge.
-   */
-  HalfEdgeVoronoi	elem;
+  protected final static String CLOSE = "Close";
 
-  /**
-   * Constructor, initializes member data.
-   */
-  ListElem() {
-    left = null;
-    right = null;
-    elem = null;
+  GraphGNG(DemoGNG demo) {
+    this.demo = demo;
+    graph = new SelGraphics();
+    setTitle("ErrorGraph");
+
+    setLayout(new BorderLayout());
+    add("North",new Label("  Error Graph"));
+    add("Center",graph);
+    Panel pSouth = new Panel();
+    pSouth.add(new Button(CLEAR));
+    pSouth.add(new Button(CLOSE));
+    add("South", pSouth);
+    pack();
   }
 
-  /**
-   * Constructor, allows setting data.
-   *
-   * @param elem 	The data elem
-   */
-  ListElem(HalfEdgeVoronoi elem) {
-    left = right = null;
-    this.elem = elem;
+  public boolean handleEvent(Event evt) {
+    if (CLEAR.equals(evt.arg)) {
+      graph.clear();
+      return true;
+    } else if (CLOSE.equals(evt.arg)) {
+      demo.graphClose();
+      return true;
+    }
+    return super.handleEvent(evt);
   }
 
-  /**
-   * Constructor, allows setting neighbors and data.
-   *
-   * @param l 		Left neighbor
-   * @param r 		Right neighbor
-   * @param elem 	The data elem
-   */
-  ListElem(ListElem l, ListElem r, HalfEdgeVoronoi elem) {
-    left = l;
-    right = r;
-    this.elem = elem;
-  }
-
-  /**
-   * Print the element.
-   */
-  public void print() {
-    if(elem != null)
-      elem.print();
-  }
 }
