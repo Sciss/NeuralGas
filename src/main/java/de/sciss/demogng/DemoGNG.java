@@ -1966,51 +1966,11 @@ public class DemoGNG extends JApplet {
         Font checkboxfont = new Font(font.getName(), Font.PLAIN, font.getSize());
         Font comboboxfont = checkboxfont;
         Font labelfont = checkboxfont;
-        //		this.setFont(myfont);
         UIManager.put("Button.font", buttonfont);
-//		UIManager.put("ToggleButton.font", /* font of your liking */);
-//		UIManager.put("RadioButton.font", /* font of your liking */);
         UIManager.put("CheckBox.font", checkboxfont);
-//		UIManager.put("ColorChooser.font", /* font of your liking */);
         UIManager.put("ComboBox.font", comboboxfont);
         UIManager.put("Label.font", labelfont);
-//		UIManager.put("List.font", /* font of your liking */);
-//		UIManager.put("MenuBar.font", /* font of your liking */);
-//		UIManager.put("MenuItem.font", /* font of your liking */);
-//		UIManager.put("RadioButtonMenuItem.font", /* font of your liking */);
-//		UIManager.put("CheckBoxMenuItem.font", /* font of your liking */);
-//		UIManager.put("Menu.font", /* font of your liking */);
-//		UIManager.put("PopupMenu.font", /* font of your liking */);
-//		UIManager.put("OptionPane.font", /* font of your liking */);
-//		UIManager.put("Panel.font", /* font of your liking */);
-//		UIManager.put("ProgressBar.font", /* font of your liking */);
-//		UIManager.put("ScrollPane.font", /* font of your liking */);
-//		UIManager.put("Viewport.font", /* font of your liking */);
-//		UIManager.put("TabbedPane.font", /* font of your liking */);
-//		UIManager.put("Table.font", /* font of your liking */);
-//		UIManager.put("TableHeader.font", /* font of your liking */);
-//		UIManager.put("TextField.font", /* font of your liking */);
-//		UIManager.put("PasswordField.font", /* font of your liking */);
-//		UIManager.put("TextArea.font", /* font of your liking */);
-//		UIManager.put("TextPane.font", /* font of your liking */);
-//		UIManager.put("EditorPane.font", /* font of your liking */);
-//		UIManager.put("TitledBorder.font", /* font of your liking */);
-//		UIManager.put("ToolBar.font", /* font of your liking */);
-//		UIManager.put("ToolTip.font", /* font of your liking */);
-//		UIManager.put("Tree.font", /* font of your liking */);
         createGUI();
-//		try {
-//			log("invokeandwait");
-//			SwingUtilities.invokeAndWait(new GuiThread());
-//		} catch (InterruptedException e) {
-//			log("InterruptedException");
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (InvocationTargetException e) {
-//			log("InvocationTargetException");
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
     }
     class RandomSimThread implements Runnable {
         @Override

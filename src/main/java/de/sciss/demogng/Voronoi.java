@@ -33,12 +33,15 @@ import java.awt.Dimension;
  */
 public class Voronoi {
     PanelGNG cgng;
+    ComputeGNG compute;
+
     Voronoi() {
     }
 
     Voronoi(PanelGNG cgng) {
         this.cgng = cgng;
         vsites = new SiteVoronoi[cgng.MAX_NODES + 1];
+        this.compute = cgng.compute;
     }
     /**
      * This array of sites is sorted by y-coordinate (2nd y-coordinate).
@@ -160,7 +163,7 @@ public class Voronoi {
         sortSites(cgng.nNodes);
 
         if ( (cgng.nNodes == 0) ||
-                ( (cgng.nNodes != cgng.maxNodes) && (cgng.algo != Algo.GNG) && (cgng.algo != Algo.GG) ) )
+                ( (cgng.nNodes != cgng.maxNodes) && (compute.algo != Algo.GNG) && (compute.algo != Algo.GG) ) )
             return true;
 
         xmin = (int) vsites[1].coord.x;
