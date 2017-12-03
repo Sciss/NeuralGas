@@ -1,49 +1,42 @@
-// ========================================================================== ;
-//                                                                            ;
-// Copyright 1996-1998 Hartmut S. Loos, Instit. f. Neuroinformatik, Bochum    ;
-// Copyright 2012-2013 Bernd Fritzke                                          ;
-//                                                                            ;
-// This program is free software; you can redistribute it and/or modify       ;
-// it under the terms of the GNU General Public License as published by       ;
-// the Free Software Foundation; either version 1, or (at your option)        ;
-// any later version.                                                         ;
-//                                                                            ;
-// This program is distributed in the hope that it will be useful,            ;
-// but WITHOUT ANY WARRANTY; without even the implied warranty of             ;
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the              ;
-// GNU General Public License for more details.                               ;
-//                                                                            ;
-// You should have received a copy of the GNU General Public License          ;
-// along with this program; if not, write to the Free Software                ;
-// Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.                  ;
-//                                                                            ;
-// ========================================================================== ;
-
 package de.sciss.demogng;
 
-import java.awt.Dimension;
-import java.awt.Point;
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Vector;
 
-/**
- * A class which implements the network algorithms.
- * It implements many functions/algorithms.
- * The most important method is 'learn' which implements all adaptation methods
- * 
- */
-class ComputeGNG {
+@SuppressWarnings("serial")
+class PanelGNG extends JPanel implements
+        Runnable,
+        MouseMotionListener,
+        MouseListener,
+        ComponentListener,
+        ChangeListener
+{
+    Voronoi voro;
+
     int delay = 10;
+
     void log(String prefix, String txt) {
         System.out.println(timeStamp()+" C: "+prefix+txt);
     }
+
     void log(String txt) {
         log("####### ", txt);
     }
 
+    public void setSize(Dimension d) {
+        log("COM: setsize");
+    }
+
     final static private SimpleDateFormat format
-    = new SimpleDateFormat("yyyy.MM.dd HH.mm.ss");
+            = new SimpleDateFormat("yyyy.MM.dd HH.mm.ss");
+
     public synchronized String timeStamp() {
         long lDateTime = new Date().getTime();
         String str;
@@ -135,6 +128,7 @@ class ComputeGNG {
      */
     protected int panelHeight = 310;
 
+    protected DemoGNG graph;
     /**
      * The actual number of nodes.
      */
@@ -195,6 +189,10 @@ class ComputeGNG {
      */
     protected EdgeGNG edges[] = new EdgeGNG[MAX_EDGES];
     /**
+     * The actual number of Voronoi lines.
+     */
+    protected int nlines = 0;
+    /**
      * The array of the actual used lines.
      */
     protected LineGNG lines[] = new LineGNG[MAX_V_LINES];
@@ -202,6 +200,9 @@ class ComputeGNG {
      * The array of boolean to distinguish between Voronoi and Delaunay lines.
      */
     protected boolean vd[] = new boolean[MAX_V_LINES];
+
+    Thread relaxer;
+    GraphGNG errorGraph;
 
     /**
      * The flag for playing the sound for a new inserted node.
@@ -250,38 +251,91 @@ class ComputeGNG {
      * close SOM to a torus
      */
     protected boolean torusSOMB = false;
-
+    /**
+     * The flag for displaying usage
+     */
+    protected boolean usageB = false;
     /**
      * The flag for inserting new nodes in GNG.
      *  This variable can be set by the user. If true no new nodes are
      *  inserted.
      */
     protected boolean noNewNodesGNGB = false;
-
     /**
      * The flag for inserting new nodes in GG.
      *  This variable can be set by the user. If true no new nodes are
      *  inserted.
      */
     protected boolean noNewNodesGGB = false;
-
     /**
      * The flag for stopping the demo.
      *  This variable can be set by the user. If true no calculation is done.
      */
-    protected boolean stopB = false;
-
+    private boolean stopB = false;
+    /**
+     * The flag for the sound.
+     *  This variable can be set by the user. If false no sound is played.
+     */
+    protected boolean soundB = false;
+    /**
+     * The flag for the teach-mode.
+     *  This variable can be set by the user. If true a legend is displayed
+     *  which describes the new form and color of some nodes. Furthermore
+     *  all calculation is very slow.
+     */
+    protected boolean teachB = false;
     /**
      * The flag for variable movement (HCL).
      *  This variable can be set by the user.
      */
     protected boolean variableB = false;
+    /**
+     * The flag for displaying the edges.
+     *  This variable can be set by the user.
+     */
+    protected boolean edgesB = true;
+    /**
+     * The flag for displaying the nodes.
+     *  This variable can be set by the user.
+     */
+    protected boolean nodesB = true;
+    /**
+     * The flag for displaying the (motion) traces.
+     *  This variable can be set by the user.
+     */
+    protected boolean tracesB = false;
+    /**
+     * The flag for displaying the error graph.
+     *  This variable can be set by the user.
+     */
+    protected boolean errorGraphB = false;
 
+    /**
+     * The flag for displaying the probability distribution
+     *  This variable can be set by the user.
+     */
+    protected boolean probDistB = true;
+
+
+    /**
+     * The flag for displaying the Voronoi diagram.
+     *  This variable can be set by the user.
+     */
+    protected boolean voronoiB = false;
+    /**
+     * The flag for displaying the Delaunay triangulation.
+     *  This variable can be set by the user.
+     */
+    protected boolean delaunayB = false;
+    /**
+     * The flag for any moved nodes (to compute the Voronoi diagram/Delaunay
+     *  triangulation).
+     */
+    protected boolean nodesMovedB = true;
     /**
      * The flag for using utility (GNG-U).
      */
     protected boolean GNG_U_B = false;
-
     /**
      * The flag for changed number of nodes.
      */
@@ -291,68 +345,63 @@ class ComputeGNG {
      * The flag for LBG-U method
      */
     protected boolean LBG_U_B = false;
-
     /**
      * The flag for end of calculation (LBG)
      */
     protected boolean readyLBG_B = false;
-
     /**
      * The selected distribution.
      *  This variable can be set by the user.
      */
-    protected PD pd = PD.Rectangle;
-
+    protected PD pd=PD.Rectangle;
     /**
      * The selected algorithm.
      */
     Algo algo = Algo.NG;
-
     /**
      * The current maximum number to delete an old edge (GNG,NGwCHL).
      *  This variable can be set by the user.
      */
     protected int MAX_EDGE_AGE = 88;
-
     /**
      * The current number of calculations done in one step.
      *  This variable can be set by the user. After <TT> stepSize </TT>
      *  calculations the result is displayed.
      */
     protected int stepSize = 50;
-
+    /**
+     * This variable determines how long the compute thread sleeps. In this time
+     *  the user can interact with the program. Slow machines and/or slow
+     *  WWW-browsers need more time than fast machines and/or browsers.
+     *  This variable can be set by the user.
+     */
+    protected int tSleep = 10; //should be taken from the speed choice
     /**
      * The actual x size of the grid array.
      */
     protected int gridWidth = 0;
-
     /**
      * The actual y size of the grid array.
      */
     protected int gridHeight = 0;
-
     /**
      * The direction factor for the x axis (-1 or 1) used for the
      * 'Moving Rectangle' distribution
      */
     protected int bounceX = -1;
-
     /**
      * The direction factor for the y axis (-1 or 1) used for the
      * 'Moving Rectangle' distribution
      */
     protected int bounceY = -1;
-
     /**
      * The x coordinate for the 'Jumping Rectangle' and 'R.Mouse' distribution
      */
     protected int jumpX = 250;
-
     /**
      * The y coordinate for the 'Jumping Rectangle' and 'R.Mouse' distribution
      */
     protected int jumpY = 250;
-
     /**
      * Stores the old x value of the remainder in order to detect the bounce
      * (used for the 'Moving Rectangle' distribution)
@@ -369,137 +418,127 @@ class ComputeGNG {
      *  This variable can be set by the user.
      */
     protected float epsilon = 0.1f;
-
     /**
      * The value epsilon for the GNG algorithm (winner).
      *  This variable can be set by the user.
      */
     protected float epsilonGNG = 0.1f;
-
     /**
      * The value epsilon for the GNG algorithm (second).
      *  This variable can be set by the user.
      */
     protected float epsilonGNG2 = 0.001f;
-
     /**
      * The value alpha for the GNG algorithm.
      *  This variable can be set by the user.
      */
     protected float alphaGNG = 0.5f;
-
     /**
      * The value beta for the GNG algorithm.
      *  This variable can be set by the user.
      */
     protected float betaGNG = 0.0005f;
-
     /**
      * maximum width of grid
      *
      */
     protected int maxYGG = 0;
-
     /**
      * The utility factor for the GNG-U algorithm.
      *  This variable can be set by the user.
      */
     protected float utilityGNG = 3.0f;
-
     /**
      * The decay factor for utility
      */
     protected float decayFactorUtility = 1.0f - betaGNG;
-
     /**
      * The factor to forget old values.
      */
     protected float decayFactor = 1.0f - betaGNG;
-
     /**
      * The value lambda initial for the NG,NGwCHL,GG algorithms.
      *  This variable can be set by the user.
      */
     protected float l_i = 30.0f;
-
     /**
      * The value lambda final for the NG,NGwCHL,GG algorithms.
      *  This variable can be set by the user.
      */
     protected float l_f = 0.01f;
-
     /**
      * The value epsilon(t) for the NG,NGwCHL algorithms.
      */
     protected float e_t = 0.0f;
-
     /**
      * The value epsilon initial for the NG,NGwCHL,GG algorithms.
      *  This variable can be set by the user.
      */
     protected float e_i = 0.3f;
-
     /**
      * The value epsilon final for the NG,NGwCHL,GG algorithms.
      *  This variable can be set by the user.
      */
     protected float e_f = 0.05f;
-
     /**
      * The value t_max for the NG,NGwCHL,SOM algorithms.
      *  This variable can be set by the user.
      */
     protected float t_max = 40000.0f;
-
     /**
      * The value delete edge initial for the NGwCHL algorithm.
      *  This variable can be set by the user.
      */
     protected float delEdge_i = 20.0f;
-
     /**
      * The value delete edge final for the NGwCHL algorithm.
      *  This variable can be set by the user.
      */
     protected float delEdge_f = 200.0f;
-
     /**
      * The value sigma for the GG algorithm.
      *  This variable can be set by the user.
      */
     protected float sigma = 0.9f;
-
     /**
      * The value sigma_i for the SOM algorithm.
      *  This variable can be set by the user.
      */
     protected float sigma_i = 5.0f;
-
     /**
      * The value sigma_f for the SOM algorithm.
      *  This variable can be set by the user.
      */
     protected float sigma_f = 5.0f;
-
     /**
      * This value is displayed in the error graph.
      */
     protected float valueGraph = 0.0f;
-
     /**
      * This value contains the best error value for LBG-U up to now.
      */
     protected float errorBestLBG_U = Float.MAX_VALUE;
-
     /**
      * The string shown in the fine-tuning phase of the method GG.
      */
     protected String fineTuningS = "";
 
     /**
-     * The constructor.
+     * The actual number of Voronoi lines.
      */
-    ComputeGNG() {
+    protected int nLines = 0;
+
+    /**
+     * The constructor.
+     *
+     * @param graph	The drawing area
+     */
+    PanelGNG(DemoGNG graph) {
+        addMouseMotionListener(this);
+        addMouseListener(this);
+        addComponentListener(this);
+        this.graph = graph;
+        this.voro = new Voronoi(this);
     }
 
     /**
@@ -642,6 +681,10 @@ class ComputeGNG {
             for (j = 0; j < height; j++)
             {
                 addGridNode(i, j, d);
+//				if (i+j<=2) {
+//					NodeGNG n = grid[i][j].node;
+//					System.out.printf("initGrid(): new node: %d %d x_grid= %d y_grid = %d  x=%5.3f y=%5.3f\n", i,j,n.x_grid,n.y_grid,n.x,n.y);
+//				}
             }
 
         gridWidth = width;
@@ -696,30 +739,30 @@ class ComputeGNG {
         // left neighbor
         if (x > 0)
             d1 = (grid[x-1][y].node.x - grid[x][y].node.x) *
-                 (grid[x-1][y].node.x - grid[x][y].node.x) +
-                 (grid[x-1][y].node.y - grid[x][y].node.y) *
-                 (grid[x-1][y].node.y - grid[x][y].node.y);
+                    (grid[x-1][y].node.x - grid[x][y].node.x) +
+                    (grid[x-1][y].node.y - grid[x][y].node.y) *
+                            (grid[x-1][y].node.y - grid[x][y].node.y);
 
         // upper neighbor
         if (y > 0)
             d2 = (grid[x][y-1].node.x - grid[x][y].node.x) *
-                 (grid[x][y-1].node.x - grid[x][y].node.x) +
-                 (grid[x][y-1].node.y - grid[x][y].node.y) *
-                 (grid[x][y-1].node.y - grid[x][y].node.y);
+                    (grid[x][y-1].node.x - grid[x][y].node.x) +
+                    (grid[x][y-1].node.y - grid[x][y].node.y) *
+                            (grid[x][y-1].node.y - grid[x][y].node.y);
 
         // right neighbor
         if (x < gridWidth - 1)
             d3 = (grid[x+1][y].node.x - grid[x][y].node.x) *
-                 (grid[x+1][y].node.x - grid[x][y].node.x) +
-                 (grid[x+1][y].node.y - grid[x][y].node.y) *
-                 (grid[x+1][y].node.y - grid[x][y].node.y);
+                    (grid[x+1][y].node.x - grid[x][y].node.x) +
+                    (grid[x+1][y].node.y - grid[x][y].node.y) *
+                            (grid[x+1][y].node.y - grid[x][y].node.y);
 
         // lower neighbor
         if (y < gridHeight - 1)
             d4 = (grid[x][y+1].node.x - grid[x][y].node.x) *
-                 (grid[x][y+1].node.x - grid[x][y].node.x) +
-                 (grid[x][y+1].node.y - grid[x][y].node.y) *
-                 (grid[x][y+1].node.y - grid[x][y].node.y);
+                    (grid[x][y+1].node.x - grid[x][y].node.x) +
+                    (grid[x][y+1].node.y - grid[x][y].node.y) *
+                            (grid[x][y+1].node.y - grid[x][y].node.y);
         if ((maxYGG > 0) && (gridHeight >= maxYGG )) { //
             d4=0;
             d2=0;
@@ -1007,14 +1050,14 @@ class ComputeGNG {
      *  The result goes into the global arrays <TT> discreteSignalsX </TT>
      *  and <TT> discreteSignalsY </TT>.
      *
-     *  With and height are taken from <TT>panelWidth</TT> and <TT>panelHeight</TT>.
+     *  With and height are taken from <TT>getSize</TT>.
      *
      * @param pd          The specified distribution
      */
     protected void initDiscreteSignals(PD pd) {
-//        Dimension d = getSize();
-        int w = panelWidth; // d.width;
-        int h = panelHeight; // d.height;
+        Dimension d = getSize();
+        int w = d.width;
+        int h = d.height;
         int kx = 1;
         int ky = 1;
         int l = 0;
@@ -1552,6 +1595,11 @@ class ComputeGNG {
                 discreteSignalsX[i]=dSX[i];
                 discreteSignalsY[i]=dSY[i];
             }
+//			for (int i = 0; i < MAX_DISCRETE_SIGNALS; i++) {
+//				getSignal(pd);
+//				discreteSignalsX[i] = SignalX;
+//				discreteSignalsY[i] = SignalY;
+//			}
         }
     }
     protected Point2D.Double circlePoint() {
@@ -1596,429 +1644,517 @@ class ComputeGNG {
         mindim=(wi < hi) ? wi : hi;
 
         switch (pd) {
-        case Rectangle:
-        ll = wi/20;
-        lr = hi/20;
-        r2 = wi*9/10;
-        l2 = hi*9/10;
-        SignalX = (int) (ll + (r2 * Math.random()));
-        SignalY = (int) (lr + (l2 * Math.random()));
-        break;
-        case Circle:
+            case Rectangle:
+                ll = wi/20;
+                lr = hi/20;
+                r2 = wi*9/10;
+                l2 = hi*9/10;
+                SignalX = (int) (ll + (r2 * Math.random()));
+                SignalY = (int) (lr + (l2 * Math.random()));
+                break;
+            case Circle:
 
-            int diameter = mindim*9/10; // Diameter is proportional to the smallest panel dimension
+                int diameter = mindim*9/10; // Diameter is proportional to the smallest panel dimension
 
-            Point.Double sig = circlePoint();
-            SignalX = (int) (sig.getX()*diameter+cx);
-            SignalY = (int) (sig.getY()*diameter+cy);
+                Point.Double sig = circlePoint();
+                SignalX = (int) (sig.getX()*diameter+cx);
+                SignalY = (int) (sig.getY()*diameter+cy);
 
-            break;
-        case TwoCircles:
-            // circle space circle (3x1)
-            if (wi/3 < hi){
-                // limiting dimension is width
-                l2=(int) (wi/2.6);
-            } else {
-                // limiting dimension is height
-                l2=(int) (hi*0.95);
-            }
-            diameter = l2; // Diameter is proportional to the smallest panel dimension
-            sig = circlePoint();
-            int dx;
+                break;
+            case TwoCircles:
+                // circle space circle (3x1)
+                if (wi/3 < hi){
+                    // limiting dimension is width
+                    l2=(int) (wi/2.6);
+                } else {
+                    // limiting dimension is height
+                    l2=(int) (hi*0.95);
+                }
+                diameter = l2; // Diameter is proportional to the smallest panel dimension
+                sig = circlePoint();
+                int dx;
 
-            if (Math.random()>0.5) {
-                dx = -l2*3/4;
-            } else {
-                dx = l2*3/4;
-            }
-            SignalX = (int) (sig.getX()*diameter+cx+dx);
-            SignalY = (int) (sig.getY()*diameter+cy);
-            break;
-        case Ring:
+                if (Math.random()>0.5) {
+                    dx = -l2*3/4;
+                } else {
+                    dx = l2*3/4;
+                }
+                SignalX = (int) (sig.getX()*diameter+cx+dx);
+                SignalY = (int) (sig.getY()*diameter+cy);
+                break;
+            case Ring:
 
-            l2 = (cx < cy) ? cx : cy; // Diameter
+                l2 = (cx < cy) ? cx : cy; // Diameter
 
-            ll = cx - l2;
-            lr = cy - l2;
-            ringRadius = (int) (l2 * RING_FACTOR);
+                ll = cx - l2;
+                lr = cy - l2;
+                ringRadius = (int) (l2 * RING_FACTOR);
 
-            do {
-                SignalX = (int) (ll + (2*l2 * Math.random()));
-                SignalY = (int) (lr + (2*l2 * Math.random()));
-                rdist = (float) Math.sqrt(((cx - SignalX) *
-                        (cx - SignalX) +
-                        (cy - SignalY) *
-                        (cy - SignalY)));
-            } while ( (rdist > l2) || (rdist < (l2 - ringRadius)) );
-            break;
-        case UNI:
-            w = wi/9;
-            h = hi/5;
-            xA[0] = w;
-            yA[0] = h;
-            xA[1] = w;
-            yA[1] = 2*h;
-            xA[2] = w;
-            yA[2] = 3*h;
-            xA[3] = 2*w;
-            yA[3] = 3*h;
-            xA[4] = 3*w;
-            yA[4] = 3*h;
-            xA[5] = 3*w;
-            yA[5] = 2*h;
-            xA[6] = 3*w;
-            yA[6] = h;
-            xA[7] = 4*w;
-            yA[7] = h;
-            xA[8] = 5*w;
-            yA[8] = h;
-            xA[9] = 5*w;
-            yA[9] = 2*h;
-            xA[10] = 5*w;
-            yA[10] = 3*h;
-            xA[11] = 7*w;
-            yA[11] = h;
-            xA[12] = 7*w;
-            yA[12] = 2*h;
-            xA[13] = 7*w;
-            yA[13] = 3*h;
+                do {
+                    SignalX = (int) (ll + (2*l2 * Math.random()));
+                    SignalY = (int) (lr + (2*l2 * Math.random()));
+                    rdist = (float) Math.sqrt(((cx - SignalX) *
+                            (cx - SignalX) +
+                            (cy - SignalY) *
+                                    (cy - SignalY)));
+                } while ( (rdist > l2) || (rdist < (l2 - ringRadius)) );
+                break;
+            case UNI:
+                w = wi/9;
+                h = hi/5;
+                xA[0] = w;
+                yA[0] = h;
+                xA[1] = w;
+                yA[1] = 2*h;
+                xA[2] = w;
+                yA[2] = 3*h;
+                xA[3] = 2*w;
+                yA[3] = 3*h;
+                xA[4] = 3*w;
+                yA[4] = 3*h;
+                xA[5] = 3*w;
+                yA[5] = 2*h;
+                xA[6] = 3*w;
+                yA[6] = h;
+                xA[7] = 4*w;
+                yA[7] = h;
+                xA[8] = 5*w;
+                yA[8] = h;
+                xA[9] = 5*w;
+                yA[9] = 2*h;
+                xA[10] = 5*w;
+                yA[10] = 3*h;
+                xA[11] = 7*w;
+                yA[11] = h;
+                xA[12] = 7*w;
+                yA[12] = 2*h;
+                xA[13] = 7*w;
+                yA[13] = 3*h;
 
-            z = (int) (14 * Math.random());
-            SignalX = (int) (xA[z] + (w * Math.random()));
-            SignalY = (int) (yA[z] + (h * Math.random()));
-
-            break;
-        case SmallSpirals:
-            w = wi/9;
-            h = hi/7;
-            xA[0] = w;
-            yA[0] = 5*h;
-            xA[1] = w;
-            yA[1] = 4*h;
-            xA[2] = w;
-            yA[2] = 3*h;
-            xA[3] = w;
-            yA[3] = 2*h;
-            xA[4] = 1*w;
-            yA[4] = h;
-            xA[5] = 2*w;
-            yA[5] = h;
-            xA[6] = 3*w;
-            yA[6] = h;
-            xA[7] = 4*w;
-            yA[7] = h;
-            xA[8] = 5*w;
-            yA[8] = 1*h;
-            xA[9] = 5*w;
-            yA[9] = 2*h;
-            xA[10] = 5*w;
-            yA[10] = 3*h;
-            xA[11] = 3*w;
-            yA[11] = 3*h;
-            xA[12] = 3*w;
-            yA[12] = 4*h;
-            xA[13] = 3*w;
-            yA[13] = 5*h;
-            xA[14] = 4*w;
-            yA[14] = 5*h;
-            xA[15] = 5*w;
-            yA[15] = 5*h;
-            xA[16] = 6*w;
-            yA[16] = 5*h;
-            xA[17] = 7*w;
-            yA[17] = 5*h;
-            xA[18] = 7*w;
-            yA[18] = 4*h;
-            xA[19] = 7*w;
-            yA[19] = 3*h;
-            xA[20] = 7*w;
-            yA[20] = 2*h;
-            xA[21] = 7*w;
-            yA[21] = 1*h;
-
-            z = (int) (22 * Math.random());
-            SignalX = (int) (xA[z] + (w * Math.random()));
-            SignalY = (int) (yA[z] + (h * Math.random()));
-
-            break;
-        case LargeSpirals:
-            w = wi/13;
-            h = hi/11;
-            xA[0] = w;
-            yA[0] = h;
-            xA[1] = w;
-            yA[1] = 2*h;
-            xA[2] = w;
-            yA[2] = 3*h;
-            xA[3] = w;
-            yA[3] = 4*h;
-            xA[4] = 1*w;
-            yA[4] = 5*h;
-            xA[5] = 1*w;
-            yA[5] = 6*h;
-            xA[6] = 1*w;
-            yA[6] = 7*h;
-            xA[7] = 1*w;
-            yA[7] = 8*h;
-            xA[8] = 1*w;
-            yA[8] = 9*h;
-            xA[9] = 2*w;
-            yA[9] = 1*h;
-            xA[10] = 3*w;
-            yA[10] = 1*h;
-            xA[11] = 4*w;
-            yA[11] = 1*h;
-            xA[12] = 5*w;
-            yA[12] = 1*h;
-            xA[13] = 6*w;
-            yA[13] = 1*h;
-            xA[14] = 7*w;
-            yA[14] = 1*h;
-            xA[15] = 8*w;
-            yA[15] = 1*h;
-            xA[16] = 9*w;
-            yA[16] = 1*h;
-            xA[17] = 9*w;
-            yA[17] = 2*h;
-            xA[18] = 9*w;
-            yA[18] = 3*h;
-            xA[19] = 9*w;
-            yA[19] = 4*h;
-            xA[20] = 9*w;
-            yA[20] = 5*h;
-            xA[21] = 9*w;
-            yA[21] = 6*h;
-            xA[22] = 9*w;
-            yA[22] = 7*h;
-            xA[23] = 8*w;
-            yA[23] = 7*h;
-            xA[24] = 7*w;
-            yA[24] = 7*h;
-            xA[25] = 6*w;
-            yA[25] = 7*h;
-            xA[26] = 5*w;
-            yA[26] = 7*h;
-            xA[27] = 5*w;
-            yA[27] = 6*h;
-            xA[28] = 5*w;
-            yA[28] = 5*h;
-            xA[29] = 3*w;
-            yA[29] = 3*h;
-            xA[30] = 3*w;
-            yA[30] = 4*h;
-            xA[31] = 3*w;
-            yA[31] = 5*h;
-            xA[32] = 3*w;
-            yA[32] = 6*h;
-            xA[33] = 3*w;
-            yA[33] = 7*h;
-            xA[34] = 3*w;
-            yA[34] = 8*h;
-            xA[35] = 3*w;
-            yA[35] = 9*h;
-            xA[36] = 4*w;
-            yA[36] = 3*h;
-            xA[37] = 5*w;
-            yA[37] = 3*h;
-            xA[38] = 6*w;
-            yA[38] = 3*h;
-            xA[39] = 7*w;
-            yA[39] = 3*h;
-            xA[40] = 7*w;
-            yA[40] = 4*h;
-            xA[41] = 7*w;
-            yA[41] = 5*h;
-            xA[42] = 4*w;
-            yA[42] = 9*h;
-            xA[43] = 5*w;
-            yA[43] = 9*h;
-            xA[44] = 6*w;
-            yA[44] = 9*h;
-            xA[45] = 7*w;
-            yA[45] = 9*h;
-            xA[46] = 8*w;
-            yA[46] = 9*h;
-            xA[47] = 9*w;
-            yA[47] = 9*h;
-            xA[48] =10*w;
-            yA[48] = 9*h;
-            xA[49] =11*w;
-            yA[49] = 9*h;
-            xA[50] =11*w;
-            yA[50] = 8*h;
-            xA[51] =11*w;
-            yA[51] = 7*h;
-            xA[52] =11*w;
-            yA[52] = 6*h;
-            xA[53] =11*w;
-            yA[53] = 5*h;
-            xA[54] =11*w;
-            yA[54] = 4*h;
-            xA[55] =11*w;
-            yA[55] = 3*h;
-            xA[56] =11*w;
-            yA[56] = 2*h;
-            xA[57] =11*w;
-            yA[57] = 1*h;
-
-            z = (int) (58 * Math.random());
-            SignalX = (int) (xA[z] + (w * Math.random()));
-            SignalY = (int) (yA[z] + (h * Math.random()));
-
-            break;
-
-        case HiLoDensity:
-            w = wi/10;
-            h = hi/10;
-            xA[0] = 2 * w;
-            yA[0] = 4 * h;
-            xA[1] = 5 * w;
-            yA[1] = 1 * h;
-
-            z = (int) (2 * Math.random());
-            if (z == 0) {
+                z = (int) (14 * Math.random());
                 SignalX = (int) (xA[z] + (w * Math.random()));
                 SignalY = (int) (yA[z] + (h * Math.random()));
-            } else {
-                SignalX = (int) (xA[z] + (4 * w * Math.random()));
-                SignalY = (int) (yA[z] + (8 * h * Math.random()));
-            }
 
-            break;
+                break;
+            case SmallSpirals:
+                w = wi/9;
+                h = hi/7;
+                xA[0] = w;
+                yA[0] = 5*h;
+                xA[1] = w;
+                yA[1] = 4*h;
+                xA[2] = w;
+                yA[2] = 3*h;
+                xA[3] = w;
+                yA[3] = 2*h;
+                xA[4] = 1*w;
+                yA[4] = h;
+                xA[5] = 2*w;
+                yA[5] = h;
+                xA[6] = 3*w;
+                yA[6] = h;
+                xA[7] = 4*w;
+                yA[7] = h;
+                xA[8] = 5*w;
+                yA[8] = 1*h;
+                xA[9] = 5*w;
+                yA[9] = 2*h;
+                xA[10] = 5*w;
+                yA[10] = 3*h;
+                xA[11] = 3*w;
+                yA[11] = 3*h;
+                xA[12] = 3*w;
+                yA[12] = 4*h;
+                xA[13] = 3*w;
+                yA[13] = 5*h;
+                xA[14] = 4*w;
+                yA[14] = 5*h;
+                xA[15] = 5*w;
+                yA[15] = 5*h;
+                xA[16] = 6*w;
+                yA[16] = 5*h;
+                xA[17] = 7*w;
+                yA[17] = 5*h;
+                xA[18] = 7*w;
+                yA[18] = 4*h;
+                xA[19] = 7*w;
+                yA[19] = 3*h;
+                xA[20] = 7*w;
+                yA[20] = 2*h;
+                xA[21] = 7*w;
+                yA[21] = 1*h;
 
-        case DiscreteMixture:
-            z = (int) (MIXTURE_SIZE * Math.random());
-            SignalX = Math.round(discreteSignalsX[z]);
-            SignalY = Math.round(discreteSignalsY[z]);
+                z = (int) (22 * Math.random());
+                SignalX = (int) (xA[z] + (w * Math.random()));
+                SignalY = (int) (yA[z] + (h * Math.random()));
 
-            break;
+                break;
+            case LargeSpirals:
+                w = wi/13;
+                h = hi/11;
+                xA[0] = w;
+                yA[0] = h;
+                xA[1] = w;
+                yA[1] = 2*h;
+                xA[2] = w;
+                yA[2] = 3*h;
+                xA[3] = w;
+                yA[3] = 4*h;
+                xA[4] = 1*w;
+                yA[4] = 5*h;
+                xA[5] = 1*w;
+                yA[5] = 6*h;
+                xA[6] = 1*w;
+                yA[6] = 7*h;
+                xA[7] = 1*w;
+                yA[7] = 8*h;
+                xA[8] = 1*w;
+                yA[8] = 9*h;
+                xA[9] = 2*w;
+                yA[9] = 1*h;
+                xA[10] = 3*w;
+                yA[10] = 1*h;
+                xA[11] = 4*w;
+                yA[11] = 1*h;
+                xA[12] = 5*w;
+                yA[12] = 1*h;
+                xA[13] = 6*w;
+                yA[13] = 1*h;
+                xA[14] = 7*w;
+                yA[14] = 1*h;
+                xA[15] = 8*w;
+                yA[15] = 1*h;
+                xA[16] = 9*w;
+                yA[16] = 1*h;
+                xA[17] = 9*w;
+                yA[17] = 2*h;
+                xA[18] = 9*w;
+                yA[18] = 3*h;
+                xA[19] = 9*w;
+                yA[19] = 4*h;
+                xA[20] = 9*w;
+                yA[20] = 5*h;
+                xA[21] = 9*w;
+                yA[21] = 6*h;
+                xA[22] = 9*w;
+                yA[22] = 7*h;
+                xA[23] = 8*w;
+                yA[23] = 7*h;
+                xA[24] = 7*w;
+                yA[24] = 7*h;
+                xA[25] = 6*w;
+                yA[25] = 7*h;
+                xA[26] = 5*w;
+                yA[26] = 7*h;
+                xA[27] = 5*w;
+                yA[27] = 6*h;
+                xA[28] = 5*w;
+                yA[28] = 5*h;
+                xA[29] = 3*w;
+                yA[29] = 3*h;
+                xA[30] = 3*w;
+                yA[30] = 4*h;
+                xA[31] = 3*w;
+                yA[31] = 5*h;
+                xA[32] = 3*w;
+                yA[32] = 6*h;
+                xA[33] = 3*w;
+                yA[33] = 7*h;
+                xA[34] = 3*w;
+                yA[34] = 8*h;
+                xA[35] = 3*w;
+                yA[35] = 9*h;
+                xA[36] = 4*w;
+                yA[36] = 3*h;
+                xA[37] = 5*w;
+                yA[37] = 3*h;
+                xA[38] = 6*w;
+                yA[38] = 3*h;
+                xA[39] = 7*w;
+                yA[39] = 3*h;
+                xA[40] = 7*w;
+                yA[40] = 4*h;
+                xA[41] = 7*w;
+                yA[41] = 5*h;
+                xA[42] = 4*w;
+                yA[42] = 9*h;
+                xA[43] = 5*w;
+                yA[43] = 9*h;
+                xA[44] = 6*w;
+                yA[44] = 9*h;
+                xA[45] = 7*w;
+                yA[45] = 9*h;
+                xA[46] = 8*w;
+                yA[46] = 9*h;
+                xA[47] = 9*w;
+                yA[47] = 9*h;
+                xA[48] =10*w;
+                yA[48] = 9*h;
+                xA[49] =11*w;
+                yA[49] = 9*h;
+                xA[50] =11*w;
+                yA[50] = 8*h;
+                xA[51] =11*w;
+                yA[51] = 7*h;
+                xA[52] =11*w;
+                yA[52] = 6*h;
+                xA[53] =11*w;
+                yA[53] = 5*h;
+                xA[54] =11*w;
+                yA[54] = 4*h;
+                xA[55] =11*w;
+                yA[55] = 3*h;
+                xA[56] =11*w;
+                yA[56] = 2*h;
+                xA[57] =11*w;
+                yA[57] = 1*h;
 
-        case UNIT:
-            w = wi/17;
-            h = hi/8;
-            xA[0] = w;
-            yA[0] = 2*h;
-            xA[1] = w;
-            yA[1] = 3*h;
-            xA[2] = w;
-            yA[2] = 4*h;
-            xA[3] = w;
-            yA[3] = 5*h;
-            xA[4] = 2*w;
-            yA[4] = 5*h;
-            xA[5] = 3*w;
-            yA[5] = 5*h;
-            xA[6] = 3*w;
-            yA[6] = 4*h;
-            xA[7] = 3*w;
-            yA[7] = 3*h;
-            xA[8] = 3*w;
-            yA[8] = 2*h;
-            xA[9] = 4*w;
-            yA[9] = 2*h;
-            xA[10] = 5*w;
-            yA[10] = 2*h;
-            xA[11] = 6*w;
-            yA[11] = 2*h;
-            xA[12] = 7*w;
-            yA[12] = 2*h;
-            xA[13] = 7*w;
-            yA[13] = 3*h;
-            xA[14] = 7*w;
-            yA[14] = 4*h;
-            xA[15] = 7*w;
-            yA[15] = 5*h;
-            xA[16] = 8*w;
-            yA[16] = 5*h;
-            xA[17] = 9*w;
-            yA[17] = 5*h;
-            xA[18] = 10*w;
-            yA[18] = 5*h;
-            xA[19] = 11*w;
-            yA[19] = 5*h;
-            xA[20] = 11*w;
-            yA[20] = 4*h;
-            xA[21] = 11*w;
-            yA[21] = 3*h;
-            xA[22] = 11*w;
-            yA[22] = 2*h;
-            xA[23] = 14*w;
-            yA[23] = 2*h;
-            xA[24] = 15*w;
-            yA[24] = 2*h;
-            xA[25] = 15*w;
-            yA[25] = 3*h;
-            xA[26] = 15*w;
-            yA[26] = 4*h;
-            xA[27] = 15*w;
-            yA[27] = 5*h;
+                z = (int) (58 * Math.random());
+                SignalX = (int) (xA[z] + (w * Math.random()));
+                SignalY = (int) (yA[z] + (h * Math.random()));
 
-            z = (int) (28 * Math.random());
-            SignalX = (int) (xA[z] + (w * Math.random()));
-            SignalY = (int) (yA[z] + (h * Math.random()));
+                break;
 
-            break;
-        case MoveJump: // Moving and Jumping Rectangle
-            r2 = wi/4;
-            l2 = hi/4;
-            ll = (int) (0.75 * (wi/2 +
-                    Math.IEEEremainder(0.2 * sigs,(wi))));
-            lr = (int) (0.75 * (hi/2 +
-                    Math.IEEEremainder(0.2 * sigs,(hi))));
+            case HiLoDensity:
+                w = wi/10;
+                h = hi/10;
+                xA[0] = 2 * w;
+                yA[0] = 4 * h;
+                xA[1] = 5 * w;
+                yA[1] = 1 * h;
 
-            SignalX = (int) (ll + (r2 * Math.random()));
-            SignalY = (int) (lr + (l2 * Math.random()));
-            break;
-        case Move: // Moving Rectangle
-            r2 = wi/4;
-            l2 = hi/4;
+                z = (int) (2 * Math.random());
+                if (z == 0) {
+                    SignalX = (int) (xA[z] + (w * Math.random()));
+                    SignalY = (int) (yA[z] + (h * Math.random()));
+                } else {
+                    SignalX = (int) (xA[z] + (4 * w * Math.random()));
+                    SignalY = (int) (yA[z] + (8 * h * Math.random()));
+                }
 
-            remainderX = Math.IEEEremainder(0.2 * sigs,(wi));
-            remainderY = Math.IEEEremainder(0.2 * sigs,(hi));
+                break;
 
-            if ( (bounceX_old > 0) && (remainderX < 0) )
-                bounceX = bounceX * (-1);
-            if ( (bounceY_old > 0) && (remainderY < 0) )
-                bounceY = bounceY * (-1);
+            case DiscreteMixture:
+                z = (int) (MIXTURE_SIZE * Math.random());
+                SignalX = Math.round(discreteSignalsX[z]);
+                SignalY = Math.round(discreteSignalsY[z]);
 
-            ll = (int) (0.75 * (wi/2 + bounceX * remainderX));
-            lr = (int) (0.75 * (hi/2 + bounceY * remainderY));
+                break;
 
-            bounceX_old = remainderX;
-            bounceY_old = remainderY;
+            case UNIT:
+                w = wi/17;
+                h = hi/8;
+                xA[0] = w;
+                yA[0] = 2*h;
+                xA[1] = w;
+                yA[1] = 3*h;
+                xA[2] = w;
+                yA[2] = 4*h;
+                xA[3] = w;
+                yA[3] = 5*h;
+                xA[4] = 2*w;
+                yA[4] = 5*h;
+                xA[5] = 3*w;
+                yA[5] = 5*h;
+                xA[6] = 3*w;
+                yA[6] = 4*h;
+                xA[7] = 3*w;
+                yA[7] = 3*h;
+                xA[8] = 3*w;
+                yA[8] = 2*h;
+                xA[9] = 4*w;
+                yA[9] = 2*h;
+                xA[10] = 5*w;
+                yA[10] = 2*h;
+                xA[11] = 6*w;
+                yA[11] = 2*h;
+                xA[12] = 7*w;
+                yA[12] = 2*h;
+                xA[13] = 7*w;
+                yA[13] = 3*h;
+                xA[14] = 7*w;
+                yA[14] = 4*h;
+                xA[15] = 7*w;
+                yA[15] = 5*h;
+                xA[16] = 8*w;
+                yA[16] = 5*h;
+                xA[17] = 9*w;
+                yA[17] = 5*h;
+                xA[18] = 10*w;
+                yA[18] = 5*h;
+                xA[19] = 11*w;
+                yA[19] = 5*h;
+                xA[20] = 11*w;
+                yA[20] = 4*h;
+                xA[21] = 11*w;
+                yA[21] = 3*h;
+                xA[22] = 11*w;
+                yA[22] = 2*h;
+                xA[23] = 14*w;
+                yA[23] = 2*h;
+                xA[24] = 15*w;
+                yA[24] = 2*h;
+                xA[25] = 15*w;
+                yA[25] = 3*h;
+                xA[26] = 15*w;
+                yA[26] = 4*h;
+                xA[27] = 15*w;
+                yA[27] = 5*h;
 
-            SignalX = (int) (ll + (r2 * Math.random()));
-            SignalY = (int) (lr + (l2 * Math.random()));
-            break;
+                z = (int) (28 * Math.random());
+                SignalX = (int) (xA[z] + (w * Math.random()));
+                SignalY = (int) (yA[z] + (h * Math.random()));
 
-        case Jump: // Jumping Rectangle
-            r2 = wi/4;
-            l2 = hi/4;
+                break;
+            case MoveJump: // Moving and Jumping Rectangle
+                r2 = wi/4;
+                l2 = hi/4;
+                ll = (int) (0.75 * (wi/2 +
+                        Math.IEEEremainder(0.2 * sigs,(wi))));
+                lr = (int) (0.75 * (hi/2 +
+                        Math.IEEEremainder(0.2 * sigs,(hi))));
 
-            if (Math.ceil(Math.IEEEremainder(sigs, 1000.0)) == 0) {
-                jumpX = (int) ((wi - r2) * Math.random());
-                jumpY = (int) ((hi - l2) * Math.random());
-            }
+                SignalX = (int) (ll + (r2 * Math.random()));
+                SignalY = (int) (lr + (l2 * Math.random()));
+                break;
+            case Move: // Moving Rectangle
+                r2 = wi/4;
+                l2 = hi/4;
 
-            SignalX = (int) (jumpX + (r2 * Math.random()));
-            SignalY = (int) (jumpY + (l2 * Math.random()));
-            break;
+                remainderX = Math.IEEEremainder(0.2 * sigs,(wi));
+                remainderY = Math.IEEEremainder(0.2 * sigs,(hi));
 
-        case RightMouseB: // R.Mouse Rectangle
-            r2 = wi/4;
-            l2 = hi/4;
+                if ( (bounceX_old > 0) && (remainderX < 0) )
+                    bounceX = bounceX * (-1);
+                if ( (bounceY_old > 0) && (remainderY < 0) )
+                    bounceY = bounceY * (-1);
 
-            SignalX = (int) (jumpX + (r2 * Math.random()));
-            SignalY = (int) (jumpY + (l2 * Math.random()));
-            break;
+                ll = (int) (0.75 * (wi/2 + bounceX * remainderX));
+                lr = (int) (0.75 * (hi/2 + bounceY * remainderY));
+
+                bounceX_old = remainderX;
+                bounceY_old = remainderY;
+
+                SignalX = (int) (ll + (r2 * Math.random()));
+                SignalY = (int) (lr + (l2 * Math.random()));
+                break;
+
+            case Jump: // Jumping Rectangle
+                r2 = wi/4;
+                l2 = hi/4;
+
+                if (Math.ceil(Math.IEEEremainder(sigs, 1000.0)) == 0) {
+                    jumpX = (int) ((wi - r2) * Math.random());
+                    jumpY = (int) ((hi - l2) * Math.random());
+                }
+
+                SignalX = (int) (jumpX + (r2 * Math.random()));
+                SignalY = (int) (jumpY + (l2 * Math.random()));
+                break;
+
+            case RightMouseB: // R.Mouse Rectangle
+                r2 = wi/4;
+                l2 = hi/4;
+
+                SignalX = (int) (jumpX + (r2 * Math.random()));
+                SignalY = (int) (jumpY + (l2 * Math.random()));
+                break;
         }
+    }
+
+    /**
+     * Do resize calculations, start the learning method.
+     *
+     */
+    @Override
+    public void run() {
+        int i;
+        log("run(): run and learn until stopped .............................");
+        if (graph.isGuiInitialized()){
+            log("run(): gui already initialized ....");
+        } else {
+            log("run(): gui not yet initialized ....");
+            //graph.prepareAlgo(algo);
+        }
+        while (true) {
+
+            // Relativate Positions
+            Dimension d = getSize();
+            if ( (d.width != panelWidth) || (d.height != panelHeight) ) {
+                //
+                // panel size has changed! ==> rescaling needed
+                //
+                nodesMovedB = true; // for Voronoi
+                NodeGNG n;
+                for (i = 0 ; i < nNodes ; i++) {
+                    n = nodes[i];
+
+                    n.x = n.x * d.width / panelWidth;
+                    n.y = n.y * d.height / panelHeight;
+                }
+
+                if (pd == PD.DiscreteMixture || algo.isDiscrete()){
+                    rescaleDiscreteSignals(1.0*d.width / panelWidth, 1.0*d.height / panelHeight);
+                }
+                panelWidth = d.width;
+                panelHeight = d.height;
+                //initDiscreteSignals(pd);
+                if ( ( nNodes == 0) && (algo.isDiscrete()) ) {
+                    // can this happen???
+                    // Generate some nodes
+                    int z = (int) (numDiscreteSignals * Math.random());
+                    int mod = 0;
+                    for (i = 0; i < maxNodes; i++) {
+                        mod = (z+i)%numDiscreteSignals;
+                        addNode(Math.round(discreteSignalsX[mod]),
+                                Math.round(discreteSignalsY[mod]));
+                    }
+                }
+                repaint();
+            }
+
+            // Calculate the new positions
+            if (!stopB) {
+                learn();
+                nodesMovedB = true;
+            }
+
+            // update error graph
+            if (errorGraphB && !stopB)
+                errorGraph.graph.add(valueGraph);
+
+            if (stopB)
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            else {
+                repaint(); // todo: only when needed?
+            }
+
+            if (teachB) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            } else {
+                try {
+                    Thread.sleep(tSleep);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
+        log("run() end");
     }
 
     /**
      * Build a minimum-heap.
      *
-     * @param i          The start of the interval
-     * @param k          The end of the interval
+     * @param i          The start of the intervall
+     * @param k          The end of the intervall
      */
     protected void reheap_min(int i, int k) {
         int j = i;
@@ -2042,17 +2178,6 @@ class ComputeGNG {
                 return;
         }
     }
-
-    public static class Result {
-        boolean repaint = false;
-        boolean stop    = false;
-
-        void reset() {
-            repaint = false;
-            stop    = false;
-        }
-    }
-
     /**
      * Do the learning. An input signal is generated for the given distribution
      *  and forwarded to the switched algorithm.
@@ -2069,12 +2194,11 @@ class ComputeGNG {
      *   Self-Organizing Map (SOM).
      *
      */
-    protected synchronized void learn(Result result) {
-        result.reset();
+    protected synchronized void learn() {
         //
         // learning is done for stepSize steps
         //
-//        Dimension d = getSize();
+        Dimension d = getSize();
         int curr1stIdx, curr2ndIdx;
         int i, j, k, l, m;
         int x, y;
@@ -2089,17 +2213,25 @@ class ComputeGNG {
         float maxError, minUtility;
         NodeGNG curr1st, curr2nd, n_i, node;
 
-        SignalX = panelWidth/2; // d.width/2;
-        SignalY = panelHeight/2; // d.height/2;
+        SignalX = d.width/2;
+        SignalY = d.height/2;
 
         valueGraph = 0.0f;
         if (stopB)
             return;
-        
+
         // do stepSize adaption steps using random signals
         for (k = 0; k < stepSize; k++) {
 
             sigs++;
+//			if (sigs%100==0) {
+//				//
+//				try {
+//					Thread.sleep(delay);
+//				} catch (InterruptedException e) {
+//					break;
+//				}
+//			}
 
             if (!algo.isDiscrete()) { // neither LBG nor LBG-U
                 //
@@ -2139,7 +2271,7 @@ class ComputeGNG {
                     // Calculate squared distance to input signal
                     n_i.sqrDist =
                             (n_i.x - SignalX) * (n_i.x - SignalX) +
-                            (n_i.y - SignalY) * (n_i.y - SignalY);
+                                    (n_i.y - SignalY) * (n_i.y - SignalY);
 
                     // Decay error and utility
                     n_i.error *= decayFactor;
@@ -2173,8 +2305,8 @@ class ComputeGNG {
                 //
                 if (Float.isNaN(curr1st.x)){ // hack
                     System.out.printf("learn(): Float.isNaN(pick.x) stopping .....\n");
-                    result.stop = true;
-                    // stop();
+                    graph.stop();
+                    stop();
                     return;
                 }
                 valueGraph += bestSqrDist;
@@ -2195,142 +2327,142 @@ class ComputeGNG {
                 // do adaptation ("learning") according to current model
                 //
                 switch (algo) {
-                //
-                // Growing Neural Gas
-                //
-                case GNGU: //does not occur, since it is mapped to GNG
-                case GNG:
-                    // Find second-closest node (continued)
-                    if (curr1stIdx == curr2ndIdx) {
-                        curr2ndIdx++;
-                        nextBestDist = Float.MAX_VALUE;
-                        curr2nd = nodes[curr2ndIdx];
-                    }
-                    for (i = curr1stIdx + 1 ; i < nNodes ; i++) {
-                        //n_i = nodes[i];
-                        if (nodes[i].sqrDist < nextBestDist) {
-                            curr2nd = nodes[i];
-                            curr2ndIdx = i;
-                            nextBestDist = nodes[i].sqrDist;
+                    //
+                    // Growing Neural Gas
+                    //
+                    case GNGU: //does not occur, since it is mapped to GNG
+                    case GNG:
+                        // Find second-closest node (continued)
+                        if (curr1stIdx == curr2ndIdx) {
+                            curr2ndIdx++;
+                            nextBestDist = Float.MAX_VALUE;
+                            curr2nd = nodes[curr2ndIdx];
                         }
-                    }
-                    // Mark second for teach-mode
-                    curr2nd.isSecond = true;
-                    curr2nd.x_old = curr2nd.x;
-                    curr2nd.y_old = curr2nd.y;
-
-
-                    // Adaptation of Winner:
-                    dx = epsilonGNG * (SignalX - curr1st.x);
-                    dy = epsilonGNG * (SignalY - curr1st.y);
-                    curr1st.adapt(dx,dy);
-
-                    numNb = curr1st.numNeighbors();
-
-                    // Adaptation of Neighbors:
-                    int nn;
-                    for (i = 0; i < numNb; i++) {
-                        nn = curr1st.neighbor(i);
-
-                        nodes[nn].hasMoved = true;
+                        for (i = curr1stIdx + 1 ; i < nNodes ; i++) {
+                            //n_i = nodes[i];
+                            if (nodes[i].sqrDist < nextBestDist) {
+                                curr2nd = nodes[i];
+                                curr2ndIdx = i;
+                                nextBestDist = nodes[i].sqrDist;
+                            }
+                        }
+                        // Mark second for teach-mode
+                        curr2nd.isSecond = true;
                         curr2nd.x_old = curr2nd.x;
                         curr2nd.y_old = curr2nd.y;
 
-                        dx = epsilonGNG2 * (SignalX - nodes[nn].x);
-                        dy = epsilonGNG2 * (SignalY - nodes[nn].y);
-                        nodes[nn].adapt(dx,dy);
-                    }
 
-                    // Accumulate square error
-                    curr1st.error += bestSqrDist;
+                        // Adaptation of Winner:
+                        dx = epsilonGNG * (SignalX - curr1st.x);
+                        dy = epsilonGNG * (SignalY - curr1st.y);
+                        curr1st.adapt(dx,dy);
 
-                    // Accumulate utility
-                    curr1st.utility += (nextBestDist - bestSqrDist);
+                        numNb = curr1st.numNeighbors();
 
-                    // Connect the two winning nodes
-                    addEdge(curr1stIdx, curr2ndIdx);
+                        // Adaptation of Neighbors:
+                        int nn;
+                        for (i = 0; i < numNb; i++) {
+                            nn = curr1st.neighbor(i);
 
-                    // Calculate the age of the connected edges and delete too old edges
-                    ageEdgesOfNode(curr1stIdx);
+                            nodes[nn].hasMoved = true;
+                            curr2nd.x_old = curr2nd.x;
+                            curr2nd.y_old = curr2nd.y;
 
-                    // Check inserting node and insert if necessary
-                    if ( (sigs % lambdaGNG) == 0 ) {
-                        if (!noNewNodesGNGB) {
-                            if (autoStopB) {
-                                if (nNodes >= maxNodes || (GNG_U_B && (sigs > 300000))) {
-                                    result.stop = true;
-                                    break;
-                                }
-                            }
-                            insertedSoundB =
-                            ( -1 != insertNode(numError, maximumErrorNeighbor(numError)) );
+                            dx = epsilonGNG2 * (SignalX - nodes[nn].x);
+                            dy = epsilonGNG2 * (SignalY - nodes[nn].y);
+                            nodes[nn].adapt(dx,dy);
                         }
-                    }
 
-                    // Delete Node without Neighbors (not GNG-U)
-                    if ((toDelete != -1) && (nNodes > 2) && !GNG_U_B )
-                        deleteNode(toDelete);
-                    // Delete Node with very low utility
-                    else {
-                        if ( maxError > minUtility * utilityGNG) {
-                            if (GNG_U_B && (nNodes > 2)) {
+                        // Accumulate square error
+                        curr1st.error += bestSqrDist;
+
+                        // Accumulate utility
+                        curr1st.utility += (nextBestDist - bestSqrDist);
+
+                        // Connect the two winning nodes
+                        addEdge(curr1stIdx, curr2ndIdx);
+
+                        // Calculate the age of the connected edges and delete too old edges
+                        ageEdgesOfNode(curr1stIdx);
+
+                        // Check inserting node and insert if necessary
+                        if ( (sigs % lambdaGNG) == 0 ) {
+                            if (!noNewNodesGNGB) {
+                                if (autoStopB) {
+                                    if (nNodes >= maxNodes || (GNG_U_B && (sigs > 300000))) {
+                                        graph.stop();
+                                        break;
+                                    }
+                                }
+                                insertedSoundB =
+                                        ( -1 != insertNode(numError, maximumErrorNeighbor(numError)) );
+                            }
+                        }
+
+                        // Delete Node without Neighbors (not GNG-U)
+                        if ((toDelete != -1) && (nNodes > 2) && !GNG_U_B )
+                            deleteNode(toDelete);
+                            // Delete Node with very low utility
+                        else {
+                            if ( maxError > minUtility * utilityGNG) {
+                                if (GNG_U_B && (nNodes > 2)) {
+                                    deleteNode(minUtilityNode);
+                                }
+                            } else if (  (nNodes > 2) && (nNodes > maxNodes) ) {
+                                // relevant if maxnodes is lowered during the simulation
                                 deleteNode(minUtilityNode);
                             }
-                        } else if (  (nNodes > 2) && (nNodes > maxNodes) ) {
-                            // relevant if maxnodes is lowered during the simulation
-                            deleteNode(minUtilityNode);
                         }
-                    }
 
-                    break;
+                        break;
 
                     //
                     // Hard Competitive Learning
                     //
-                case HCL:
-                    if ((sigs >= t_max) && (variableB || autoStopB)) {
-                        result.repaint  = true;
-                        result.stop     = true;
+                    case HCL:
+                        if ((sigs >= t_max) && (variableB || autoStopB)) {
+                            graph.stop();
+                            repaint();
+                            break;
+                        }
+
+                        // Adapt picked node
+                        if (variableB) {
+                            e_t = (float)(e_i * Math.pow(e_f/e_i, sigs/t_max));
+                            dx = e_t * (SignalX - curr1st.x);
+                            dy = e_t * (SignalY - curr1st.y);
+                            curr1st.adapt(dx,dy);
+
+                        } else {
+                            dx = epsilon * (SignalX - curr1st.x);
+                            dy = epsilon * (SignalY - curr1st.y);
+                            curr1st.adapt(dx,dy);
+                        }
                         break;
-                    }
-
-                    // Adapt picked node
-                    if (variableB) {
-                        e_t = (float)(e_i * Math.pow(e_f/e_i, sigs/t_max));
-                        dx = e_t * (SignalX - curr1st.x);
-                        dy = e_t * (SignalY - curr1st.y);
-                        curr1st.adapt(dx,dy);
-
-                    } else {
-                        dx = epsilon * (SignalX - curr1st.x);
-                        dy = epsilon * (SignalY - curr1st.y);
-                        curr1st.adapt(dx,dy);
-                    }
-                    break;
 
                     //
                     // Neural Gas
                     //
-                case NG:
-                    if (sigs >= t_max) {
-                        result.repaint  = true;
-                        result.stop     = true;
-                        break;
-                    }
+                    case NG:
+                        if (sigs >= t_max) {
+                            graph.stop();
+                            repaint();
+                            break;
+                        }
 
-                    // Initialize the sorted node array, if necessary
-                    if (nNodesChangedB) {
-                        for (i = 1; i <= nNodes; i++)
-                            sNodes[i] = i-1;
-                        nNodesChangedB = false;
-                    }
+                        // Initialize the sorted node array, if necessary
+                        if (nNodesChangedB) {
+                            for (i = 1; i <= nNodes; i++)
+                                sNodes[i] = i-1;
+                            nNodesChangedB = false;
+                        }
 
-                    l_t = (float)(l_i * Math.pow(l_f/l_i, sigs/t_max));
-                    e_t = (float)(e_i * Math.pow(e_f/e_i, sigs/t_max));
+                        l_t = (float)(l_i * Math.pow(l_f/l_i, sigs/t_max));
+                        e_t = (float)(e_i * Math.pow(e_f/e_i, sigs/t_max));
 
-                    // Build a minimum heap
-                    for (i = nNodes/2; i > 0; i--)
-                        reheap_min(i, nNodes);
+                        // Build a minimum heap
+                        for (i = nNodes/2; i > 0; i--)
+                            reheap_min(i, nNodes);
 
                     {
                         int decrNnodes = nNodes - 1;
@@ -2368,30 +2500,30 @@ class ComputeGNG {
                     //
                     // Neural Gas with Competitive Hebbian Learning
                     //
-                case NGCHL:
-                    if (sigs >= t_max) {
-                        result.repaint  = true;
-                        result.stop     = true;
-                        break;
-                    }
+                    case NGCHL:
+                        if (sigs >= t_max) {
+                            graph.stop();
+                            repaint();
+                            break;
+                        }
 
-                    // Initialize the sorted node array, if necessary
-                    if (nNodesChangedB) {
-                        for (i = 1; i <= nNodes; i++)
-                            sNodes[i] = i-1;
-                        nNodesChangedB = false;
-                    }
+                        // Initialize the sorted node array, if necessary
+                        if (nNodesChangedB) {
+                            for (i = 1; i <= nNodes; i++)
+                                sNodes[i] = i-1;
+                            nNodesChangedB = false;
+                        }
 
-                    l_t = (float)(l_i * Math.pow(l_f/l_i, sigs/t_max));
-                    e_t = (float)(e_i * Math.pow(e_f/e_i, sigs/t_max));
+                        l_t = (float)(l_i * Math.pow(l_f/l_i, sigs/t_max));
+                        e_t = (float)(e_i * Math.pow(e_f/e_i, sigs/t_max));
 
-                    // Calculate the new edge-deleting term
-                    MAX_EDGE_AGE = (int) (delEdge_i *
-                            Math.pow(delEdge_f/delEdge_i, sigs/t_max));
+                        // Calculate the new edge-deleting term
+                        MAX_EDGE_AGE = (int) (delEdge_i *
+                                Math.pow(delEdge_f/delEdge_i, sigs/t_max));
 
-                    // Build a minimum heap
-                    for (i = nNodes/2; i > 0; i--)
-                        reheap_min(i, nNodes);
+                        // Build a minimum heap
+                        for (i = nNodes/2; i > 0; i--)
+                            reheap_min(i, nNodes);
 
                     {
                         int decrNnodes = nNodes - 1;
@@ -2436,161 +2568,161 @@ class ComputeGNG {
                     //
                     // Competitive Hebbian Learning
                     //
-                case CHL:
-                    if ((sigs >= 50000) && autoStopB) {
-                        result.repaint  = true;
-                        result.stop     = true;
-                        break;
-                    }
-                    // Find second node (continued)
-                    if (curr1stIdx == curr2ndIdx) {
-                        curr2ndIdx++;
-                        nextBestDist = Float.MAX_VALUE;
-                        curr2nd = nodes[curr2ndIdx];
-                    }
-                    for (i = curr1stIdx + 1 ; i < nNodes ; i++) {
-                        n_i = nodes[i];
-                        if (n_i.sqrDist < nextBestDist) {
-                            curr2nd = n_i;
-                            curr2ndIdx = i;
-                            nextBestDist = n_i.sqrDist;
+                    case CHL:
+                        if ((sigs >= 50000) && autoStopB) {
+                            graph.stop();
+                            repaint();
+                            break;
                         }
-                    }
-                    // Mark second for teach-mode
-                    curr2nd.isSecond = true;
-                    curr2nd.x_old = curr2nd.x;
-                    curr2nd.y_old = curr2nd.y;
+                        // Find second node (continued)
+                        if (curr1stIdx == curr2ndIdx) {
+                            curr2ndIdx++;
+                            nextBestDist = Float.MAX_VALUE;
+                            curr2nd = nodes[curr2ndIdx];
+                        }
+                        for (i = curr1stIdx + 1 ; i < nNodes ; i++) {
+                            n_i = nodes[i];
+                            if (n_i.sqrDist < nextBestDist) {
+                                curr2nd = n_i;
+                                curr2ndIdx = i;
+                                nextBestDist = n_i.sqrDist;
+                            }
+                        }
+                        // Mark second for teach-mode
+                        curr2nd.isSecond = true;
+                        curr2nd.x_old = curr2nd.x;
+                        curr2nd.y_old = curr2nd.y;
 
-                    // Connect the nodes
-                    addEdge(curr1stIdx, curr2ndIdx);
+                        // Connect the nodes
+                        addEdge(curr1stIdx, curr2ndIdx);
 
-                    break;
+                        break;
 
                     //
                     // Growing Grid
                     //
-                case GG:
-                case GR:
-                    x = curr1st.x_grid;
-                    y = curr1st.y_grid;
-                    if ((x < 0)||(y<0)){
-                        System.out.printf("learn(): Disaster, x_grid or y_grid < 0, x=%d, y=%d, pick.x = %f pick.y = %f continuing not! .....\n",x,y,curr1st.x, curr1st.y);
-                        result.stop = true;
-                        break;
-                    }
-                    // count signals (leads to density estimation by node density)
-                    grid[x][y].node.tau+=1.0;
-
-                    if (fineTuningB) {
-                        int percent;
-                        // tmax proportional to network size
-                        float tmax = gridWidth * gridHeight * l_f;
-                        if (algo.equals(Algo.GR)) {
-                            tmax = gridWidth * gridHeight * 10;
-                        }
-                        e_t = (float)(e_i * Math.pow(e_f/e_i, (sigs-sigsTmp)/tmax));
-                        percent = (int) (((sigs-sigsTmp)*100)/tmax);
-                        if (percent >= 100) {
-                            fineTuningS = "Fine-tuning (100%)";
-                            log("fine tuning at 100%, calling stop ....");
-                            result.repaint  = true;
-                            result.stop     = true; // stop after fine-tuning
+                    case GG:
+                    case GR:
+                        x = curr1st.x_grid;
+                        y = curr1st.y_grid;
+                        if ((x < 0)||(y<0)){
+                            System.out.printf("learn(): Desaster, x_grid or y_grid < 0, x=%d, y=%d, pick.x = %f pick.y = %f continuing not! .....\n",x,y,curr1st.x, curr1st.y);
+                            graph.stop();
                             break;
                         }
-                        fineTuningS = "Fine-tuning (" + String.valueOf(percent) + "%)";
-                    } else {
-                        e_t = e_i;
-                    }
+                        // count signals (leads to density estimation by node density)
+                        grid[x][y].node.tau+=1.0;
 
-                    int dist;
-                    for (i = 0; i < gridWidth; i++) {
-                        for (j = 0; j < gridHeight; j++) {
-                            if (torusGGB) {
-                            // Manhattan Torus Distance
-                                float xxx = Math.min(Math.abs(x-i), Math.min(x+Math.abs(gridWidth-1-i),i+Math.abs(gridWidth-1-x)));
-                                dist = (int) xxx + Math.abs(y - j);
-                            } else {
-                                // Manhattan Distance
-                                dist = Math.abs(x - i) + Math.abs(y - j);
+                        if (fineTuningB) {
+                            int percent;
+                            // tmax proportional to network size
+                            float tmax = gridWidth * gridHeight * l_f;
+                            if (algo.equals(Algo.GR)) {
+                                tmax = gridWidth * gridHeight * 10;
                             }
-                            node = grid[i][j].node;
-
-                            dstSgmExp = (float) (Math.exp(-(dist*dist)/(2.0 * sigma * sigma)));
-                            dx = e_t * dstSgmExp * (SignalX - node.x);
-                            dy = e_t * dstSgmExp * (SignalY - node.y);
-                            node.adapt(dx, dy);
-
-                            if ( dstSgmExp > 0.5f )
-                                node.isSecond = true;
+                            e_t = (float)(e_i * Math.pow(e_f/e_i, (sigs-sigsTmp)/tmax));
+                            percent = (int) (((sigs-sigsTmp)*100)/tmax);
+                            if (percent >= 100) {
+                                fineTuningS = "Fine-tuning (100%)";
+                                log("fine tuning at 100%, calling stop ....");
+                                repaint();
+                                graph.stop(); // stop after fine-tuning
+                                break;
+                            }
+                            fineTuningS = "Fine-tuning (" + String.valueOf(percent) + "%)";
+                        } else {
+                            e_t = e_i;
                         }
-                    }
 
-                    // Check inserting nodes and insert if necessary
-                    if ( (sigs % (gridWidth * gridHeight * l_i) == 0) && (!fineTuningB) ) {
-                        if (!noNewNodesGGB) {
-                            if(enlargeGrid()) {
-                                insertedSoundB = true;
-                                fineTuningB = false;
-                            } else {
-                                insertedSoundB = false;
-                                fineTuningB = true;
-                                log("fine-tuning .....");
+                        int dist;
+                        for (i = 0; i < gridWidth; i++) {
+                            for (j = 0; j < gridHeight; j++) {
+                                if (torusGGB) {
+                                    // Manhattan Torus Distance
+                                    float xxx = Math.min(Math.abs(x-i), Math.min(x+Math.abs(gridWidth-1-i),i+Math.abs(gridWidth-1-x)));
+                                    dist = (int) xxx + Math.abs(y - j);
+                                } else {
+                                    // Manhattan Distance
+                                    dist = Math.abs(x - i) + Math.abs(y - j);
+                                }
+                                node = grid[i][j].node;
 
+                                dstSgmExp = (float) (Math.exp(-(dist*dist)/(2.0 * sigma * sigma)));
+                                dx = e_t * dstSgmExp * (SignalX - node.x);
+                                dy = e_t * dstSgmExp * (SignalY - node.y);
+                                node.adapt(dx, dy);
+
+                                if ( dstSgmExp > 0.5f )
+                                    node.isSecond = true;
                             }
-                            sigsTmp = sigs;
+                        }
+
+                        // Check inserting nodes and insert if necessary
+                        if ( (sigs % (gridWidth * gridHeight * l_i) == 0) && (!fineTuningB) ) {
+                            if (!noNewNodesGGB) {
+                                if(enlargeGrid()) {
+                                    insertedSoundB = true;
+                                    fineTuningB = false;
+                                } else {
+                                    insertedSoundB = false;
+                                    fineTuningB = true;
+                                    log("fine-tuning .....");
+
+                                }
+                                sigsTmp = sigs;
 //							if (inserted) {
 //								break;
 //							}
+                            }
                         }
-                    }
 
-                    break;
+                        break;
 
                     //
                     // Self-Organizing Map
                     //
-                case SOM:
-                    if (sigs >= t_max){
-                        result.stop = true; // stop adaptation
-                        break;
-                    }
-
-                    // Adapt nodes
-                    x = curr1st.x_grid;
-                    y = curr1st.y_grid;
-
-                    e_t = (float)(e_i * Math.pow(e_f/e_i, sigs/t_max));
-                    sigma = (float)(sigma_i * Math.pow(sigma_f, sigs/t_max));
-
-                    for (i = 0; i < gridWidth; i++) {
-                        for (j = 0; j < gridHeight; j++) {
-                            // Distance
-                            if (torusSOMB) {
-                                // Manhattan Torus Distance
-                                float xxx = Math.min(Math.abs(x-i), Math.min(x+Math.abs(gridWidth-1-i),i+Math.abs(gridWidth-1-x)));
-                                dist = (int) xxx + Math.abs(y - j);
-                            } else {
-                                // Manhattan Distance
-                                dist = Math.abs(x - i) + Math.abs(y - j);
-                            }
-                            node = grid[i][j].node;
-
-                            dstSgmExp = (float) (Math.exp(-(dist*dist)/(2.0 * sigma * sigma)));
-                            dx = e_t * dstSgmExp * (SignalX - node.x);
-                            dy = e_t * dstSgmExp * (SignalY - node.y);
-                            node.adapt(dx, dy);
-
-                            if ( dstSgmExp > 0.5f )
-                                node.isSecond = true;
+                    case SOM:
+                        if (sigs >= t_max){
+                            graph.stop(); // stop adaptation
+                            break;
                         }
-                    }
 
-                    break;
-                case LBG:
-                case LBGU:
-                    // can not happen since in this branch only non-discrete distributions
-                    // are handled
-                    break;
+                        // Adapt nodes
+                        x = curr1st.x_grid;
+                        y = curr1st.y_grid;
+
+                        e_t = (float)(e_i * Math.pow(e_f/e_i, sigs/t_max));
+                        sigma = (float)(sigma_i * Math.pow(sigma_f, sigs/t_max));
+
+                        for (i = 0; i < gridWidth; i++) {
+                            for (j = 0; j < gridHeight; j++) {
+                                // Distance
+                                if (torusSOMB) {
+                                    // Manhattan Torus Distance
+                                    float xxx = Math.min(Math.abs(x-i), Math.min(x+Math.abs(gridWidth-1-i),i+Math.abs(gridWidth-1-x)));
+                                    dist = (int) xxx + Math.abs(y - j);
+                                } else {
+                                    // Manhattan Distance
+                                    dist = Math.abs(x - i) + Math.abs(y - j);
+                                }
+                                node = grid[i][j].node;
+
+                                dstSgmExp = (float) (Math.exp(-(dist*dist)/(2.0 * sigma * sigma)));
+                                dx = e_t * dstSgmExp * (SignalX - node.x);
+                                dy = e_t * dstSgmExp * (SignalY - node.y);
+                                node.adapt(dx, dy);
+
+                                if ( dstSgmExp > 0.5f )
+                                    node.isSecond = true;
+                            }
+                        }
+
+                        break;
+                    case LBG:
+                    case LBGU:
+                        // can not happen since in this branch only non-discrete distributions
+                        // are handled
+                        break;
 
                 } // switch
             } else
@@ -2626,7 +2758,7 @@ class ComputeGNG {
                         n_i.sqrDist = (n_i.x - discreteSignalsX[j]) *
                                 (n_i.x - discreteSignalsX[j]) +
                                 (n_i.y - discreteSignalsY[j]) *
-                                (n_i.y - discreteSignalsY[j]);
+                                        (n_i.y - discreteSignalsY[j]);
 
                         // Calculate node with best distance and prepare for second
                         if (n_i.sqrDist < bestDistLBG) {
@@ -2742,8 +2874,8 @@ class ComputeGNG {
                     }
                 }
                 if (readyLBG_B && autoStopB) {
-                    result.repaint  = true;
-                    result.stop     = true;
+                    graph.stop();
+                    repaint();
                 }
 
             } // if (algo.isDiscrete())
@@ -2752,8 +2884,15 @@ class ComputeGNG {
 
         } // loop over stepSize
 
-        return;
+//		if (errorGraphB) {
+//			// Calculate mean square error
+//			if (algo.isDiscrete())
+//				valueGraph = valueGraph / numDiscreteSignals;
+//
+//			valueGraph = (float) Math.sqrt( valueGraph / (stepSize) );
+//		}
     }
+
 
 
     /**
@@ -2763,14 +2902,1123 @@ class ComputeGNG {
     /**
      * The flag for mouse-selected node.
      */
-    protected boolean pickFixed;
+    protected boolean pickfixed;
 
-// repaint --> update() ---> paintComponent()
+    /**
+     * The color of input signals
+     */
+    protected final Color signalsColor = Color.red;
+    /**
+     * The color of the 1-D SOM torus.
+     */
+    protected final Color torusColor = Color.cyan;
+    /**
+     * The color of SOM polgons.
+     */
+    protected final Color somColor = Color.yellow;
+    /**
+     * The color of the unused nodes (usage=true).
+     */
+    protected final Color unusedColor = Color.black;
+    /**
+     * The color of the winner node (teach-mode).
+     */
+    protected final Color winnerColor = Color.red;
+    /**
+     * The color of the second node (teach-mode).
+     */
+    protected final Color secondColor = Color.orange;
+    /**
+     * The color of the last moved nodes (teach-mode).
+     */
+    protected final Color movedColor = Color.yellow;
+    /**
+     * The color of the last inserted node (teach-mode).
+     */
+    protected final Color insertedColor = Color.blue;
+    /**
+     * The color of the shown signal (teach-mode).
+     */
+    protected final Color signalColor = Color.black;
+    /**
+     * The color of the edges.
+     */
+    protected final Color edgeColor = Color.black;
+    /**
+     * The color of the Voronoi diagram.
+     */
+    protected final Color voronoiColor = Color.red;
+    /**
+     * The color of the Delaunay diagram.
+     */
+    protected final Color delaunayColor = new Color(205,155,29);
+    /**
+     * The color of the nodes.
+     */
+    protected final Color nodeColor = Color.green;
+    /**
+     * The color of the distribution.
+     */
+    protected final Color distribColor = new Color(203, 205, 252);
+    /**
+     * The color of the low density distribution.
+     */
+    protected final Color lowDistribColor = new Color(203, 205, 252);
+    /**
+     * The color of the high density distribution.
+     */
+    protected final Color highDistribColor = new Color(152, 161, 250);
+
+    /**
+     * Paint a node.
+     *
+     * @param g            The graphic context
+     * @param n            The node
+     */
+    public void paintNode(Graphics g, NodeGNG n) {
+        int RADIUS = 10;
+        Color col = nodeColor;
+
+        if (teachB && (!algo.isDiscrete()) ) {
+            if (n.isWinner) {
+                RADIUS += 5;
+                col = winnerColor;
+            } else if (n.isSecond) {
+                RADIUS += 3;
+                col = secondColor;
+            }
+//			else if (n.hasMoved) {
+//				RADIUS += 2;
+//				col = movedColor;
+//			}
+        }
+
+        if (algo.isSOMType() && usageB){
+            if (n.tau < 1.0){
+                //Color c = nodeColor;
+                //col = new Color(c.getRed(),c.getGreen(),c.getBlue(),(int)(100*n.tau));
+                //col = mixColor(nodeColor,Color.black,n.tau);
+                col=unusedColor;
+            }
+        }
+        if (n.isMostRecentlyInserted)  {
+            RADIUS += 2;
+            col = insertedColor;
+        }
+
+        if ( (algo.isDiscrete()) && (!n.hasMoved) ) {
+            RADIUS += 4;
+            col = movedColor;
+        }
+
+        g.setColor(col);
+        if (mapSpaceGGB && (algo==Algo.GG||algo==Algo.GR) || mapSpaceSOMB && algo==Algo.SOM) {
+            g.fillOval((int)(gx2x((int)n.x_grid) - (RADIUS/2)), (int)(gy2y((int)n.y_grid) - (RADIUS/2)), RADIUS, RADIUS);
+        } else {
+            g.fillOval((int)n.x - (RADIUS/2), (int)n.y - (RADIUS/2), RADIUS, RADIUS);
+        }
+        g.setColor(Color.black);
+        if (mapSpaceGGB && (algo==Algo.GG||algo==Algo.GR) || mapSpaceSOMB && algo==Algo.SOM) {
+            g.drawOval((int)gx2x(n.x_grid) - (RADIUS/2), (int)gy2y(n.y_grid) - (RADIUS/2), RADIUS, RADIUS);
+        } else {
+            g.drawOval((int)n.x - (RADIUS/2), (int)n.y - (RADIUS/2), RADIUS, RADIUS);
+        }
+
+    }
+
+    // repaint --> update() ---> paintComponent()
 //	/**
 //	 * Update the drawing area.
 //	 *
 //	 * @param g          The graphic context
 //	 */
-    static int paintCounter =0;
+    static int paintCouter=0;
     static int prevSigs=0;
+
+    // helper function to compute mapspace coordinates for SOM-like networks
+    public int gx2x(int gx){
+        Dimension d = getSize();
+        return (int) (gx *d.width*0.9f/(gridWidth-1)+0.05*d.width);
+    }
+    public int gy2y(int gy){
+        Dimension d = getSize();
+        return (int) (gy *d.height*0.9f/(gridHeight-1)+0.05*d.height);
+    }
+
+    protected void drawPD(final Graphics g, final Dimension d) {
+        int ll,lr,r2,l2;
+        int xA[] = new int[MAX_COMPLEX];
+        int yA[] = new int[MAX_COMPLEX];
+        int w;
+        int h;
+        int mindim;
+        int ringRadius;
+        int i, x, y;
+        mindim = (d.width < d.height) ? d.width : d.height;
+
+        switch (pd) {
+            case Rectangle: // Rectangle
+                ll = d.width/20;
+                lr = d.height/20;
+                r2 = d.width*9/10;
+                l2 = d.height*9/10;
+                g.fillRect(ll, lr, r2, l2);
+                break;
+            case Circle: // Circle
+
+                l2 = mindim*9/10; // Diameter is proportional to the smallest panel dimension
+
+                ll = d.width/2 -l2/2;
+                lr = d.height/2 -l2/2;
+
+                g.fillOval(ll, lr, l2, l2);
+                break;
+            case TwoCircles: // Circle
+                // circle space circle (3x1)
+                if (d.width/3 < d.height){
+                    // limiting dimension is width
+                    l2=(int) (d.width/2.6);
+                } else {
+                    // limiting dimension is height
+                    l2=(int) (d.height*0.95);
+                }
+
+                ll = d.width/2 -l2*5/4;
+                lr = d.height/2 -l2/2;
+                g.fillOval(ll, lr, l2, l2);
+
+                ll = d.width/2 +l2/4;
+                g.fillOval(ll, lr, l2, l2);
+
+                break;
+            case Ring: // Ring
+                int cx = d.width/2; // horizontal center of panel
+                int cy = d.height/2;// vertical center of panel
+                l2 = (cx < cy) ? cx : cy; // Diameter
+
+                ll = cx - l2;
+                lr = cy - l2;
+                ringRadius = (int) (l2 * RING_FACTOR);
+
+                g.fillOval(ll, lr, 2*l2, 2*l2);
+                if (whiteB)
+                    g.setColor(Color.white);
+                else
+                    g.setColor(getBackground());
+                g.fillOval(ll + ringRadius,
+                        lr+ringRadius,
+                        2*l2-2*ringRadius,
+                        2*l2-2*ringRadius);
+                break;
+            case UNI: // Complex (1)
+                w = d.width/9;
+                h = d.height/5;
+                xA[0] = w;
+                yA[0] = h;
+                xA[1] = w;
+                yA[1] = 2*h;
+                xA[2] = w;
+                yA[2] = 3*h;
+                xA[3] = 2*w;
+                yA[3] = 3*h;
+                xA[4] = 3*w;
+                yA[4] = 3*h;
+                xA[5] = 3*w;
+                yA[5] = 2*h;
+                xA[6] = 3*w;
+                yA[6] = h;
+                xA[7] = 4*w;
+                yA[7] = h;
+                xA[8] = 5*w;
+                yA[8] = h;
+                xA[9] = 5*w;
+                yA[9] = 2*h;
+                xA[10] = 5*w;
+                yA[10] = 3*h;
+                xA[11] = 7*w;
+                yA[11] = h;
+                xA[12] = 7*w;
+                yA[12] = 2*h;
+                xA[13] = 7*w;
+                yA[13] = 3*h;
+
+                for (i = 0; i < 14; i++)
+                    g.fillRect(xA[i], yA[i], w, h);
+                break;
+            case SmallSpirals: // Complex (2)
+                w = d.width/9;
+                h = d.height/7;
+                xA[0] = w;
+                yA[0] = 5*h;
+                xA[1] = w;
+                yA[1] = 4*h;
+                xA[2] = w;
+                yA[2] = 3*h;
+                xA[3] = w;
+                yA[3] = 2*h;
+                xA[4] = 1*w;
+                yA[4] = h;
+                xA[5] = 2*w;
+                yA[5] = h;
+                xA[6] = 3*w;
+                yA[6] = h;
+                xA[7] = 4*w;
+                yA[7] = h;
+                xA[8] = 5*w;
+                yA[8] = 1*h;
+                xA[9] = 5*w;
+                yA[9] = 2*h;
+                xA[10] = 5*w;
+                yA[10] = 3*h;
+                xA[11] = 3*w;
+                yA[11] = 3*h;
+                xA[12] = 3*w;
+                yA[12] = 4*h;
+                xA[13] = 3*w;
+                yA[13] = 5*h;
+                xA[14] = 4*w;
+                yA[14] = 5*h;
+                xA[15] = 5*w;
+                yA[15] = 5*h;
+                xA[16] = 6*w;
+                yA[16] = 5*h;
+                xA[17] = 7*w;
+                yA[17] = 5*h;
+                xA[18] = 7*w;
+                yA[18] = 4*h;
+                xA[19] = 7*w;
+                yA[19] = 3*h;
+                xA[20] = 7*w;
+                yA[20] = 2*h;
+                xA[21] = 7*w;
+                yA[21] = 1*h;
+
+                for (i = 0; i < 22; i++)
+                    g.fillRect(xA[i], yA[i], w, h);
+                break;
+            case LargeSpirals: // Complex (3)
+                w = d.width/13;
+                h = d.height/11;
+                xA[0] = w;
+                yA[0] = h;
+                xA[1] = w;
+                yA[1] = 2*h;
+                xA[2] = w;
+                yA[2] = 3*h;
+                xA[3] = w;
+                yA[3] = 4*h;
+                xA[4] = 1*w;
+                yA[4] = 5*h;
+                xA[5] = 1*w;
+                yA[5] = 6*h;
+                xA[6] = 1*w;
+                yA[6] = 7*h;
+                xA[7] = 1*w;
+                yA[7] = 8*h;
+                xA[8] = 1*w;
+                yA[8] = 9*h;
+                xA[9] = 2*w;
+                yA[9] = 1*h;
+                xA[10] = 3*w;
+                yA[10] = 1*h;
+                xA[11] = 4*w;
+                yA[11] = 1*h;
+                xA[12] = 5*w;
+                yA[12] = 1*h;
+                xA[13] = 6*w;
+                yA[13] = 1*h;
+                xA[14] = 7*w;
+                yA[14] = 1*h;
+                xA[15] = 8*w;
+                yA[15] = 1*h;
+                xA[16] = 9*w;
+                yA[16] = 1*h;
+                xA[17] = 9*w;
+                yA[17] = 2*h;
+                xA[18] = 9*w;
+                yA[18] = 3*h;
+                xA[19] = 9*w;
+                yA[19] = 4*h;
+                xA[20] = 9*w;
+                yA[20] = 5*h;
+                xA[21] = 9*w;
+                yA[21] = 6*h;
+                xA[22] = 9*w;
+                yA[22] = 7*h;
+                xA[23] = 8*w;
+                yA[23] = 7*h;
+                xA[24] = 7*w;
+                yA[24] = 7*h;
+                xA[25] = 6*w;
+                yA[25] = 7*h;
+                xA[26] = 5*w;
+                yA[26] = 7*h;
+                xA[27] = 5*w;
+                yA[27] = 6*h;
+                xA[28] = 5*w;
+                yA[28] = 5*h;
+                xA[29] = 3*w;
+                yA[29] = 3*h;
+                xA[30] = 3*w;
+                yA[30] = 4*h;
+                xA[31] = 3*w;
+                yA[31] = 5*h;
+                xA[32] = 3*w;
+                yA[32] = 6*h;
+                xA[33] = 3*w;
+                yA[33] = 7*h;
+                xA[34] = 3*w;
+                yA[34] = 8*h;
+                xA[35] = 3*w;
+                yA[35] = 9*h;
+                xA[36] = 4*w;
+                yA[36] = 3*h;
+                xA[37] = 5*w;
+                yA[37] = 3*h;
+                xA[38] = 6*w;
+                yA[38] = 3*h;
+                xA[39] = 7*w;
+                yA[39] = 3*h;
+                xA[40] = 7*w;
+                yA[40] = 4*h;
+                xA[41] = 7*w;
+                yA[41] = 5*h;
+                xA[42] = 4*w;
+                yA[42] = 9*h;
+                xA[43] = 5*w;
+                yA[43] = 9*h;
+                xA[44] = 6*w;
+                yA[44] = 9*h;
+                xA[45] = 7*w;
+                yA[45] = 9*h;
+                xA[46] = 8*w;
+                yA[46] = 9*h;
+                xA[47] = 9*w;
+                yA[47] = 9*h;
+                xA[48] =10*w;
+                yA[48] = 9*h;
+                xA[49] =11*w;
+                yA[49] = 9*h;
+                xA[50] =11*w;
+                yA[50] = 8*h;
+                xA[51] =11*w;
+                yA[51] = 7*h;
+                xA[52] =11*w;
+                yA[52] = 6*h;
+                xA[53] =11*w;
+                yA[53] = 5*h;
+                xA[54] =11*w;
+                yA[54] = 4*h;
+                xA[55] =11*w;
+                yA[55] = 3*h;
+                xA[56] =11*w;
+                yA[56] = 2*h;
+                xA[57] =11*w;
+                yA[57] = 1*h;
+
+                for (i = 0; i < 58; i++)
+                    g.fillRect(xA[i], yA[i], w, h);
+                break;
+
+            case HiLoDensity: // HiLo-Density
+                w = d.width/10;
+                h = d.height/10;
+                xA[0] = 2 * w;
+                yA[0] = 4 * h;
+                xA[1] = 5 * w;
+                yA[1] = 1 * h;
+
+                if (!algo.isDiscrete())
+                    g.setColor(highDistribColor);
+                g.fillRect(xA[0], yA[0], w, h);
+                if (!algo.isDiscrete())
+                    g.setColor(lowDistribColor);
+                g.fillRect(xA[1], yA[1], 4 * w, 8 * h);
+                break;
+
+            case DiscreteMixture: // discrete
+                //int RADIUS = 2;
+                for (i = 0; i < numDiscreteSignals; i++) {
+                    x = Math.round(discreteSignalsX[i]);
+                    y = Math.round(discreteSignalsY[i]);
+
+                    g.setColor(distribColor);
+                    g.fillOval(x - 1, y - 1, 2, 2);
+                    g.setColor(Color.black);
+                    g.drawOval(x - 1, y - 1, 2, 2);
+                }
+                break;
+
+            case UNIT: // Complex (4)
+                w = d.width/17;
+                h = d.height/8;
+                xA[0] = w;
+                yA[0] = 2*h;
+                xA[1] = w;
+                yA[1] = 3*h;
+                xA[2] = w;
+                yA[2] = 4*h;
+                xA[3] = w;
+                yA[3] = 5*h;
+                xA[4] = 2*w;
+                yA[4] = 5*h;
+                xA[5] = 3*w;
+                yA[5] = 5*h;
+                xA[6] = 3*w;
+                yA[6] = 4*h;
+                xA[7] = 3*w;
+                yA[7] = 3*h;
+                xA[8] = 3*w;
+                yA[8] = 2*h;
+                xA[9] = 4*w;
+                yA[9] = 2*h;
+                xA[10] = 5*w;
+                yA[10] = 2*h;
+                xA[11] = 6*w;
+                yA[11] = 2*h;
+                xA[12] = 7*w;
+                yA[12] = 2*h;
+                xA[13] = 7*w;
+                yA[13] = 3*h;
+                xA[14] = 7*w;
+                yA[14] = 4*h;
+                xA[15] = 7*w;
+                yA[15] = 5*h;
+                xA[16] = 8*w;
+                yA[16] = 5*h;
+                xA[17] = 9*w;
+                yA[17] = 5*h;
+                xA[18] = 10*w;
+                yA[18] = 5*h;
+                xA[19] = 11*w;
+                yA[19] = 5*h;
+                xA[20] = 11*w;
+                yA[20] = 4*h;
+                xA[21] = 11*w;
+                yA[21] = 3*h;
+                xA[22] = 11*w;
+                yA[22] = 2*h;
+                xA[23] = 14*w;
+                yA[23] = 2*h;
+                xA[24] = 15*w;
+                yA[24] = 2*h;
+                xA[25] = 15*w;
+                yA[25] = 3*h;
+                xA[26] = 15*w;
+                yA[26] = 4*h;
+                xA[27] = 15*w;
+                yA[27] = 5*h;
+
+                for (i = 0; i < 28; i++)
+                    g.fillRect(xA[i], yA[i], w, h);
+                break;
+            case MoveJump: // Moving and Jumping Rectangle
+                r2 = d.width/4;
+                l2 = d.height/4;
+                ll = (int) (0.75 * (d.width/2 +
+                        Math.IEEEremainder(0.2 * sigs,(d.width))));
+                lr = (int) (0.75 * (d.height/2 +
+                        Math.IEEEremainder(0.2 * sigs,(d.height))));
+
+                g.fillRect(ll, lr, r2, l2);
+                break;
+            case Move: // Moving Rectangle
+                r2 = d.width/4;
+                l2 = d.height/4;
+                ll = (int) (0.75 * (d.width/2 +
+                        bounceX * Math.IEEEremainder(0.2 * sigs,
+                                (d.width))));
+                lr = (int) (0.75 * (d.height/2 +
+                        bounceY * Math.IEEEremainder(0.2 * sigs,
+                                (d.height))));
+
+                g.fillRect(ll, lr, r2, l2);
+                break;
+
+            case Jump: // Jumping Rectangle
+                r2 = d.width/4;
+                l2 = d.height/4;
+
+                g.fillRect(jumpX, jumpY, r2, l2);
+                break;
+
+            case RightMouseB: // R.Mouse Rectangle
+                r2 = d.width/4;
+                l2 = d.height/4;
+
+                g.fillRect(jumpX, jumpY, r2, l2);
+                break;
+        }
+    }
+
+    public synchronized void paintComponent(Graphics g) {
+
+        //log("paintComponent() CGNG " + String.valueOf(paintCounter)+" signals:"+String.valueOf(sigs) + "delta-sig:"+String.valueOf(sigs - prevSigs));
+        paintCouter+=1;
+        prevSigs = sigs;
+        Dimension d = getSize();
+        int i, x, y;
+
+        if (whiteB)
+            g.setColor(Color.white);
+        else
+            g.setColor(getBackground());
+
+        g.fillRect(0, 0, d.width, d.height);
+
+        // recompute Delaunay/Voronoi
+        if ((delaunayB || voronoiB) && nodesMovedB) {
+            nlines = 0;
+            voro.computeVoronoi();// TODO: analyze
+        }
+        nodesMovedB = false;
+        //
+        // draw probability distribution .....
+        // changes need to be reflected in the distribution itself
+        //
+
+        // Set color for distribution
+        if (!algo.isDiscrete())
+            g.setColor(distribColor);
+
+        if (probDistB) drawPD(g, d);
+
+        // Draw the edges
+        if (edgesB) {
+            int x1, y1, x2, y2;
+            EdgeGNG e;
+            for (i = 0 ; i < nEdges ; i++) {
+                e = edges[i];
+                if (mapSpaceGGB && (algo==Algo.GG||algo==Algo.GR) || mapSpaceSOMB && algo==Algo.SOM) {
+                    x1 = gx2x(nodes[e.from].x_grid);
+                    y1 = gy2y(nodes[e.from].y_grid);
+                    x2 = gx2x(nodes[e.to].x_grid);
+                    y2 = gy2y(nodes[e.to].y_grid);
+                } else {
+                    x1 = (int)nodes[e.from].x;
+                    y1 = (int)nodes[e.from].y;
+                    x2 = (int)nodes[e.to].x;
+                    y2 = (int)nodes[e.to].y;
+                }
+                g.setColor(edgeColor);
+                g.drawLine(x1, y1, x2, y2);
+            }
+        } else if (algo.isSOMType()) {
+            g.setColor(edgeColor);
+            // draw the outer edges, i.e. where for *both* endpoints holds:
+            // gridx=0 or gridy=0 or gridx = width-1 or grid y= height-1
+            for (i = 0; i < gridWidth-1; i++) {
+                NodeGNG n1 = grid[i][0].node;
+                NodeGNG n2 = grid[i+1][0].node;
+                g.drawLine((int)n1.x, (int)n1.y, (int)n2.x, (int)n2.y);
+                n1 = grid[i][gridHeight-1].node;
+                n2 = grid[i+1][gridHeight-1].node;
+                g.drawLine((int)n1.x, (int)n1.y, (int)n2.x, (int)n2.y);
+            }
+            for (i = 0; i < gridHeight-1; i++) {
+                NodeGNG n1 = grid[0][i].node;
+                NodeGNG n2 = grid[0][i+1].node;
+                g.drawLine((int)n1.x, (int)n1.y, (int)n2.x, (int)n2.y);
+                n1 = grid[gridWidth-1][i].node;
+                n2 = grid[gridWidth-1][i+1].node;
+                g.drawLine((int)n1.x, (int)n1.y, (int)n2.x, (int)n2.y);
+            }
+        }
+
+        // draw the filled polygons of fixed-dimensional networks (SOM, GG. eventually GCS)
+        if (algo.isSOMType()){
+            Color c = somColor;
+            Color cT = new Color(c.getRed(),c.getGreen(),c.getBlue(),80);
+            //Color dd = Color.black;
+            //Color dT = new Color(dd.getRed(),dd.getGreen(),dd.getBlue(),80);
+            int j;
+            int xPoints[] = new int[5];
+            int yPoints[] = new int[5];
+            // draw the rectangles (as closed polygons)
+            if (gridHeight>1){
+                for (i = 0; i < gridWidth-1; i++) {
+                    for (j = 0; j < gridHeight-1; j++) {
+                        // draw polygon i,j;i+1,j;i+1,j+1;i,j+1;i,j
+                        if (mapSpaceGGB && (algo==Algo.GG||algo==Algo.GR) || mapSpaceSOMB && algo==Algo.SOM) {
+                            xPoints[0]=gx2x(i);
+                            xPoints[1]=gx2x(i+1);
+                            xPoints[2]=gx2x(i+1);
+                            xPoints[3]=gx2x(i);
+                            xPoints[4]=gx2x(i);
+
+                            yPoints[0]=gy2y(j);
+                            yPoints[1]=gy2y(j);
+                            yPoints[2]=gy2y(j+1);
+                            yPoints[3]=gy2y(j+1);
+                            yPoints[4]=gy2y(j);
+
+                        } else {
+                            xPoints[0]=(int)grid[i][j].node.x;
+                            xPoints[1]=(int)grid[i+1][j].node.x;
+                            xPoints[2]=(int)grid[i+1][j+1].node.x;
+                            xPoints[3]=(int)grid[i][j+1].node.x;
+                            xPoints[4]=(int)grid[i][j].node.x;
+
+                            yPoints[0]=(int)grid[i][j].node.y;
+                            yPoints[1]=(int)grid[i+1][j].node.y;
+                            yPoints[2]=(int)grid[i+1][j+1].node.y;
+                            yPoints[3]=(int)grid[i][j+1].node.y;
+                            yPoints[4]=(int)grid[i][j].node.y;
+                        }
+                        g.setColor(cT);
+                        g.fillPolygon(xPoints,yPoints,5);
+                        //g.setColor(dT);
+                        //g.drawPolygon(xPoints,yPoints,5);
+                    }
+                }
+            } else if ((algo==Algo.SOM && torusSOMB) || ((algo==Algo.GG||algo==Algo.GR) && torusGGB)){
+                c = torusColor;
+                cT = new Color(c.getRed(),c.getGreen(),c.getBlue(),80);
+                g.setColor(cT);
+                Polygon p = new Polygon();
+                for (i = 0; i < gridWidth-1; i++) {
+                    p.addPoint((int)grid[i][0].node.x,(int)grid[i][0].node.y);
+                }
+                g.fillPolygon(p);
+            }
+        }
+
+        // Draw the Voronoi or Delaunay diagram
+        if (voronoiB || delaunayB) {
+            LineGNG l;
+            for (i = 0; i < nlines; i++) {
+                l = lines[i];
+                if (vd[i])
+                    // voronoi
+                    g.setColor(voronoiColor);
+                else
+                    // delaunay
+                    g.setColor(delaunayColor);
+                g.drawLine(l.x1, l.y1, l.x2, l.y2);
+            }
+        }
+
+        // Draw the nodes
+        if (nodesB)
+            for (i = 0; i < nNodes; i++)
+                paintNode(g, nodes[i]);
+
+        // draw the tau values
+        if ((algo==Algo.GG||algo==Algo.GR) && tauB){
+            g.setColor(Color.black);
+            int j;
+            for (i = 0; i < gridWidth; i++) {
+                for (j = 0; j < gridHeight; j++) {
+                    GridNodeGNG xx = grid[i][j];
+                    if (i==0 && j==0){
+                        if (mapSpaceGGB) {
+                            g.drawString("x"+String.valueOf((int)xx.node.tau)+"x", gx2x(xx.node.x_grid), gy2y(xx.node.y_grid));
+
+                        } else {
+                            g.drawString("x"+String.valueOf((int)xx.node.tau)+"x", (int)xx.node.x, (int)xx.node.y);
+                        }
+                    } else {
+                        if (mapSpaceGGB) {
+                            g.drawString(String.valueOf((int)xx.node.tau),  gx2x(xx.node.x_grid), gy2y(xx.node.y_grid));
+                        } else {
+                            g.drawString(String.valueOf((int)xx.node.tau), (int)xx.node.x, (int)xx.node.y);
+
+                        }
+                    }
+                }
+            }
+
+        }
+
+        // Draw the motion traces
+        if (tracesB && !algo.isLBGType()){ // traces not working for LBG for some reason
+            g.setColor(Color.black);
+            for (i = 0; i < nNodes; i++) {
+                Vector<Float> tr = nodes[i].getTrace();
+                if (tr.size()<4)
+                    break;
+                int x1,y1,x2,y2;
+                x1=(int) Math.round(tr.get(0));
+                y1=(int) Math.round(tr.get(1));
+                for (int j=2;j<tr.size();j+=2){
+                    x2=(int) Math.round(tr.get(j));
+                    y2=(int) Math.round(tr.get(j+1));
+                    g.drawLine(x1, y1, x2, y2);
+                    x1=x2;
+                    y1=y2;
+                }
+            }
+        }
+
+
+        //Draw teach mode info
+        if ( teachB ) {
+            int r = 6;
+            int offset_x = 12;
+            int offset2_x = offset_x + 5;
+            int offset_y = d.height/4;
+
+            if (algo.isDiscrete()) {
+                // Draw legend
+                g.setColor(Color.black);
+                g.drawString("Legend:", 	2, offset_y); offset_y += 15;
+
+                g.setColor(movedColor);
+                g.fillOval(offset_x - r, offset_y - r, r, r);
+                g.setColor(Color.black);
+                g.drawString("Not moved", offset2_x,
+                        offset_y); offset_y += 15;
+            } else {
+                g.setColor(signalColor);
+                g.fillOval((int) SignalX - r/2, (int) SignalY - r/2, r, r);
+
+                // Draw legend
+                g.setColor(Color.black);
+                g.drawString("Legend:", 	2, offset_y); offset_y += 15;
+
+                g.setColor(winnerColor);
+                g.fillOval(offset_x - r, offset_y - r, r, r);
+                g.setColor(Color.black);
+                g.drawString("Winner", offset2_x, offset_y); offset_y += 15;
+
+                if (algo != Algo.HCL) {
+                    g.setColor(secondColor);
+                    g.fillOval(offset_x - r, offset_y - r, r, r);
+                    g.setColor(Color.black);
+                    g.drawString("Second", offset2_x, offset_y); offset_y += 15;
+                }
+
+                if (algo == Algo.GNG) {
+                    g.setColor(movedColor);
+                    g.fillOval(offset_x - r, offset_y - r, r, r);
+                    g.setColor(Color.black);
+                    g.drawString("Neighbors", offset2_x, offset_y); offset_y += 15;
+
+                    g.setColor(insertedColor);
+                    g.fillOval(offset_x - r, offset_y - r, r, r);
+                    g.setColor(Color.black);
+                    g.drawString("Last inserted", offset2_x, offset_y); offset_y += 15;
+                }
+
+                g.setColor(signalColor);
+                g.fillOval(offset_x - r, offset_y - r, r, r);
+                g.setColor(Color.black);
+                g.drawString("Signal", offset2_x, offset_y); offset_y += 15;
+            }
+        }
+
+        g.setColor(Color.black);
+        g.drawString("Signals: "+String.valueOf(sigs), 10, 10);
+        if (maxNodes == 1)
+            g.drawString(String.valueOf(nNodes) + " node",
+                    10, d.height - 10);
+        else
+            g.drawString("Nodes: "+String.valueOf(nNodes),
+                    10, d.height - 10);
+
+        g.drawString("DemoGNG "+DGNG_VERSION, d.width - 130, 10);
+        if ( readyLBG_B && (algo.isLBGType()) ) {
+            g.drawString("READY!", d.width-50, d.height-10);
+        }
+        if ( fineTuningB && (algo==Algo.GG||algo==Algo.GR) )
+            g.drawString(fineTuningS, d.width-130, d.height-10);
+
+        //
+        // draw signals
+        //
+        if ( signalsB && (!algo.isDiscrete()) ) {
+            for (i = 0; i < stepSize; i++) {
+                x = (int) (lastSignalsX[i]);
+                y = (int) (lastSignalsY[i]);
+
+                //g.setColor(Color.green);
+                //g.fillOval(x - 1, y - 1, 2, 2);
+                g.setColor(signalsColor);
+                g.fillOval(x - 2, y - 2, 3, 3);
+                g.drawOval(x - 2, y - 2, 3, 3);
+            }
+        }
+
+
+        //
+        // play insert sound
+        //
+        if ( insertedSoundB && soundB ) {
+            //log("beep!!!");
+            //log(graph.getCodeBase().toString());
+            graph.play(graph.getCodeBase(), "audio/drip.au");
+            insertedSoundB = false;
+        }
+
+        if (algo.isDiscrete()) {
+            for (i = 0; i < numDiscreteSignals; i++) {
+                x = Math.round(discreteSignalsX[i]);
+                y = Math.round(discreteSignalsY[i]);
+
+                g.setColor(distribColor);
+                g.fillOval(x - 1, y - 1, 2, 2);
+                g.setColor(Color.black);
+                g.drawOval(x - 1, y - 1, 2, 2);
+            }
+        }
+
+        // Show error graph or not
+        if (errorGraph != null) {
+            if (errorGraphB)
+                errorGraph.setVisible(true);
+            else
+                errorGraph.setVisible(false);
+        }
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent evt) {
+        int x = evt.getX();
+        int y = evt.getY();
+        if ((evt.getModifiersEx() & MouseEvent.BUTTON3_DOWN_MASK) == MouseEvent.BUTTON3_DOWN_MASK) {
+            if (pd == PD.RightMouseB)  {
+                Dimension d = getSize();
+
+                jumpX = x;
+                jumpY = y;
+                // Draw distribution only inside the visible region
+                if (jumpX > (0.75 * d.width))
+                    jumpX = (int) (0.75 * d.width);
+
+                if (jumpY > (0.75 * d.height))
+                    jumpY = (int) (0.75 * d.height);
+
+                repaint();
+                return;// true;
+            } else return;
+        } else if ((evt.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK) {
+
+            float bestDist = Float.MAX_VALUE;
+            NodeGNG n;
+            float dist;
+
+            for (int i = 0 ; i < nNodes ; i++) {
+                n = nodes[i];
+                dist = (n.x - x) * (n.x - x) + (n.y - y) * (n.y - y);
+                if (dist <= bestDist) {
+                    pick = n;
+                    bestDist = dist;
+                }
+            }
+            pickfixed = pick.isMouseSelected;
+            pick.isMouseSelected = true;
+            pick.x = x;
+            pick.y = y;
+
+            if (algo.isDiscrete())
+                pick.hasMoved = true;
+
+            nodesMovedB = true;
+            repaint();
+        }
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent evt) {
+        int x = evt.getX();
+        int y = evt.getY();
+        Dimension d = getSize();
+
+        if ((evt.getModifiersEx() & MouseEvent.BUTTON3_DOWN_MASK) == MouseEvent.BUTTON3_DOWN_MASK) {
+            if (pd == PD.RightMouseB)  {
+                jumpX = x;
+                jumpY = y;
+
+                // Draw distribution only inside the visible region
+                if (jumpX < 0)
+                    jumpX = 0;
+                else if (jumpX > (0.75 * d.width))
+                    jumpX = (int) (0.75 * d.width);
+
+                if (jumpY < 0)
+                    jumpY = 0;
+                else if (jumpY > (0.75 * d.height))
+                    jumpY = (int) (0.75 * d.height);
+
+                repaint();
+            }
+        } else if ((evt.getModifiersEx() & MouseEvent.BUTTON1_DOWN_MASK) == MouseEvent.BUTTON1_DOWN_MASK) {
+
+            pick.x = x;
+            pick.y = y;
+
+            // Draw nodes only inside the visible region
+            if (pick.x < 0)
+                pick.x = 0;
+            else if (pick.x > d.width)
+                pick.x = d.width;
+
+            if (pick.y < 0)
+                pick.y = 0;
+            else if (pick.y > d.height)
+                pick.y = d.height;
+
+            nodesMovedB = true;
+            repaint();
+        }
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent evt) {
+        Dimension d = getSize();
+        int x = evt.getX();
+        int y = evt.getY();
+
+        if ((evt.getButton()==java.awt.event.MouseEvent.BUTTON3) && (pd == PD.RightMouseB) ) {
+            jumpX = x;
+            jumpY = y;
+
+            // Draw distribution only inside the visible region
+            if (jumpX < 0)
+                jumpX = 0;
+            else if (jumpX > (0.75 * d.width))
+                jumpX = (int) (0.75 * d.width);
+
+            if (jumpY < 0)
+                jumpY = 0;
+            else if (jumpY > (0.75 * d.height))
+                jumpY = (int) (0.75 * d.height);
+
+            repaint();
+        } else if (evt.getButton()==java.awt.event.MouseEvent.BUTTON1) {
+
+            pick.x = x;
+            pick.y = y;
+            pick.isMouseSelected = pickfixed;
+
+            // Draw nodes only inside the visible region
+            if (pick.x < 0)
+                pick.x = 0;
+            else if (pick.x > d.width)
+                pick.x = d.width;
+
+            if (pick.y < 0)
+                pick.y = 0;
+            else if (pick.y > d.height)
+                pick.y = d.height;
+
+            pick = null;
+
+            nodesMovedB = true;
+            repaint();
+        }
+    }
+
+    public void start() {
+        stopB = false;
+        log("start() ......");
+        relaxer = new Thread(this);
+        relaxer.start();
+
+        if ( errorGraphB  && (errorGraph != null) )
+            errorGraph.setVisible(true);
+    }
+
+    public void stop(){
+        log("stop() ......");
+        stopB =true;
+        if (relaxer != null) {
+            relaxer.interrupt(); //!!!!
+            relaxer = null;
+            log("set relaxer to 0");
+        }
+        if ( errorGraphB  && (errorGraph != null) )
+            errorGraph.setVisible(false);
+    }
+
+    public void destroy() {
+        if ( errorGraphB  && (errorGraph != null) ) {
+            errorGraph.dispose();
+            errorGraph = null;
+        }
+    }
+
+    public void graphClose() {
+        if ( errorGraphB  && (errorGraph != null) ) {
+            errorGraph.dispose();
+            errorGraph = null;
+        }
+    }
+    //	@Override
+//	public void mouseDragged(MouseEvent e) {
+//		// TODO Auto-generated method stub
+//		//log("mouseDragged");
+//
+//	}
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        // TODO Auto-generated method stub
+        //log("mouseMoved");
+
+    }
+
+    // mouse listener
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        // TODO Auto-generated method stub
+
+    }
+    //	@Override
+//	public void mousePressed(MouseEvent e) {
+//		// TODO Auto-generated method stub
+//		log("mouseMoved");
+//		log(e.toString());
+//
+//	}
+//	@Override
+//	public void mouseReleased(MouseEvent e) {
+//		// TODO Auto-generated method stub
+//
+//	}
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        // TODO Auto-generated method stub
+
+    }
+    @Override
+    public void mouseExited(MouseEvent e) {
+        // TODO Auto-generated method stub
+
+    }
+    @Override
+    public void componentResized(ComponentEvent e) {
+        // TODO Auto-generated method stub
+        log("....................... resized!!!!!!!! ..............");
+        nodesMovedB=true;
+        //wasResized();
+    }
+    @Override
+    public void componentMoved(ComponentEvent e) {
+        // TODO Auto-generated method stub
+
+    }
+    @Override
+    public void componentShown(ComponentEvent e) {
+        // TODO Auto-generated method stub
+        log("......................... SH O W N ..................");
+
+    }
+    @Override
+    public void componentHidden(ComponentEvent e) {
+        // TODO Auto-generated method stub
+
+    }
+    @Override
+    public void stateChanged(ChangeEvent e) {
+        // TODO Auto-generated method stub
+        JSlider source = (JSlider)e.getSource();
+        if (true/*!source.getValueIsAdjusting()*/) {
+            delay = (50-(int)source.getValue())*10;
+        }
+
+
+
+    }
+
 }

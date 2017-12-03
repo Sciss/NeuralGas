@@ -90,7 +90,7 @@ public class DemoGNG extends JApplet {
         return str;
     }
 
-    // Slioder listener
+    // Slider listener
     class ALSlider implements ChangeListener {
 
         @Override
@@ -133,35 +133,35 @@ public class DemoGNG extends JApplet {
                 }  if (cb.equals(torusSOM_cb)) {
                     compute.torusSOMB = val;
                 }  if (cb.equals(usage_cb)) {
-                    compute.usageB = val;
+                    panel.usageB = val;
                 }  else if (cb.getText().equals(UTILITY_GNG)) {
                     compute.GNG_U_B = val;
                 } else if (cb.getText().equals(LBG_U)) {
                     compute.LBG_U_B = val;
                 } else if (cb.getText().equals(SOUND)) {
-                    compute.soundB = val;
+                    panel.soundB = val;
                 } else if (cb.getText().equals(AUTOSTOP)) {
                     compute.autoStopB = val;
                 } else if (cb.getText().equals(RNDINIT)) {
                     compute.rndInitB = val;
                 } else if (cb.getText().equals(NODES)) {
-                    compute.nodesB = val;
+                    panel.nodesB = val;
                 } else if (cb.getText().equals(PROB_DIST)) {
-                    compute.probDistB = val;
+                    panel.probDistB = val;
                 } else if (cb.getText().equals(TRACES)) {
-                    compute.tracesB = val;
+                    panel.tracesB = val;
                 } else if (cb.getText().equals(EDGES)) {
-                    compute.edgesB = val;
+                    panel.edgesB = val;
                 } else if (cb.getText().equals(ERRORGRAPH)) {
-                    compute.errorGraphB = val;
+                    panel.errorGraphB = val;
                 } else if (cb.getText().equals(VORONOI)) {
-                    compute.voronoiB = val;
-                    compute.nodesMovedB = true;
+                    panel.voronoiB = val;
+                    panel.nodesMovedB = true;
                 } else if (cb.getText().equals(DELAUNAY)) {
-                    compute.delaunayB = val;
-                    compute.nodesMovedB = true;
+                    panel.delaunayB = val;
+                    panel.nodesMovedB = true;
                 } else if (cb.getText().equals(TEACH)) {
-                    compute.teachB = val;
+                    panel.teachB = val;
                 } else if (cb.getText().equals(VARIABLE)) {
                     compute.variableB = val;
                     if (compute.variableB) {
@@ -188,7 +188,7 @@ public class DemoGNG extends JApplet {
                         //tmaxHCL_choice.setEnabled(false);
                     }
                 }
-                compute.repaint(); // added after removing the general repaint()
+                panel.repaint(); // added after removing the general repaint()
             }
         }
     }
@@ -234,13 +234,13 @@ public class DemoGNG extends JApplet {
             log("prepareAlgo: gui not yet initialized ....");
             return;
         }
-        Dimension d = compute.getSize();
+        Dimension d = panel.getSize();
         int i;
         // Reset values
         compute.sigs = 0;
         compute.nNodes = 0;
         compute.nEdges = 0;
-        compute.nodesMovedB = true;
+        panel.nodesMovedB = true;
         if (aNew.equals(Algo.LBGU)) {
             // use LBG card for LBG-U as well
             ((CardLayout)cards.getLayout()).show(cards,Algo.LBG.getName());
@@ -283,7 +283,7 @@ public class DemoGNG extends JApplet {
         }
         if (!aNew.equals(Algo.GR)) {
             nodes_cb.setSelected(true);
-            compute.nodesB = true;
+            panel.nodesB = true;
             torusGG_cb.setSelected(false);
             compute.torusGGB = false;
             //setChoice
@@ -443,7 +443,7 @@ public class DemoGNG extends JApplet {
             torusGG_cb.setSelected(true);
             compute.torusGGB = true;
             nodes_cb.setSelected(false);
-            compute.nodesB = false;
+            panel.nodesB = false;
         } else if (aNew.equals(Algo.SOM)) {
             // Set default values
             setChoice(epsiloniSOM_Af,epsiloniSOM_choice,0.1f);
@@ -534,7 +534,7 @@ public class DemoGNG extends JApplet {
                 }
                 // machine speed
                 else if (speed_choice.equals(mc)) {
-                    compute.tSleep = speed_Ai[speed_choice.getSelectedIndex()];
+                    panel.tSleep = speed_Ai[speed_choice.getSelectedIndex()];
                 }
                 // max. nodes
                 else if (maxNodes_choice.equals(mc)) {
@@ -695,7 +695,7 @@ public class DemoGNG extends JApplet {
                     }
                     compute.errorBestLBG_U = Float.MAX_VALUE;
                 }
-                compute.repaint(); // added after removing the general repaint()
+                panel.repaint(); // added after removing the general repaint()
             }
         }
     }
@@ -879,6 +879,7 @@ public class DemoGNG extends JApplet {
     private volatile boolean guiInitialized = false;
     boolean virgin = true;
     ComputeGNG compute;
+    PanelGNG panel;
     MyPanel cards;
     MyPanel pan_GNG;
     MyPanel p71;
@@ -952,7 +953,7 @@ public class DemoGNG extends JApplet {
      * The array for the stepsize.
      *  To add or delete values to the choice, only this array must be changed.
      */
-    protected int stepSize_Ai[] = {50, 1, 2, 5, 10, 20, 40, 80, 100, 150, 200};
+    protected int stepSize_Ai[] = {50, 1, 2, 5, 10, 20, 40, 80, 100, 150, 200, 400, 500};
     /**
      * The array for the machine speed.
      *  To add or delete values to the choice, change this array and speed_As[].
@@ -968,7 +969,7 @@ public class DemoGNG extends JApplet {
      *  To add or delete values to the choice, only this array must be changed.
      */
     protected int maxNodes_Ai[] = {100, 1, 2, 3, 4, 5, 10, 20, 50, 150,
-            200, 250,500,1000,2000,5000,10000};
+            200, 250,500,1000,2000,5000,10000,15000,20000,30000};
     /**
      * The array for the maximum age of an edge.
      *  To add or delete values to the choice, only this array must be changed.
@@ -1024,7 +1025,7 @@ public class DemoGNG extends JApplet {
      * The array for the value beta of the GNG algorithm.
      *  To add or delete values to the choice, only this array must be changed.
      */
-    protected float betaGNG_Af[] = {0.0005f, 0.0f, 0.00001f, 0.00005f, 0.0001f,
+    protected float betaGNG_Af[] = {0.0005f, 0.0f, 0.00001f, 0.000015f, 0.00002f, 0.00005f, 0.0001f,
             0.001f, 0.005f, 0.01f, 0.05f, 0.1f, 0.5f,
             1.0f};
     /**
@@ -1033,7 +1034,7 @@ public class DemoGNG extends JApplet {
      */
     protected float utilityGNG_Af[] =  {3.0f, 1.0f, 1.5f, 2.0f, 2.5f,
             3.5f, 4.0f, 4.5f, 5.0f, 5.5f, 6.0f, 6.5f,
-            7.0f, 7.5f, 8.0f};
+            7.0f, 7.5f, 8.0f, 8.5f, 9.0f, 9.5f, 10.0f, 12.0f, 14.0f, 15.0f, 16.0f};
     /**
      * The array for the value lambda initial of the NG algorithms.
      *  To add or delete values to the choice, only this array must be changed.
@@ -1189,14 +1190,14 @@ public class DemoGNG extends JApplet {
         syslog("reset() algo = " + compute.algo.getMnemo());
         syslog("reset() maxNodes = "+String.format("%d",compute.maxNodes));
         int i;
-        Dimension d = compute.getSize();
+        Dimension d = panel.getSize();
         // Reset values
         compute.sigs = 0;
         compute.nNodes = 0;
         compute.nEdges = 0;
         compute.noNewNodesGNGB = noNewNodesGNG_cb.isSelected();
         compute.GNG_U_B = gng_u_cb.isSelected();
-        compute.nodesMovedB = true;
+        panel.nodesMovedB = true;
 
         // Set specific algorithm parameters
         if (compute.algo.isGNGType()) { // GNG
@@ -1248,8 +1249,8 @@ public class DemoGNG extends JApplet {
             for (i = 0; i < compute.maxNodes; i++)
                 compute.addNode(d);
         }
-        ComputeGNG.paintCouter = 0;
-        compute.repaint(); // reset, added after removing the general repaint()
+        ComputeGNG.paintCounter = 0;
+        panel.repaint(); // reset, added after removing the general repaint()
 
     }
 
@@ -1270,10 +1271,11 @@ public class DemoGNG extends JApplet {
     }
 
     protected ComputeGNG createComputation() {
-        return new ComputeGNG(this);
+        return new ComputeGNG();
     }
 
     public ComputeGNG getComputation() { return compute; }
+    public PanelGNG getPanel() { return panel; }
 
     /* (non-Javadoc)
      * @see java.applet.Applet#init()
@@ -1308,7 +1310,7 @@ public class DemoGNG extends JApplet {
 
         // Create the GNG-MyPanel and center it
         compute = createComputation();
-        add("Center", compute);
+        add("Center", panel);
 
         // Create a MyPanel for the Buttons
 
@@ -1362,15 +1364,15 @@ public class DemoGNG extends JApplet {
         pAllN.add(new MyCheckBox(VORONOI,false,"display Voronoi diagram"),orientation);
         pAllN.add(new MyCheckBox(DELAUNAY,false,"display Delaunay triangulation"),orientation);
 
-        errorGraph_cb = new MyCheckBox(ERRORGRAPH, compute.errorGraphB);
+        errorGraph_cb = new MyCheckBox(ERRORGRAPH, panel.errorGraphB);
         pAllS.add(errorGraph_cb);
-        pAllS.add(nodes_cb = new MyCheckBox(NODES, compute.nodesB, "display reference vectors as green circles"));
-        pAllS.add(new MyCheckBox(PROB_DIST, compute.probDistB, "display probability distribution"));
-        pAllS.add(new MyCheckBox(TRACES, compute.tracesB, "display (motion) traces"));
-        pAllS.add(new MyCheckBox(EDGES, compute.edgesB,"display neighborhood edges"));
+        pAllS.add(nodes_cb = new MyCheckBox(NODES, panel.nodesB, "display reference vectors as green circles"));
+        pAllS.add(new MyCheckBox(PROB_DIST, panel.probDistB, "display probability distribution"));
+        pAllS.add(new MyCheckBox(TRACES, panel.tracesB, "display (motion) traces"));
+        pAllS.add(new MyCheckBox(EDGES, panel.edgesB,"display neighborhood edges"));
         pAllS.add(new MyCheckBox(RNDINIT, compute.rndInitB,"init ref. vectors from rectangular distribution instead of chosen one"));
         //pAllS.add(new MyCheckBox(WHITE, compute.whiteB));
-        pAllS.add(new MyCheckBox(SOUND, compute.soundB,"play sounds e.g. at insertion"));
+        pAllS.add(new MyCheckBox(SOUND, panel.soundB,"play sounds e.g. at insertion"));
         pAllS.add(new MyCheckBox(AUTOSTOP, compute.autoStopB,"stop algo automatically (model-dependent)"));
         pAll.add("North", pAllN);
         pAll.add("South", pAllS);
@@ -1936,8 +1938,8 @@ public class DemoGNG extends JApplet {
                     compute.addNode(new Dimension(compute.panelWidth, compute.panelHeight));
             }
         }
-        compute.errorGraph = new GraphGNG(this);
-        compute.errorGraph.graph.startNewTrace();
+        panel.errorGraph = new GraphGNG(this);
+        panel.errorGraph.graph.startNewTrace();
         setGuiInitialized(true);
         syslog("createGUI() end XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     }
@@ -2052,7 +2054,7 @@ public class DemoGNG extends JApplet {
             stop_b.setEnabled(true);
             reset_b.setEnabled(false);
             compute.readyLBG_B = false;
-            compute.start();
+            panel.start();
             log("T H R E A D ! ! ! StartThread done");
         }
     }
@@ -2060,7 +2062,7 @@ public class DemoGNG extends JApplet {
     @Override
     public void start() {
         syslog("start()");
-        syslog(String.format("tspeed = %d", compute.tSleep));
+        syslog(String.format("tspeed = %d", panel.tSleep));
         //for (int i =1;i<10;i++)
         StartThread t = new StartThread();
         //t.start();
@@ -2089,19 +2091,19 @@ public class DemoGNG extends JApplet {
         restart_b.setEnabled(true);
         stop_b.setEnabled(false);
         reset_b.setEnabled(true);
-        compute.stop();
+        panel.stop();
     }
 
     @Override
     public void destroy() {
-        compute.destroy();
+        panel.destroy();
         log("............... destroyed .....................");
     }
 
     public void graphClose() {
-        compute.errorGraphB = false;
+        panel.errorGraphB = false;
         errorGraph_cb.setSelected(false);
-        compute.graphClose();
+        panel.graphClose();
     }
 
 //	private void setCheckBox(MyCheckBox cb, boolean x){

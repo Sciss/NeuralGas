@@ -12,8 +12,10 @@ public class ImageComputeGNG extends ComputeGNG {
     private final int    numDots;
     private final int    imgW, imgH;
 
-    public ImageComputeGNG(DemoGNG graph, BufferedImage img) {
-        super(graph);
+    public int getNumDots() { return numDots; }
+
+    public ImageComputeGNG(DemoGNG graph, BufferedImage img, boolean invert) {
+        super();
         final int w = img.getWidth();
         final int h = img.getHeight();
         final int numPixels = w * h;
@@ -24,7 +26,7 @@ public class ImageComputeGNG extends ComputeGNG {
                 final int rgb       = img.getRGB(x, y);
                 final int value     = (((rgb & 0xFF0000) >> 16) + ((rgb & 0xFF00) >> 8) + (rgb & 0x0000FF)) / 3;
                 final boolean isDot = value > /* <= */ 0x7F;
-                if (isDot) {
+                if (isDot ^ invert) {
                     _dots[_numDots] = (((long) x) << 32) | (y & 0xFFFFFFFFL);
                     _numDots++;
                 }
@@ -45,14 +47,14 @@ public class ImageComputeGNG extends ComputeGNG {
         final int xIn   = (int) (dot >>> 32);
         final int yIn   = (int) dot;
 
-        SignalX = xIn * wi / imgW;
-        SignalY = yIn * hi / imgH;
+        SignalX = (float) (xIn * wi) / imgW;
+        SignalY = (float) (yIn * hi) / imgH;
     }
 
-    @Override
-    protected void drawPD(final Graphics g, Dimension d) {
-        final int wi = panelWidth;
-        final int hi = panelHeight;
-        g.drawImage(img, 0, 0, wi, hi, null);
-    }
+//    @Override
+//    protected void drawPD(final Graphics g, Dimension d) {
+//        final int wi = panelWidth;
+//        final int hi = panelHeight;
+//        g.drawImage(img, 0, 0, wi, hi, null);
+//    }
 }

@@ -32,11 +32,11 @@ import java.awt.Dimension;
  * 
  */
 public class Voronoi {
-    ComputeGNG cgng;
+    PanelGNG cgng;
     Voronoi() {
     }
 
-    Voronoi(ComputeGNG cgng) {
+    Voronoi(PanelGNG cgng) {
         this.cgng = cgng;
         vsites = new SiteVoronoi[cgng.MAX_NODES + 1];
     }
@@ -366,9 +366,9 @@ public class Voronoi {
 
     public void line(float x1, float y1, float x2, float y2, boolean vdB) {
         LineGNG l = new LineGNG((int) x1, (int) y1, (int) x2, (int) y2);
-        cgng.lines[cgng.nlines] = l;
-        cgng.vd[cgng.nlines] = vdB;
-        cgng.nlines++;
+        cgng.lines[cgng.nLines] = l;
+        cgng.vd[cgng.nLines] = vdB;
+        cgng.nLines++;
     }
 
     public void PQinsert(HalfEdgeVoronoi he, SiteVoronoi v, float offset) {

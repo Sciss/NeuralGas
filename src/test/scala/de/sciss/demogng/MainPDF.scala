@@ -20,10 +20,11 @@ object MainPDF {
 
   def main(args: Array[String]): Unit = {
     val img = if (args.length >= 2 && args(0) == "--image") ImageIO.read(new File(args(1))) else null
+    val invert = args.contains("--invert")
     Swing.onEDT {
-      val main    = new Main(img)
+      val main    = new Main(img, invert)
       main.run()
-      val source  = new JavaAWT(main.getDemo.getComputation)
+      val source  = new JavaAWT(main.getDemo.getPanel)
       val f = main.getFrame
       val a = SaveAction(source :: Nil)
       a.accelerator = Some(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK))
@@ -37,6 +38,9 @@ object MainPDF {
       })
       f.revalidate()
       f.pack()
+
+      val c = main.getDemo.getComputation.asInstanceOf[ImageComputeGNG]
+      println(s"num-dots: ${c.getNumDots}")
     }
   }
 }

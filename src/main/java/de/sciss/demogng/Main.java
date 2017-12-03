@@ -15,14 +15,16 @@ import java.net.URL;
  */
 public final class Main implements Runnable, AppletStub {
     private final BufferedImage img;
-    private final boolean   hasImage;
+    private final boolean       imgInvert;
+    private final boolean       hasImage;
 
     private JFrame f;
     private DemoGNG applet;
 
-    public Main(BufferedImage img) {
-        this.img  = img;
-        hasImage  = img != null;
+    public Main(BufferedImage img, boolean invert) {
+        this.img    = img;
+        hasImage    = img != null;
+        imgInvert   = invert;
     }
 
     public static void main(String[] args) throws IOException {
@@ -33,7 +35,14 @@ public final class Main implements Runnable, AppletStub {
         } else {
             img = null;
         }
-        EventQueue.invokeLater(new Main(img));
+        boolean invert = false;
+        for (String arg : args) {
+            if (arg.equals("--invert")) {
+                invert = true;
+                break;
+            }
+        }
+        EventQueue.invokeLater(new Main(img, invert));
     }
 
     public JFrame  getFrame() { return f     ; }
@@ -41,7 +50,7 @@ public final class Main implements Runnable, AppletStub {
 
     public void run() {
         f       = new JFrame("Demo GNG");
-        applet  = hasImage ? new ImageDemoGNG(img) : new DemoGNG();
+        applet  = hasImage ? new ImageDemoGNG(img, imgInvert) : new DemoGNG();
         f.getContentPane().add(applet);
         f.setMinimumSize(new Dimension(768, 768));
         f.pack();
