@@ -91,7 +91,7 @@ class PanelGNG extends JPanel implements
     /**
      * The version of the Growing Neural Gas Demo.
      */
-    protected final String DGNG_VERSION = "v2.2.0-SNAPSHOT"; // Version
+    protected static final String DGNG_VERSION = "v2.2.0-SNAPSHOT"; // Version
     /**
      * The current maximum number of nodes.
      */

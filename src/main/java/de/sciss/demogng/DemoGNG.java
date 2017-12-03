@@ -117,17 +117,17 @@ public class DemoGNG extends JApplet {
 
 
                 if (cb.getText().equals(SIGNALS)) {
-                    compute.signalsB = val;
+                    panel.signalsB = val;
                 } else if (cb.equals(noNewNodesGNG_cb)) {
                     compute.noNewNodesGNGB = val;
                 }  if (cb.equals(noNewNodesGG_cb)) {
                     compute.noNewNodesGGB = val;
                 }  if (cb.equals(mapSpaceGG_cb)) {
-                    compute.mapSpaceGGB = val;
+                    panel.mapSpaceGGB = val;
                 }  if (cb.equals(mapSpaceSOM_cb)) {
-                    compute.mapSpaceSOMB = val;
+                    panel.mapSpaceSOMB = val;
                 }  if (cb.equals(tau_cb)) {
-                    compute.tauB = val;
+                    panel.tauB = val;
                 }  if (cb.equals(torusGG_cb)) {
                     compute.torusGGB = val;
                 }  if (cb.equals(torusSOM_cb)) {
@@ -2168,7 +2168,7 @@ public class DemoGNG extends JApplet {
 
     @Override
     public String getAppletInfo() {
-        String versionInfo = "DemoGNG " + compute.DGNG_VERSION +
+        String versionInfo = "DemoGNG " + PanelGNG.DGNG_VERSION +
                 ". Written by Hartmut S. Loos (Copyright 1996-1998)" +
                 "\n\nand  Bernd Fritzke (Copyright 2012-2013)\n\n under the terms of the GNU General Public License." +
                 "\n\nFor updates look at " + myHomepage;

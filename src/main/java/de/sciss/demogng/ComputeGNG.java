@@ -42,50 +42,55 @@ class ComputeGNG {
         log("####### ", txt);
     }
 
-    final static private SimpleDateFormat format
-    = new SimpleDateFormat("yyyy.MM.dd HH.mm.ss");
+    final static private SimpleDateFormat format = new SimpleDateFormat("yyyy.MM.dd HH.mm.ss");
+
     public synchronized String timeStamp() {
         long lDateTime = new Date().getTime();
         String str;
         str = format.format(new java.util.Date())+"."+String.format("%03d",lDateTime%1000);
         return str;
     }
+
     /**
      * The flag for debugging.
      */
     protected final boolean DEBUG = false;
+
     /**
      * The maximum number of elements to draw/calculate for the distributions.
      */
     protected final int MAX_COMPLEX = 58;
+
     /**
      * The maximum number of nodes.
      */
     protected final int MAX_NODES = 30000;
+
     /**
      * The maximum number of edges (3 * maximum number of nodes).
      */
     protected final int MAX_EDGES = 6 * MAX_NODES;
+
     /**
-     * The maximum number of Voronoi lines (5 * maximum number of nodes).
+     * The maximum step-size.
      */
-    protected final int MAX_V_LINES = 6 * MAX_NODES;
-    /**
-     * The maximum stepsize.
-     */
-    protected final int MAX_STEPSIZE = 500;
+    protected final int MAX_STEP_SIZE = 500;
+
     /**
      * The size of the DiscreteMixture signal set.
      */
     protected final int MIXTURE_SIZE = 500;
+
     /**
      * The maximum number of discrete signals.
      */
     protected final int MAX_DISCRETE_SIGNALS = 20000;
+
     /**
      * The maximum x size of the grid array.
      */
     protected final int MAX_GRID_X = 10000;
+
     /**
      * The maximum y size of the grid array.
      */
@@ -95,18 +100,17 @@ class ComputeGNG {
      * The factor for the ring-thickness (distribution).
      */
     protected final float RING_FACTOR = 0.4f;	// Factor < 1
-    /**
-     * The version of the Growing Neural Gas Demo.
-     */
-    protected final String DGNG_VERSION = "v2.2.0-SNAPSHOT"; // Version
+
     /**
      * The current maximum number of nodes.
      */
     protected int maxNodes = 100;
+
     /**
      * The current number of runs to insert a new node (GNG).
      */
     protected int lambdaGNG = 600;
+
     /**
      * The current number of input signals used for adaptation.
      */
@@ -116,19 +120,23 @@ class ComputeGNG {
      * The temporal backup of a run.
      */
     protected int sigsTmp = 0;
+
     /**
      * The x-position of the actual signal.
      */
     protected float SignalX = 0f;
+
     /**
      * The y-position of the actual signal.
      */
     protected float SignalY = 0f;
+
     /**
      * The initial width of the drawing area.
      * This value can only be changed by resizing the appletviewer.
      */
     protected int panelWidth = 550;
+
     /**
      * The initial height of the drawing area.
      * This value can only be changed by resizing the appletviewer.
@@ -139,44 +147,54 @@ class ComputeGNG {
      * The actual number of nodes.
      */
     protected int nNodes = 0;
+
     /**
      * The array of the actual used nodes.
      */
     protected NodeGNG nodes[] = new NodeGNG[MAX_NODES];
+
     /**
      * The sorted array of indices of nodes.
      * The indices of the nodes are sorted by their distance from the actual
      * signal. sNodes[1] is the index of the nearest node.
      */
     protected int sNodes[] = new int[MAX_NODES + 1];
+
     /**
      * The array of the nodes in the grid.
      */
     protected GridNodeGNG grid[][] = new GridNodeGNG[MAX_GRID_X][MAX_GRID_Y];
+
     /**
      * The array of the last computed signals (x-coordinate).
      */
-    protected float lastSignalsX[] = new float[MAX_STEPSIZE];
+    protected float lastSignalsX[] = new float[MAX_STEP_SIZE];
+
     /**
      * The array of the last computed signals (y-coordinate).
      */
-    protected float lastSignalsY[] = new float[MAX_STEPSIZE];
+    protected float lastSignalsY[] = new float[MAX_STEP_SIZE];
+
     /**
      * The array of the discrete signals (x-coordinate).
      */
     protected float discreteSignalsX[] = new float[MAX_DISCRETE_SIGNALS];
+
     /**
      * The array of the discrete signals (y-coordinate).
      */
     protected float discreteSignalsY[] = new float[MAX_DISCRETE_SIGNALS];
+
     /**
      * The array of the best distance (discrete signals).
      */
     protected float discreteSignalsD1[] = new float[MAX_DISCRETE_SIGNALS];
+
     /**
      * The array of the second best distance (discrete signals).
      */
     protected float discreteSignalsD2[] = new float[MAX_DISCRETE_SIGNALS];
+
     /**
      * The array of the second best distance (discrete signals).
      */
@@ -186,66 +204,38 @@ class ComputeGNG {
      * The current number of discrete signals.
      */
     protected int numDiscreteSignals = 500;
+
     /**
      * The actual number of edges.
      */
     protected int nEdges = 0;
+
     /**
      * The array of the actual used edges.
      */
     protected EdgeGNG edges[] = new EdgeGNG[MAX_EDGES];
-    /**
-     * The array of the actual used lines.
-     */
-    protected LineGNG lines[] = new LineGNG[MAX_V_LINES];
-    /**
-     * The array of boolean to distinguish between Voronoi and Delaunay lines.
-     */
-    protected boolean vd[] = new boolean[MAX_V_LINES];
 
-    /**
-     * The flag for playing the sound for a new inserted node.
-     */
-    protected boolean insertedSoundB = false;
-    /**
-     * The flag for a white background. Useful for making hardcopies
-     */
-    protected boolean whiteB = false;
     /**
      * The flag for random init. The nodes will be placed only in the specified
      *  distribution or not.
      */
     protected boolean rndInitB = false;
+
     /**
      * The flag for entering the fine-tuning phase (GG).
      */
     protected boolean fineTuningB = false;
-    /**
-     * The flag for showing the signal.
-     *  This variable can be set by the user and shows the last input signals.
-     */
-    protected boolean signalsB = false;
+
     /**
      * stop the algo when max number of nodes is reached
      */
     protected boolean autoStopB = true;
 
     /**
-     * display GG network in mapSpace
-     */
-    protected boolean mapSpaceGGB = false;
-    /**
-     * display SOM network in mapSpace
-     */
-    protected boolean mapSpaceSOMB = false;
-    /**
-     * The flag for displaying tau values
-     */
-    protected boolean tauB = false;
-    /**
      * close GG to a torus
      */
     protected boolean torusGGB = false;
+
     /**
      * close SOM to a torus
      */
@@ -265,11 +255,11 @@ class ComputeGNG {
      */
     protected boolean noNewNodesGGB = false;
 
-    /**
-     * The flag for stopping the demo.
-     *  This variable can be set by the user. If true no calculation is done.
-     */
-    protected boolean stopB = false;
+//    /**
+//     * The flag for stopping the demo.
+//     *  This variable can be set by the user. If true no calculation is done.
+//     */
+//    protected boolean stopB = false;
 
     /**
      * The flag for variable movement (HCL).
@@ -2044,12 +2034,14 @@ class ComputeGNG {
     }
 
     public static class Result {
-        boolean repaint = false;
-        boolean stop    = false;
+        boolean repaint         = false;
+        boolean stop            = false;
+        boolean insertedSound   = false;
 
         void reset() {
-            repaint = false;
-            stop    = false;
+            repaint         = false;
+            stop            = false;
+            insertedSound   = false;
         }
     }
 
@@ -2093,8 +2085,8 @@ class ComputeGNG {
         SignalY = panelHeight/2; // d.height/2;
 
         valueGraph = 0.0f;
-        if (stopB)
-            return;
+//        if (stopB)
+//            return;
         
         // do stepSize adaption steps using random signals
         for (k = 0; k < stepSize; k++) {
@@ -2262,8 +2254,8 @@ class ComputeGNG {
                                     break;
                                 }
                             }
-                            insertedSoundB =
-                            ( -1 != insertNode(numError, maximumErrorNeighbor(numError)) );
+                            result.insertedSound =
+                                    ( -1 != insertNode(numError, maximumErrorNeighbor(numError)) );
                         }
                     }
 
@@ -2529,10 +2521,10 @@ class ComputeGNG {
                     if ( (sigs % (gridWidth * gridHeight * l_i) == 0) && (!fineTuningB) ) {
                         if (!noNewNodesGGB) {
                             if(enlargeGrid()) {
-                                insertedSoundB = true;
+                                result.insertedSound = true;
                                 fineTuningB = false;
                             } else {
-                                insertedSoundB = false;
+                                result.insertedSound = false;
                                 fineTuningB = true;
                                 log("fine-tuning .....");
 
@@ -2747,8 +2739,8 @@ class ComputeGNG {
                 }
 
             } // if (algo.isDiscrete())
-            if (stopB==true)
-                break;
+//            if (stopB==true)
+//                break;
 
         } // loop over stepSize
 
