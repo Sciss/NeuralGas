@@ -46,7 +46,7 @@ public class EdgeGNG {
    * The age of this edge.
    * @see EdgeGNG
    */
-  protected int age = 0;
+  public int age = 0;
 
   /**
    * Replace a node with a new one. This is necessary after deleting a node

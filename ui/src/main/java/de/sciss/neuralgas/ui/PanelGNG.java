@@ -241,7 +241,7 @@ class PanelGNG extends JPanel implements
 
             // Relativate Positions
             Dimension d = getSize();
-            if ( false && ((d.width != compute.panelWidth) || (d.height != compute.panelHeight)) ) {
+            if ( (d.width != compute.panelWidth) || (d.height != compute.panelHeight) ) {
                 //
                 // panel size has changed! ==> rescaling needed
                 //

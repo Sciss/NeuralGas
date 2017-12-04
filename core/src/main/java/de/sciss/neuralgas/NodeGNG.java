@@ -28,7 +28,8 @@ import java.util.*;
  *
  */
 public class NodeGNG {
-    final int TRACE_LEN=100;
+    final int TRACE_LEN = 100;
+
     float traceX[] = new float[TRACE_LEN];
     float traceY[] = new float[TRACE_LEN];
     int traceIdx=0;
@@ -69,7 +70,7 @@ public class NodeGNG {
     /**
      * The maximum number of neighbors of a node
      */
-    protected final int MAX_NEIGHBORS = 10;
+    public final int MAX_NEIGHBORS = 10;
     /**
      * The flag for mouse-selection
      */
@@ -122,7 +123,7 @@ public class NodeGNG {
     /**
      * The error of the node.
      */
-    protected float error = 0.0f;
+    public float error = 0.0f;
     /**
      * for GG tau counter
      */
@@ -130,11 +131,11 @@ public class NodeGNG {
     /**
      * The distance from the input signal.
      */
-    protected float sqrDist = Float.MAX_VALUE;
+    public float sqrDist = Float.MAX_VALUE;
     /**
      * The utility for GNG-U and LBG-U
      */
-    protected float utility = 0.0f;
+    public float utility = 0.0f;
     /**
      * The number of neighbors.
      */
@@ -142,9 +143,9 @@ public class NodeGNG {
     /**
      * The list of neighbor cells.
      */
-    protected int neighbor[] = new int[MAX_NEIGHBORS];
+    public  int neighbor[] = new int[MAX_NEIGHBORS];
     /**
-     * The list of neighboring numSignals (specified by their number).
+     * The list of neighboring signals (specified by their number).
      */
     protected Vector<Integer> signals = new Vector<Integer>();
 
@@ -172,7 +173,7 @@ public class NodeGNG {
      *
      * @return		number of numSignals
      */
-    protected int numSignals() {
+    public int numSignals() {
         return(signals.size());
     }
 
@@ -181,7 +182,7 @@ public class NodeGNG {
      *
      * @param sig		The index of the signal
      */
-    protected void addSignal(int sig) {
+    public void addSignal(int sig) {
         signals.addElement( new Integer(sig) );
     }
 
@@ -190,7 +191,7 @@ public class NodeGNG {
      *
      * @return		The index of the signal or -1.
      */
-    protected int removeSignal() {
+    public int removeSignal() {
         int size = signals.size();
         if (size < 1)
             return(-1);
@@ -206,7 +207,7 @@ public class NodeGNG {
      *
      * @return	Number of neighbors
      */
-    protected int numNeighbors() {
+    public int numNeighbors() {
         return nNeighbor;
     }
 
@@ -215,7 +216,7 @@ public class NodeGNG {
      *
      * @return	Space enough?
      */
-    protected boolean moreNeighbors() {
+    public boolean moreNeighbors() {
         return (MAX_NEIGHBORS != nNeighbor);
     }
 
@@ -225,7 +226,7 @@ public class NodeGNG {
      * @param i	The index of a neighbor
      * @return	The index of a node
      */
-    protected int neighbor(int i) {
+    public int neighbor(int i) {
         return neighbor[i];
     }
 
@@ -234,7 +235,7 @@ public class NodeGNG {
      *
      * @param node	The index of a node
      */
-    protected void deleteNeighbor(int node) {
+    public void deleteNeighbor(int node) {
         for (int i = 0; i < nNeighbor; i++) {
             if (node == neighbor[i]) {
                 nNeighbor--;
@@ -252,7 +253,7 @@ public class NodeGNG {
      * @param newN	The index of a node
      * @see ComputeGNG#deleteNode
      */
-    protected void replaceNeighbor(int old, int newN) {
+    public void replaceNeighbor(int old, int newN) {
         for (int i = 0; i < nNeighbor; i++) {
             if (old == neighbor[i]) {
                 neighbor[i] = newN;
@@ -267,7 +268,7 @@ public class NodeGNG {
      * @param n		The index of a node
      * @return		Neighbor?
      */
-    protected boolean isNeighbor(int n) {
+    public boolean isNeighbor(int n) {
         for (int i = 0; i < nNeighbor; i++)
             if (n == neighbor[i])
                 return true;
@@ -279,7 +280,7 @@ public class NodeGNG {
      *
      * @param node	The index of a node
      */
-    protected void addNeighbor(int node) {
+    public void addNeighbor(int node) {
         if (nNeighbor == MAX_NEIGHBORS)
             return;
 
