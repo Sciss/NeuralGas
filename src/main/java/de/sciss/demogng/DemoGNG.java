@@ -228,7 +228,7 @@ public class DemoGNG extends JApplet {
             }
         }
     }
-    public void prepareAlgo(Algo aNew){
+    public void prepareAlgo(Algorithm aNew){
         log("PREPARE ALGO");
         if (!isGuiInitialized()){
             log("prepareAlgo: gui not yet initialized ....");
@@ -237,19 +237,19 @@ public class DemoGNG extends JApplet {
         Dimension d = panel.getSize();
         int i;
         // Reset values
-        compute.sigs = 0;
+        compute.numSignals = 0;
         compute.nNodes = 0;
         compute.nEdges = 0;
         panel.nodesMovedB = true;
-        if (aNew.equals(Algo.LBGU)) {
+        if (aNew.equals(Algorithm.LBGU)) {
             // use LBG card for LBG-U as well
-            ((CardLayout)cards.getLayout()).show(cards,Algo.LBG.getName());
-        } else if (aNew.equals(Algo.GNGU)) {
+            ((CardLayout)cards.getLayout()).show(cards, Algorithm.LBG.getName());
+        } else if (aNew.equals(Algorithm.GNGU)) {
             // use GNG card for GNG-U as well
-            ((CardLayout)cards.getLayout()).show(cards,Algo.GNG.getName());
-        } else if (aNew.equals(Algo.GR)) {
+            ((CardLayout)cards.getLayout()).show(cards, Algorithm.GNG.getName());
+        } else if (aNew.equals(Algorithm.GR)) {
             // use GG card for GR as well
-            ((CardLayout)cards.getLayout()).show(cards,Algo.GG.getName());
+            ((CardLayout)cards.getLayout()).show(cards, Algorithm.GG.getName());
         } else{
             // use specific card
             ((CardLayout)cards.getLayout()).show(cards,aNew.getName());
@@ -259,8 +259,8 @@ public class DemoGNG extends JApplet {
         maxNodes_lbl.setVisible(true);
         maxNodes_choice.setVisible(true);
 
-        // set algo to use
-        compute.algo = aNew; // is altered below in only some cases
+        // set algorithm to use
+        compute.algorithm = aNew; // is altered below in only some cases
         if (aNew.isDiscrete()){
             compute.stepSize = stepSize_Ai[1]; //1
             stepSize_choice.setSelectedIndex(1);
@@ -273,7 +273,7 @@ public class DemoGNG extends JApplet {
             compute.stepSize = stepSize_Ai[0]; // 50
             stepSize_choice.setSelectedIndex(0);
 
-            if (aNew.equals(Algo.GR)) {
+            if (aNew.equals(Algorithm.GR)) {
                 setChoice(maxNodes_Ai,maxNodes_choice,500);
             } else {
                 setChoice(maxNodes_Ai,maxNodes_choice,100);
@@ -281,7 +281,7 @@ public class DemoGNG extends JApplet {
             //compute.maxNodes = maxNodes_Ai[0];  //100
             //maxNodes_choice.setSelectedIndex(0);
         }
-        if (!aNew.equals(Algo.GR)) {
+        if (!aNew.equals(Algorithm.GR)) {
             nodes_cb.setSelected(true);
             panel.nodesB = true;
             torusGG_cb.setSelected(false);
@@ -289,15 +289,15 @@ public class DemoGNG extends JApplet {
             //setChoice
         }
         // Set specific algorithm parameters
-        if (aNew.equals(Algo.GNG) || aNew.equals(Algo.GNGU)) {
-            if(aNew.equals(Algo.GNGU)){
+        if (aNew.equals(Algorithm.GNG) || aNew.equals(Algorithm.GNGU)) {
+            if(aNew.equals(Algorithm.GNGU)){
                 compute.GNG_U_B=true;
             } else {
                 compute.GNG_U_B=false;
             }
             gng_u_cb.setSelected(compute.GNG_U_B);
-            // set algo to GNG in both cases!
-            compute.algo = Algo.GNG;
+            // set algorithm to GNG in both cases!
+            compute.algorithm = Algorithm.GNG;
 
             // Set default values
             compute.addNode(d);
@@ -313,7 +313,7 @@ public class DemoGNG extends JApplet {
                 compute.addNode(d);
             //maxNodes_lbl.setText("max. nodes:");
             maxNodes_lbl.setText("# nodes:");
-        } else if (aNew.equals(Algo.HCL)) {
+        } else if (aNew.equals(Algorithm.HCL)) {
             // Set default values
             setChoice(epsilonHCL_Af,epsilonHCL_choice,0.1f);
             setChoice(epsiloniHCL_Af,epsiloniHCL_choice,0.1f);
@@ -325,7 +325,7 @@ public class DemoGNG extends JApplet {
             // Generate some nodes
             for (i = 0; i < compute.maxNodes; i++)
                 compute.addNode(d);
-        } else if (aNew.equals(Algo.NG)) {
+        } else if (aNew.equals(Algorithm.NG)) {
             // Set default values
             maxNodes_lbl.setText("# nodes:");
             setChoice(lambdaiNG_Af,lambdaiNG_choice,30f);
@@ -348,7 +348,7 @@ public class DemoGNG extends JApplet {
             // Generate some nodes
             for (i = 0; i < compute.maxNodes; i++)
                 compute.addNode(d);
-        } else if (aNew.equals(Algo.NGCHL)) {
+        } else if (aNew.equals(Algorithm.NGCHL)) {
             // Set default values
             setChoice(lambdaiNGCHL_Af,lambdaiNGCHL_choice,30);
             setChoice(lambdafNGCHL_Af,lambdafNGCHL_choice,0.01f);
@@ -377,19 +377,19 @@ public class DemoGNG extends JApplet {
             // Generate some nodes
             for (i = 0; i < compute.maxNodes; i++)
                 compute.addNode(d);
-        } else if (aNew.equals(Algo.CHL)) {
+        } else if (aNew.equals(Algorithm.CHL)) {
             // Set default values
             maxNodes_lbl.setText("# nodes:");
 
             // Generate some nodes
             for (i = 0; i < compute.maxNodes; i++)
                 compute.addNode(d);
-        } else if (aNew.equals(Algo.LBG) ||
-                aNew.equals(Algo.LBGU))
+        } else if (aNew.equals(Algorithm.LBG) ||
+                aNew.equals(Algorithm.LBGU))
         {
-            // set algo to LBG in both cases!
-            compute.algo = Algo.LBG;
-            if(aNew.equals(Algo.LBGU)){
+            // set algorithm to LBG in both cases!
+            compute.algorithm = Algorithm.LBG;
+            if(aNew.equals(Algorithm.LBGU)){
                 compute.LBG_U_B=true;
             } else {
                 compute.LBG_U_B=false;
@@ -404,7 +404,7 @@ public class DemoGNG extends JApplet {
             numDiscreteSignalsLBG_choice.setSelectedIndex(0);
             maxNodes_lbl.setText("# nodes:");
 
-            // Initialize discrete signals
+            // Initialize discrete numSignals
             compute.initDiscreteSignals(compute.pd);
 
             // Generate some nodes
@@ -412,7 +412,7 @@ public class DemoGNG extends JApplet {
             for (i = 0; i < compute.maxNodes; i++)
                 compute.addNode(Math.round(compute.discreteSignalsX[(z+i)%compute.numDiscreteSignals]),
                         Math.round(compute.discreteSignalsY[(z+i)%compute.numDiscreteSignals]));
-        } else if (aNew.equals(Algo.GG)) {
+        } else if (aNew.equals(Algorithm.GG)) {
             // Set default values
             compute.fineTuningB = false;
             compute.initGrid(2, 2, d);
@@ -426,7 +426,7 @@ public class DemoGNG extends JApplet {
             setChoice(epsilonfGG_Af,epsilonfGG_choice,0.0050f);
             setChoice(sigmaGG_Af,sigmaGG_choice,0.9f);
             setChoice(maxYGG_Ai,maxYGG_choice,0);
-        } else if (aNew.equals(Algo.GR)) {
+        } else if (aNew.equals(Algorithm.GR)) {
             // Set default values
             compute.fineTuningB = false;
             compute.initGrid(2, 1, d);
@@ -444,7 +444,7 @@ public class DemoGNG extends JApplet {
             compute.torusGGB = true;
             nodes_cb.setSelected(false);
             panel.nodesB = false;
-        } else if (aNew.equals(Algo.SOM)) {
+        } else if (aNew.equals(Algorithm.SOM)) {
             // Set default values
             setChoice(epsiloniSOM_Af,epsiloniSOM_choice,0.1f);
             setChoice(epsilonfSOM_Af,epsilonfSOM_choice,0.005f);
@@ -497,9 +497,9 @@ public class DemoGNG extends JApplet {
                     log("ComboBox ALGO");
 
                     String myArg = (String) mc.getSelectedItem();
-                    // which algo?
-                    Algo aNew = null; // any value as initializer;
-                    for (Algo a1:Algo.values()){
+                    // which algorithm?
+                    Algorithm aNew = null; // any value as initializer;
+                    for (Algorithm a1: Algorithm.values()){
                         if (myArg.equals(a1.getName())){
                             log(">>> Network Model: \""+a1.getName()+"\"");
                             aNew = a1;
@@ -524,7 +524,7 @@ public class DemoGNG extends JApplet {
                             break;
                         }
                     }
-                    // Initialize discrete signals
+                    // Initialize discrete numSignals
                     compute.initDiscreteSignals(compute.pd);
                     compute.errorBestLBG_U = Float.MAX_VALUE;
                 }
@@ -685,9 +685,9 @@ public class DemoGNG extends JApplet {
                 }
                 // numDiscreteSignals LBG
                 else if (numDiscreteSignalsLBG_choice.equals(mc)) {
-                    // Initialize discrete signals
+                    // Initialize discrete numSignals
                     compute.initDiscreteSignals(compute.pd);
-                    // Set number of discrete signals
+                    // Set number of discrete numSignals
                     if (compute.pd.equals(PD.DiscreteMixture)) {
                         compute.numDiscreteSignals = 500; // TODO: define constant
                     } else {
@@ -772,8 +772,8 @@ public class DemoGNG extends JApplet {
             dumpEvent("Shown", e);
             shown=1;
             if (needReset) {
-                compute.algo = Algo.GNG; // hack
-                algo_choice.setSelectedIndex(Algo.GNG.ordinal());
+                compute.algorithm = Algorithm.GNG; // hack
+                algo_choice.setSelectedIndex(Algorithm.GNG.ordinal());
                 reset();
                 needReset =false;
                 log("componentShown(): reset performed ....");
@@ -811,7 +811,7 @@ public class DemoGNG extends JApplet {
     /**
      * The name of the signal checkbox.
      */
-    protected final static String SIGNALS    	= " signals";
+    protected final static String SIGNALS    	= " numSignals";
     /**
      * The name of the no_new_nodes checkbox.
      */
@@ -1102,7 +1102,7 @@ public class DemoGNG extends JApplet {
      */
     protected int edgefNGCHL_Ai[] = {200, 100, 120, 140, 180, 250, 300, 400, 500};
     /**
-     * The array for the number of discrete signals.
+     * The array for the number of discrete numSignals.
      *  To add or delete values to the choice, only this array must be changed.
      */
     protected int numDiscreteSignalsLBG_Ai[] = {500, 5,10, 20, 50, 100, 200,
@@ -1187,12 +1187,12 @@ public class DemoGNG extends JApplet {
             "5x50","5x100","10x1000"};
 
     public void reset() {
-        syslog("reset() algo = " + compute.algo.getMnemo());
+        syslog("reset() algorithm = " + compute.algorithm.getMnemo());
         syslog("reset() maxNodes = "+String.format("%d",compute.maxNodes));
         int i;
         Dimension d = panel.getSize();
         // Reset values
-        compute.sigs = 0;
+        compute.numSignals = 0;
         compute.nNodes = 0;
         compute.nEdges = 0;
         compute.noNewNodesGNGB = noNewNodesGNG_cb.isSelected();
@@ -1200,14 +1200,14 @@ public class DemoGNG extends JApplet {
         panel.nodesMovedB = true;
 
         // Set specific algorithm parameters
-        if (compute.algo.isGNGType()) { // GNG
+        if (compute.algorithm.isGNGType()) { // GNG
             compute.addNode(d); // node 1
             if (compute.maxNodes != 1)
                 compute.addNode(d); // node 2
-        } else if (compute.algo.isLBGType()) { // LBG / LBG-U
-            // Initialize discrete signals
+        } else if (compute.algorithm.isLBGType()) { // LBG / LBG-U
+            // Initialize discrete numSignals
             log("reset()init discrete distri ");
-            compute.initDiscreteSignals(compute.pd); // need finite number of signals here
+            compute.initDiscreteSignals(compute.pd); // need finite number of numSignals here
             compute.readyLBG_B = false;
             compute.errorBestLBG_U = Float.MAX_VALUE;
             compute.LBG_U_B = lbg_u_cb.isSelected();
@@ -1217,14 +1217,14 @@ public class DemoGNG extends JApplet {
             for (i = 0; i < compute.maxNodes; i++)
                 compute.addNode(Math.round(compute.discreteSignalsX[(z+i)%compute.numDiscreteSignals]),
                         Math.round(compute.discreteSignalsY[(z+i)%compute.numDiscreteSignals]));
-        } else if (compute.algo.equals(Algo.GG) || compute.algo.equals(Algo.GR)) { // GG
+        } else if (compute.algorithm.equals(Algorithm.GG) || compute.algorithm.equals(Algorithm.GR)) { // GG
             // Set default values
             compute.fineTuningB = false;
             if (compute.maxNodes < 4) {
                 compute.maxNodes = maxNodes_Ai[0];
                 maxNodes_choice.setSelectedIndex(0);
             }
-            if (compute.algo.equals(Algo.GR)) {
+            if (compute.algorithm.equals(Algorithm.GR)) {
                 setChoice(maxYGG_Ai, maxYGG_choice, 1);
             }
 //			else {
@@ -1237,7 +1237,7 @@ public class DemoGNG extends JApplet {
                 compute.initGrid(2, 2, d);
             }
 
-        } else if (compute.algo.equals(Algo.SOM)) { // SOM
+        } else if (compute.algorithm.equals(Algorithm.SOM)) { // SOM
             // Set default values
 
             // Generate some nodes
@@ -1265,8 +1265,8 @@ public class DemoGNG extends JApplet {
         compute.pd = pd;
         distrib_choice.setSelectedIndex(pd.ordinal());
     }
-    void setAlgo(Algo x){
-        compute.algo = x;
+    void setAlgo(Algorithm x){
+        compute.algorithm = x;
         algo_choice.setSelectedIndex(x.ordinal());
     }
 
@@ -1310,6 +1310,7 @@ public class DemoGNG extends JApplet {
 
         // Create the GNG-MyPanel and center it
         compute = createComputation();
+        panel   = new PanelGNG(this);
         add("Center", panel);
 
         // Create a MyPanel for the Buttons
@@ -1319,11 +1320,11 @@ public class DemoGNG extends JApplet {
         MyPanel cp_displayInterval = new MyPanel();
         MyPanel cp_speed = new MyPanel();
         MyPanel cp_nodes = new MyPanel(); // for nodes checkboxes
-        MyPanel cp_algo = new MyPanel(); // for algo ComboBox
+        MyPanel cp_algo = new MyPanel(); // for algorithm ComboBox
         // Create a menu of algorithms and add it to the MyPanel.
         algo_choice = new MyComboBox("algorithm to use");
         algo_choice.setFont(boldFont);
-        for (Algo a:Algo.values()){
+        for (Algorithm a: Algorithm.values()){
             algo_choice.addItem(a.getName());
         }
         MyLabel tmp = new MyLabel("Network Model:", SwingConstants.RIGHT);
@@ -1359,8 +1360,8 @@ public class DemoGNG extends JApplet {
         pAllN.add(restart_b,orientation);
         pAllN.add(new MyLabel("    "),orientation);
 
-        pAllN.add(new MyCheckBox(TEACH,false,"instructive mode: show signals, winner and neighbors"),orientation);
-        pAllN.add(new MyCheckBox(SIGNALS,false,"show input signals"),orientation);
+        pAllN.add(new MyCheckBox(TEACH,false,"instructive mode: show numSignals, winner and neighbors"),orientation);
+        pAllN.add(new MyCheckBox(SIGNALS,false,"show input numSignals"),orientation);
         pAllN.add(new MyCheckBox(VORONOI,false,"display Voronoi diagram"),orientation);
         pAllN.add(new MyCheckBox(DELAUNAY,false,"display Delaunay triangulation"),orientation);
 
@@ -1373,7 +1374,7 @@ public class DemoGNG extends JApplet {
         pAllS.add(new MyCheckBox(RNDINIT, compute.rndInitB,"init ref. vectors from rectangular distribution instead of chosen one"));
         //pAllS.add(new MyCheckBox(WHITE, compute.whiteB));
         pAllS.add(new MyCheckBox(SOUND, panel.soundB,"play sounds e.g. at insertion"));
-        pAllS.add(new MyCheckBox(AUTOSTOP, compute.autoStopB,"stop algo automatically (model-dependent)"));
+        pAllS.add(new MyCheckBox(AUTOSTOP, compute.autoStopB,"stop algorithm automatically (model-dependent)"));
         pAll.add("North", pAllN);
         pAll.add("South", pAllS);
         pSouth.add("North",pSouthI);
@@ -1400,7 +1401,7 @@ public class DemoGNG extends JApplet {
         cp_nodes.add(maxNodes_choice);
         pDS.add(cp_nodes);
         // Create a menu of step sizes and add it to the MyPanel.
-        curcb = stepSize_choice = new MyComboBox("number of input signals after which a redraw should happen");
+        curcb = stepSize_choice = new MyComboBox("number of input numSignals after which a redraw should happen");
         for (i = 0; i < stepSize_Ai.length; i++)
             stepSize_choice.addItem(String.valueOf(stepSize_Ai[i]));
 
@@ -1444,7 +1445,7 @@ public class DemoGNG extends JApplet {
 
         pan_GNG = new MyPanel();
         pan_GNG.setLayout(new GridLayout(2,6));
-        curcb = newNodeGNG_choice = new MyComboBox("after that many signals a new unit is created");
+        curcb = newNodeGNG_choice = new MyComboBox("after that many numSignals a new unit is created");
         for (i = 0; i < lambdaGNG_Ai.length; i++)
             newNodeGNG_choice.addItem(String.valueOf(lambdaGNG_Ai[i]));
         pan_GNG.add(new MyLabel("lambda",curcb.getToolTipText()));
@@ -1506,7 +1507,7 @@ public class DemoGNG extends JApplet {
         for (i = 0; i < epsilonfHCL_Af.length; i++)
             epsilonfHCL_choice.addItem(String.valueOf(epsilonfHCL_Af[i]));
 
-        tmaxHCL_choice = new MyComboBox("time (number of signals) to use for decay process");
+        tmaxHCL_choice = new MyComboBox("time (number of numSignals) to use for decay process");
         for (i = 0; i < tmaxHCL_Af.length; i++)
             tmaxHCL_choice.addItem(String.valueOf(tmaxHCL_Af[i]));
 
@@ -1556,7 +1557,7 @@ public class DemoGNG extends JApplet {
         epsilonfNG_choice = new MyComboBox("final adaptation rate");
         for (i = 0; i < epsilonfNG_Af.length; i++)
             epsilonfNG_choice.addItem(String.valueOf(epsilonfNG_Af[i]));
-        tmaxNG_choice = new MyComboBox("number of signals used for parameter decay");
+        tmaxNG_choice = new MyComboBox("number of numSignals used for parameter decay");
         for (i = 0; i < tmaxNG_Af.length; i++)
             tmaxNG_choice.addItem(String.valueOf(tmaxNG_Af[i]));
 
@@ -1752,7 +1753,7 @@ public class DemoGNG extends JApplet {
         sigmafSOM_choice = new MyComboBox("final neighborhood parameter");
         for (i = 0; i < sigmafSOM_Af.length; i++)
             sigmafSOM_choice.addItem(String.valueOf(sigmafSOM_Af[i]));
-        tmaxSOM_choice = new MyComboBox("number of input signals to use for adaptation");
+        tmaxSOM_choice = new MyComboBox("number of input numSignals to use for adaptation");
         for (i = 0; i < tmaxSOM_Af.length; i++)
             tmaxSOM_choice.addItem(String.valueOf(tmaxSOM_Af[i]));
 
@@ -1779,18 +1780,18 @@ public class DemoGNG extends JApplet {
         p8.add("West", new MyPanel().add(new MyLabel("     ")));
 
 
-        cards.add(Algo.GNG.getName(), p1); log("cards add "+Algo.GNG.getName());
-        cards.add(Algo.HCL.getName(), pan_HCL);
-        cards.add(Algo.NG.getName(), p3);
-        cards.add(Algo.NGCHL.getName(), p4);
-        cards.add(Algo.CHL.getName(), p5);
-        cards.add(Algo.LBG.getName(), p6);
-        cards.add(Algo.GG.getName(), p7);
-        cards.add(Algo.SOM.getName(), p8);
+        cards.add(Algorithm.GNG.getName(), p1); log("cards add "+ Algorithm.GNG.getName());
+        cards.add(Algorithm.HCL.getName(), pan_HCL);
+        cards.add(Algorithm.NG.getName(), p3);
+        cards.add(Algorithm.NGCHL.getName(), p4);
+        cards.add(Algorithm.CHL.getName(), p5);
+        cards.add(Algorithm.LBG.getName(), p6);
+        cards.add(Algorithm.GG.getName(), p7);
+        cards.add(Algorithm.SOM.getName(), p8);
         pSouth.add("South", cards);
 
         // some initial value, will be overridden
-        compute.algo = null;
+        compute.algorithm = null;
 
         // Get the parameter from the html-page
         String algorithmParam = getParameter("algorithm");
@@ -1798,9 +1799,9 @@ public class DemoGNG extends JApplet {
         log("******** algorithmParam: "+algorithmParam+" distributionParam:"+ distributionParam+ "*********\n");
         if (algorithmParam==null){
             needReset=false;
-            algorithmParam = Algo.NG.getMnemo();
+            algorithmParam = Algorithm.NG.getMnemo();
             distributionParam = "UNIT";
-            algo_choice.setSelectedIndex(Algo.NG.ordinal());
+            algo_choice.setSelectedIndex(Algorithm.NG.ordinal());
             log("******** algorithmParam: "+algorithmParam+" distributionParam:"+ distributionParam+ " now *********\n");
         } else {
             needReset=true;
@@ -1821,10 +1822,10 @@ public class DemoGNG extends JApplet {
         if (algorithmParam != null) {
             log("createGUI() algoparam <> null");
             // Init for Hard Competitive Learning (HCL)
-            if (algorithmParam.equals(Algo.HCL.getMnemo())) {
-                compute.algo = Algo.HCL;
-                algo_choice.setSelectedIndex(Algo.HCL.ordinal());
-                ((CardLayout)cards.getLayout()).show(cards, Algo.HCL.getName());
+            if (algorithmParam.equals(Algorithm.HCL.getMnemo())) {
+                compute.algorithm = Algorithm.HCL;
+                algo_choice.setSelectedIndex(Algorithm.HCL.ordinal());
+                ((CardLayout)cards.getLayout()).show(cards, Algorithm.HCL.getName());
                 maxNodes_lbl.setText("# nodes:");
 
                 // Generate some nodes (HCL)
@@ -1832,10 +1833,10 @@ public class DemoGNG extends JApplet {
                     compute.addNode(new Dimension(compute.panelWidth, compute.panelHeight));
             }
             // Init for Neural Gas (NG)
-            else if (algorithmParam.equals(Algo.NG.getMnemo())) {
-                compute.algo = Algo.NG;
-                algo_choice.setSelectedIndex(Algo.NG.ordinal());
-                ((CardLayout)cards.getLayout()).show(cards, Algo.NG.getName());
+            else if (algorithmParam.equals(Algorithm.NG.getMnemo())) {
+                compute.algorithm = Algorithm.NG;
+                algo_choice.setSelectedIndex(Algorithm.NG.ordinal());
+                ((CardLayout)cards.getLayout()).show(cards, Algorithm.NG.getName());
                 maxNodes_lbl.setText("# nodes:");
 //				compute.stepSize = stepSize_Ai[3];
 //				stepSize_choice.setSelectedIndex(3);
@@ -1845,10 +1846,10 @@ public class DemoGNG extends JApplet {
                     compute.addNode(new Dimension(compute.panelWidth, compute.panelHeight));
             }
             // Init for Neural Gas with Competitive Hebbian Learning (NGCHL)
-            else if (algorithmParam.equals(Algo.NGCHL.getMnemo())) {
-                compute.algo = Algo.NGCHL;
-                algo_choice.setSelectedIndex(Algo.NGCHL.ordinal());
-                ((CardLayout)cards.getLayout()).show(cards, Algo.NGCHL.getName());
+            else if (algorithmParam.equals(Algorithm.NGCHL.getMnemo())) {
+                compute.algorithm = Algorithm.NGCHL;
+                algo_choice.setSelectedIndex(Algorithm.NGCHL.ordinal());
+                ((CardLayout)cards.getLayout()).show(cards, Algorithm.NGCHL.getName());
                 maxNodes_lbl.setText("# nodes:");
 //				compute.stepSize = stepSize_Ai[3];
 //				stepSize_choice.setSelectedIndex(3);
@@ -1858,10 +1859,10 @@ public class DemoGNG extends JApplet {
                     compute.addNode(new Dimension(compute.panelWidth, compute.panelHeight));
             }
             // Init for Competitive Hebbian Learning (CHL)
-            else if (algorithmParam.equals(Algo.CHL.getMnemo())) {
-                compute.algo = Algo.CHL;
-                algo_choice.setSelectedIndex(Algo.CHL.ordinal());
-                ((CardLayout)cards.getLayout()).show(cards, Algo.CHL.getName());
+            else if (algorithmParam.equals(Algorithm.CHL.getMnemo())) {
+                compute.algorithm = Algorithm.CHL;
+                algo_choice.setSelectedIndex(Algorithm.CHL.ordinal());
+                ((CardLayout)cards.getLayout()).show(cards, Algorithm.CHL.getName());
                 maxNodes_lbl.setText("# nodes:");
 
                 // Generate some nodes (CHL)
@@ -1869,36 +1870,36 @@ public class DemoGNG extends JApplet {
                     compute.addNode(new Dimension(compute.panelWidth, compute.panelHeight));
             }
             // Init for LBG (LBG)
-            else if (algorithmParam.equals(Algo.LBG.getMnemo()) ||
-                    algorithmParam.equals(Algo.LBGU.getMnemo())) {
-                if (algorithmParam.equals(Algo.LBGU.getMnemo())) {
+            else if (algorithmParam.equals(Algorithm.LBG.getMnemo()) ||
+                    algorithmParam.equals(Algorithm.LBGU.getMnemo())) {
+                if (algorithmParam.equals(Algorithm.LBGU.getMnemo())) {
                     compute.LBG_U_B = true;
                     lbg_u_cb.setSelected(compute.LBG_U_B);
-                    compute.algo = Algo.LBGU;
+                    compute.algorithm = Algorithm.LBGU;
                 } else {
                     compute.LBG_U_B = false;
                     lbg_u_cb.setSelected(compute.LBG_U_B);
-                    compute.algo = Algo.LBG;
+                    compute.algorithm = Algorithm.LBG;
                 }
-                algo_choice.setSelectedIndex(compute.algo.ordinal());
-                ((CardLayout)cards.getLayout()).show(cards, Algo.LBG.getName());
+                algo_choice.setSelectedIndex(compute.algorithm.ordinal());
+                ((CardLayout)cards.getLayout()).show(cards, Algorithm.LBG.getName());
                 maxNodes_lbl.setText("# nodes:");
                 compute.errorBestLBG_U = Float.MAX_VALUE;
             }
             // Init for Growing Grid (GG)
-            else if (algorithmParam.equals(Algo.GG.getMnemo())) {
-                compute.algo = Algo.GG;
-                algo_choice.setSelectedIndex(Algo.GG.ordinal());
-                ((CardLayout)cards.getLayout()).show(cards, Algo.GG.getName());
+            else if (algorithmParam.equals(Algorithm.GG.getMnemo())) {
+                compute.algorithm = Algorithm.GG;
+                algo_choice.setSelectedIndex(Algorithm.GG.ordinal());
+                ((CardLayout)cards.getLayout()).show(cards, Algorithm.GG.getName());
 
                 // Generate some nodes (GG)
                 compute.initGrid(2, 2,
                         new Dimension(compute.panelWidth, compute.panelHeight));
             }			// Init for Growing Grid (GG)
-            else if (algorithmParam.equals(Algo.GR.getMnemo())) {
-                compute.algo = Algo.GR;
-                algo_choice.setSelectedIndex(Algo.GR.ordinal());
-                ((CardLayout)cards.getLayout()).show(cards, Algo.GG.getName());
+            else if (algorithmParam.equals(Algorithm.GR.getMnemo())) {
+                compute.algorithm = Algorithm.GR;
+                algo_choice.setSelectedIndex(Algorithm.GR.ordinal());
+                ((CardLayout)cards.getLayout()).show(cards, Algorithm.GG.getName());
 
                 // Generate some nodes (GG)
                 compute.initGrid(2, 1,
@@ -1906,10 +1907,10 @@ public class DemoGNG extends JApplet {
             }
 
             // Init for Self-Organizing Map (SOM)
-            else if (algorithmParam.equals(Algo.SOM.getMnemo())) {
-                compute.algo = Algo.SOM;
-                algo_choice.setSelectedIndex(Algo.SOM.ordinal());
-                ((CardLayout)cards.getLayout()).show(cards, Algo.SOM.getName());
+            else if (algorithmParam.equals(Algorithm.SOM.getMnemo())) {
+                compute.algorithm = Algorithm.SOM;
+                algo_choice.setSelectedIndex(Algorithm.SOM.ordinal());
+                ((CardLayout)cards.getLayout()).show(cards, Algorithm.SOM.getName());
 
                 maxNodes_lbl.setEnabled(false);
                 maxNodes_choice.setEnabled(false);
@@ -1920,16 +1921,16 @@ public class DemoGNG extends JApplet {
             }
             // Init for Growing Neural Gas (GNG) and GNG-U
             else { // default case: GNG
-                if (algorithmParam.equals(Algo.GNGU.getMnemo())) {
-                    algo_choice.setSelectedIndex(Algo.GNGU.ordinal());
+                if (algorithmParam.equals(Algorithm.GNGU.getMnemo())) {
+                    algo_choice.setSelectedIndex(Algorithm.GNGU.ordinal());
                     compute.GNG_U_B = true;
                     gng_u_cb.setSelected(true);
-                    compute.algo = Algo.GNGU;
+                    compute.algorithm = Algorithm.GNGU;
                 } else {
-                    algo_choice.setSelectedIndex(Algo.GNG.ordinal());
-                    compute.algo = Algo.GNG;
+                    algo_choice.setSelectedIndex(Algorithm.GNG.ordinal());
+                    compute.algorithm = Algorithm.GNG;
                     gng_u_cb.setSelected(false);
-                    compute.algo = Algo.GNG;
+                    compute.algorithm = Algorithm.GNG;
                 }
 
                 // Generate some nodes (GNG)
@@ -1944,7 +1945,7 @@ public class DemoGNG extends JApplet {
         syslog("createGUI() end XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     }
     public void randomizeSimulation() {
-        setAlgo(selectRandomAlgo());
+        setAlgo(selectRandomAlgorithm());
         do {
             setDist(selectRandomPD());
         } while (compute.pd == PD.DiscreteMixture
@@ -1952,24 +1953,24 @@ public class DemoGNG extends JApplet {
                 || compute.pd == PD.RightMouseB
                 || compute.pd == PD.Move
                 || compute.pd == PD.MoveJump);
-        //setAlgo(Algo.GG);
-        log("randomize: algo="+compute.algo.getName());
+        //setAlgo(Algorithm.GG);
+        log("randomize: algorithm="+compute.algorithm.getName());
         log("randomize:   PD="+compute.pd.getName());
-        prepareAlgo(compute.algo);
+        prepareAlgo(compute.algorithm);
         reset();
     }
     @Override
     public void init() {
         syslog("init()");
         Font font = getFont();
-        Font buttonfont = new Font(font.getName(), Font.PLAIN, font.getSize()+1 /*font.getSize()*/);
-        Font checkboxfont = new Font(font.getName(), Font.PLAIN, font.getSize());
-        Font comboboxfont = checkboxfont;
-        Font labelfont = checkboxfont;
-        UIManager.put("Button.font", buttonfont);
-        UIManager.put("CheckBox.font", checkboxfont);
-        UIManager.put("ComboBox.font", comboboxfont);
-        UIManager.put("Label.font", labelfont);
+        Font buttonFont = new Font(font.getName(), Font.PLAIN, font.getSize()+1 /*font.getSize()*/);
+        Font checkboxFont = new Font(font.getName(), Font.PLAIN, font.getSize());
+        Font comboBoxFont = checkboxFont;
+        Font labelFont = checkboxFont;
+        UIManager.put("Button.font", buttonFont);
+        UIManager.put("CheckBox.font", checkboxFont);
+        UIManager.put("ComboBox.font", comboBoxFont);
+        UIManager.put("Label.font", labelFont);
         createGUI();
     }
     class RandomSimThread implements Runnable {
@@ -1990,9 +1991,9 @@ public class DemoGNG extends JApplet {
         Random random = new Random();
         return PD.values()[random.nextInt(PD.values().length-1)];  //-1 to prevent RightMouseButton PD
     }
-    public Algo selectRandomAlgo() {
+    public Algorithm selectRandomAlgorithm() {
         Random random = new Random();
-        return Algo.values()[random.nextInt(Algo.values().length)];  
+        return Algorithm.values()[random.nextInt(Algorithm.values().length)];
     }
 
     //class StartThread implements Runnable {
@@ -2003,7 +2004,7 @@ public class DemoGNG extends JApplet {
             if (virgin) {
                 do {
                     randomizeSimulation();
-                } while (compute.algo.isLBGType());
+                } while (compute.algorithm.isLBGType());
                 virgin = false;
             }
             //start2();
@@ -2045,7 +2046,7 @@ public class DemoGNG extends JApplet {
 
     @Override
     public void stop() {
-        syslog("stop() after "+String.format("%d",compute.sigs)+" input signals");
+        syslog("stop() after "+String.format("%d",compute.numSignals)+" input numSignals");
         start_b.setEnabled(true);
         random_b.setEnabled(true);
         restart_b.setEnabled(true);
@@ -2128,7 +2129,7 @@ public class DemoGNG extends JApplet {
 
     @Override
     public String getAppletInfo() {
-        String versionInfo = "DemoGNG " + PanelGNG.DGNG_VERSION +
+        String versionInfo = "DemoGNG " + PanelGNG.DEMO_GNG_VERSION +
                 ". Written by Hartmut S. Loos (Copyright 1996-1998)" +
                 "\n\nand  Bernd Fritzke (Copyright 2012-2013)\n\n under the terms of the GNU General Public License." +
                 "\n\nFor updates look at " + myHomepage;

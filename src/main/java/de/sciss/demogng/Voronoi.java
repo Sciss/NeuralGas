@@ -23,113 +23,116 @@ package de.sciss.demogng;
 
 import java.awt.Dimension;
 
+import static de.sciss.demogng.ComputeGNG.MAX_NODES;
+
 /**
  * Compute Voronoi diagram.
- * A sweepline algorithm is implemented (Steven Fortune, 1987).
+ * A sweep-line algorithm is implemented (Steven Fortune, 1987).
  * It computes the Voronoi diagram/Delaunay triangulation of n sites
  * in time O(n log n) and space usage O(n).
  * Input: nodes[], Output: lines[] (global).
  * 
  */
 public class Voronoi {
-    PanelGNG cgng;
+    PanelGNG cGNG;
     ComputeGNG compute;
 
     Voronoi() {
     }
 
-    Voronoi(PanelGNG cgng) {
-        this.cgng = cgng;
-        vsites = new SiteVoronoi[cgng.MAX_NODES + 1];
-        this.compute = cgng.compute;
+    Voronoi(PanelGNG cGNG) {
+        this.cGNG = cGNG;
+        vSites = new SiteVoronoi[MAX_NODES + 1];
+        this.compute = cGNG.compute;
     }
     /**
      * This array of sites is sorted by y-coordinate (2nd y-coordinate).
-     * vsites[1] is the index of the bottom node.
+     * vSites[1] is the index of the bottom node.
      */
-    protected SiteVoronoi vsites[];// = new SiteVoronoi[cgng.MAX_NODES + 1];
+    protected SiteVoronoi vSites[];// = new SiteVoronoi[cGNG.MAX_NODES + 1];
     // Vars for Voronoi diagram (start).
-    int xmin, ymin, xmax, ymax;
-    int deltax, deltay;
-    int siteidx, nsites, sqrt_nsites;
-    int nvertices, nvedges;
-    int PQcount, PQmin;
-    SiteVoronoi bottomsite;
+    int xMin, yMin, xMax, yMax;
+    int deltaX, deltaY;
+    int siteIdx, nSites, sqrt_nSites;
+    int nVertices, nVEdges;
+    int PQ_count, PQ_min;
+    SiteVoronoi bottomSite;
     final int LE = 0;
     final int RE = 1;
     final int DELETED = -2;
     ListGNG list, pq;
     boolean debug = true;
-    HalfEdgeVoronoi ELleftend, ELrightend;
-    float pxmin, pymin, pxmax, pymax;
+    HalfEdgeVoronoi EL_leftEnd, EL_rightEnd;
+    float pxMin, pyMin, pxMax, pyMax;
     // Vars for Voronoi diagram (end).
 
     /**
-     * Sort the array of nodes. The result is in the <TT> vsite</TT>-array.
-     *  The implemented sorting algorithm is heapsort.
+     * Sort the array of nodes. The result is in the <TT> vSite</TT>-array.
+     *  The implemented sorting algorithm is heap-sort.
      *
      * @param n          The number of nodes to be sorted
-     * @see Voronoi#vsites
-     * @see Voronoi#reheapVoronoi
+     * @see Voronoi#vSites
+     * @see Voronoi#buildMaxHeap
      */
     protected void sortSites(int n) {
         SiteVoronoi exchange;
         int i;
 
         // Initialize the sorted site array
+        final NodeGNG[] nodes = compute.nodes;
         for (i = 1; i <= n; i++) {
-            NodeGNG nd = cgng.nodes[i-1];
+            NodeGNG nd = nodes[i-1];
             SiteVoronoi sv = new SiteVoronoi();
             sv.coord.x = nd.x;
             sv.coord.y = nd.y;
             sv.sitenbr = i-1;
             sv.refcnt = 0;
-            vsites[i] = sv;
+            vSites[i] = sv;
         }
-        cgng.nNodesChangedB = false;
+        compute.nNodesChangedB = false;
 
         // Build a maximum heap
         for (i = n/2; i > 0; i--)
-            reheapVoronoi(i, n);
+            buildMaxHeap(i, n);
 
         // Switch elements 1 and i then reheap
         for (i = n; i > 1; i--) {
-            exchange = vsites[1];
-            vsites[1] = vsites[i];
-            vsites[i] = exchange;
-            reheapVoronoi(1, i-1);
+            exchange = vSites[1];
+            vSites[1] = vSites[i];
+            vSites[i] = exchange;
+            buildMaxHeap(1, i-1);
         }
     }
 
     /**
-     * Build a maximum-heap. The result is in the <TT> vsite</TT>-array.
+     * Build a maximum-heap. The result is in the <TT> vSite</TT>-array.
      *
-     * @param i          The start of the intervall
-     * @param k          The end of the intervall
-     * @see Voronoi#vsites
+     * @param i          The start of the interval
+     * @param k          The end of the interval
+     * @see Voronoi#vSites
      * @see Voronoi#sortSites
      */
-    protected void reheapVoronoi(int i, int k) {
+    protected void buildMaxHeap(int i, int k) {
         int j = i;
         int son;
 
         while (2*j <= k) {
             if (2*j+1 <= k)
-                if ( (vsites[2*j].coord.y > vsites[2*j+1].coord.y) ||
-                        (vsites[2*j].coord.y == vsites[2*j+1].coord.y &&
-                        vsites[2*j].coord.x > vsites[2*j+1].coord.x) )
+                if ( (vSites[2*j].coord.y > vSites[2*j+1].coord.y) ||
+                        (vSites[2*j].coord.y == vSites[2*j+1].coord.y &&
+                        vSites[2*j].coord.x > vSites[2*j+1].coord.x) )
                     son = 2*j;
                 else
                     son = 2*j + 1;
             else
                 son = 2*j;
 
-            if ( (vsites[j].coord.y < vsites[son].coord.y) ||
-                    (vsites[j].coord.y == vsites[son].coord.y &&
-                    vsites[j].coord.x < vsites[son].coord.x) ) {
-                SiteVoronoi exchange = vsites[j];
-                vsites[j] = vsites[son];
-                vsites[son] = exchange;
+            if ( (vSites[j].coord.y < vSites[son].coord.y) ||
+                    (vSites[j].coord.y == vSites[son].coord.y &&
+                    vSites[j].coord.x < vSites[son].coord.x) ) {
+                SiteVoronoi exchange = vSites[j];
+                vSites[j] = vSites[son];
+                vSites[son] = exchange;
                 j = son;
             } else
                 return;
@@ -138,44 +141,44 @@ public class Voronoi {
 
     /**
      * Compute Voronoi diagram.
-     * A sweepline algorithm is implemented (Steven Fortune, 1987).
+     * A sweep-line algorithm is implemented (Steven Fortune, 1987).
      * It computes the Voronoi diagram/Delaunay triangulation of n sites
      * in time O(n log n) and space usage O(n).
      * Input: nodes[], Output: lines[] (global).
      *
      */
     public boolean computeVoronoi() {
-        Dimension d = cgng.getSize();
+        Dimension d = cGNG.getSize();
         int i;
-        xmin = 0;
-        ymin = 0;
-        xmax = deltax = d.width;
-        ymax = deltay = d.height;
-        siteidx = 0;
-        nsites = cgng.nNodes;
-        nvertices = 0;
-        nvedges = 0;
-        sqrt_nsites = (int) Math.sqrt(nsites + 4);
-        PQcount = 0;
-        PQmin = 0;
+        xMin = 0;
+        yMin = 0;
+        xMax = deltaX = d.width;
+        yMax = deltaY = d.height;
+        siteIdx = 0;
+        nSites = compute.nNodes;
+        nVertices = 0;
+        nVEdges = 0;
+        sqrt_nSites = (int) Math.sqrt(nSites + 4);
+        PQ_count = 0;
+        PQ_min = 0;
 
-        // Copy nodes[] to vsites[] and sort them
-        sortSites(cgng.nNodes);
+        // Copy nodes[] to vSites[] and sort them
+        sortSites(compute.nNodes);
 
-        if ( (cgng.nNodes == 0) ||
-                ( (cgng.nNodes != cgng.maxNodes) && (compute.algo != Algo.GNG) && (compute.algo != Algo.GG) ) )
+        if ( (compute.nNodes == 0) ||
+                ( (compute.nNodes != compute.maxNodes) && (compute.algorithm != Algorithm.GNG) && (compute.algorithm != Algorithm.GG) ) )
             return true;
 
-        xmin = (int) vsites[1].coord.x;
-        xmax = (int) vsites[1].coord.x;
-        for(i = 2; i <= nsites; i++) {
-            if (vsites[i].coord.x < xmin)
-                xmin = (int) vsites[i].coord.x;
-            if (vsites[i].coord.x > xmax)
-                xmax = (int) vsites[i].coord.x;
+        xMin = (int) vSites[1].coord.x;
+        xMax = (int) vSites[1].coord.x;
+        for(i = 2; i <= nSites; i++) {
+            if (vSites[i].coord.x < xMin)
+                xMin = (int) vSites[i].coord.x;
+            if (vSites[i].coord.x > xMax)
+                xMax = (int) vSites[i].coord.x;
         }
-        ymin = (int) vsites[1].coord.y;
-        ymax = (int) vsites[nsites].coord.y;
+        yMin = (int) vSites[1].coord.y;
+        yMax = (int) vSites[nSites].coord.y;
 
         doVoronoi();
         return false;
@@ -183,68 +186,68 @@ public class Voronoi {
 
     /**
      * Compute Voronoi diagram (2).
-     * A sweepline algorithm is implemented (Steven Fortune, 1987).
+     * A sweep-line algorithm is implemented (Steven Fortune, 1987).
      * Input: nodes[], Output: lines[] (global).
      *
      * @see Voronoi#computeVoronoi
      */
     public void doVoronoi() {
-        SiteVoronoi newsite, bot, top, temp, p, v;
-        FPoint newintstar = new FPoint();
+        SiteVoronoi newSite, bot, top, temp, p, v;
+        FPoint newIntStar = new FPoint();
         int pm;
         HalfEdgeVoronoi lbnd, rbnd, llbnd, rrbnd, bisector;
         EdgeVoronoi e;
 
         pq = new ListGNG();
-        bottomsite = nextsite();
-        ELinitialize();
-        newsite = nextsite();
+        bottomSite = nextSite();
+        EL_initialize();
+        newSite = nextSite();
 
         while(true) {
             if (!pq.empty())
-                newintstar = pq.PQ_min();
+                newIntStar = pq.PQ_min();
 
-            if ( (newsite != null) &&
+            if ( (newSite != null) &&
                     ( pq.empty() ||
-                            (newsite.coord.y < newintstar.y) ||
-                            ( (newsite.coord.y == newintstar.y) &&
-                                    (newsite.coord.x < newintstar.x) )
+                            (newSite.coord.y < newIntStar.y) ||
+                            ( (newSite.coord.y == newIntStar.y) &&
+                                    (newSite.coord.x < newIntStar.x) )
                             ) ) {
-                lbnd = ELleftbnd(newsite.coord);
+                lbnd = ELleftbnd(newSite.coord);
                 rbnd = lbnd.ELright;
-                bot = rightreg(lbnd);
-                e = bisect(bot, newsite);
+                bot = rightReg(lbnd);
+                e = bisect(bot, newSite);
                 bisector = new HalfEdgeVoronoi(e, LE);
-                ELinsert(lbnd, bisector);
+                EL_insert(lbnd, bisector);
                 if ( (p = intersect(lbnd, bisector)) != null ) {
-                    PQdelete(lbnd);
-                    PQinsert(lbnd, p, dist(p,newsite));
+                    PQ_delete(lbnd);
+                    PQ_insert(lbnd, p, dist(p,newSite));
                 }
                 lbnd = bisector;
                 bisector = new HalfEdgeVoronoi(e, RE);
-                ELinsert(lbnd, bisector);
+                EL_insert(lbnd, bisector);
                 if ( (p = intersect(bisector, rbnd)) != null ) {
-                    PQinsert(bisector, p, dist(p,newsite));
+                    PQ_insert(bisector, p, dist(p,newSite));
                 }
 
-                newsite = nextsite();
+                newSite = nextSite();
 
             } else if ( !pq.empty() ) {
                 // intersection is smallest
-                PQcount--;
+                PQ_count--;
                 lbnd = pq.PQextractmin();
                 llbnd = lbnd.ELleft;
                 rbnd = lbnd.ELright;
                 rrbnd = rbnd.ELright;
-                bot = leftreg(lbnd);
-                top = rightreg(rbnd);
+                bot = leftReg(lbnd);
+                top = rightReg(rbnd);
                 v = lbnd.vertex;
-                makevertex(v);
+                makeVertex(v);
                 endpoint(lbnd.ELedge, lbnd.ELpm, v);
                 endpoint(rbnd.ELedge, rbnd.ELpm, v);
-                ELdelete(lbnd);
-                PQdelete(rbnd);
-                ELdelete(rbnd);
+                EL_delete(lbnd);
+                PQ_delete(rbnd);
+                EL_delete(rbnd);
                 pm = LE;
                 if (bot.coord.y > top.coord.y) {
                     temp = bot;
@@ -254,22 +257,22 @@ public class Voronoi {
                 }
                 e = bisect(bot, top);
                 bisector = new HalfEdgeVoronoi(e, pm);
-                ELinsert(llbnd, bisector);
+                EL_insert(llbnd, bisector);
                 endpoint(e, RE-pm, v);
                 deref(v);
                 if ( (p = intersect(llbnd, bisector)) != null ) {
-                    PQdelete(llbnd);
-                    PQinsert(llbnd, p, dist(p, bot) );
+                    PQ_delete(llbnd);
+                    PQ_insert(llbnd, p, dist(p, bot) );
                 }
                 if ( (p = intersect(bisector, rrbnd)) != null )
-                    PQinsert(bisector, p, dist(p, bot) );
+                    PQ_insert(bisector, p, dist(p, bot) );
             } else
                 break;
         }
 
-        if (cgng.voronoiB) {
-            for(lbnd = ELleftend.ELright;
-                    lbnd != ELrightend;
+        if (cGNG.voronoiB) {
+            for(lbnd = EL_leftEnd.ELright;
+                    lbnd != EL_rightEnd;
                     lbnd = lbnd.ELright) {
                 e = lbnd.ELedge;
                 out_ep(e);
@@ -286,12 +289,12 @@ public class Voronoi {
     public void out_ep(EdgeVoronoi e) {
         SiteVoronoi s1, s2;
         float x1, x2, y1, y2;
-        Dimension dim = cgng.getSize();
+        Dimension dim = cGNG.getSize();
 
-        pxmin = 0.0f;
-        pymin = 0.0f;
-        pxmax = dim.width;
-        pymax = dim.height;
+        pxMin = 0.0f;
+        pyMin = 0.0f;
+        pxMax = dim.width;
+        pyMax = dim.height;
 
         if ( (e.a == 1.0f) && (e.b >= 0.0f) ) {
             s1 = e.ep[1];
@@ -302,65 +305,65 @@ public class Voronoi {
         }
 
         if (e.a == 1.0) {
-            y1 = pymin;
-            if ( (s1 != null) && (s1.coord.y > pymin) )
+            y1 = pyMin;
+            if ( (s1 != null) && (s1.coord.y > pyMin) )
                 y1 = s1.coord.y;
-            if (y1 > pymax)
+            if (y1 > pyMax)
                 return;
             x1 = e.c - e.b * y1;
-            y2 = pymax;
-            if ( (s2 != null) && (s2.coord.y < pymax) )
+            y2 = pyMax;
+            if ( (s2 != null) && (s2.coord.y < pyMax) )
                 y2 = s2.coord.y;
-            if (y2 < pymin)
+            if (y2 < pyMin)
                 return;
             x2 = e.c - e.b * y2;
-            if ( (x1 > pxmax & x2 > pxmax) | (x1 < pxmin & x2 < pxmin) )
+            if ( (x1 > pxMax & x2 > pxMax) | (x1 < pxMin & x2 < pxMin) )
                 return;
-            if (x1 > pxmax) {
-                x1 = pxmax;
+            if (x1 > pxMax) {
+                x1 = pxMax;
                 y1 = (e.c - x1)/e.b;
             }
-            if (x1 < pxmin) {
-                x1 = pxmin;
+            if (x1 < pxMin) {
+                x1 = pxMin;
                 y1 = (e.c - x1)/e.b;
             }
-            if (x2 > pxmax) {
-                x2 = pxmax;
+            if (x2 > pxMax) {
+                x2 = pxMax;
                 y2 = (e.c - x2)/e.b;
             }
-            if (x2 < pxmin) {
-                x2 = pxmin;
+            if (x2 < pxMin) {
+                x2 = pxMin;
                 y2 = (e.c - x2)/e.b;
             }
         } else {
-            x1 = pxmin;
-            if ( (s1 != null) && (s1.coord.x > pxmin) )
+            x1 = pxMin;
+            if ( (s1 != null) && (s1.coord.x > pxMin) )
                 x1 = s1.coord.x;
-            if (x1 > pxmax)
+            if (x1 > pxMax)
                 return;
             y1 = e.c - e.a * x1;
-            x2 = pxmax;
-            if ( (s2 != null) && (s2.coord.x < pxmax) )
+            x2 = pxMax;
+            if ( (s2 != null) && (s2.coord.x < pxMax) )
                 x2 = s2.coord.x;
-            if (x2 < pxmin)
+            if (x2 < pxMin)
                 return;
             y2 = e.c - e.a * x2;
-            if ( (y1 > pymax & y2 > pymax) | ( y1 < pymin & y2 < pymin) )
+            if ( (y1 > pyMax & y2 > pyMax) | ( y1 < pyMin & y2 < pyMin) )
                 return;
-            if (y1 > pymax) {
-                y1 = pymax;
+            if (y1 > pyMax) {
+                y1 = pyMax;
                 x1 = (e.c - y1)/e.a;
             }
-            if(y1 < pymin) {
-                y1 = pymin;
+            if(y1 < pyMin) {
+                y1 = pyMin;
                 x1 = (e.c - y1)/e.a;
             }
-            if(y2 > pymax) {
-                y2 = pymax;
+            if(y2 > pyMax) {
+                y2 = pyMax;
                 x2 = (e.c - y2)/e.a;
             }
-            if(y2 < pymin) {
-                y2 = pymin;
+            if(y2 < pyMin) {
+                y2 = pyMin;
                 x2 = (e.c - y2)/e.a;
             }
         }
@@ -369,24 +372,24 @@ public class Voronoi {
 
     public void line(float x1, float y1, float x2, float y2, boolean vdB) {
         LineGNG l = new LineGNG((int) x1, (int) y1, (int) x2, (int) y2);
-        cgng.lines[cgng.nLines] = l;
-        cgng.vd[cgng.nLines] = vdB;
-        cgng.nLines++;
+        cGNG.lines[cGNG.nLines] = l;
+        cGNG.vd[cGNG.nLines] = vdB;
+        cGNG.nLines++;
     }
 
-    public void PQinsert(HalfEdgeVoronoi he, SiteVoronoi v, float offset) {
+    public void PQ_insert(HalfEdgeVoronoi he, SiteVoronoi v, float offset) {
         he.vertex = v;
         v.refcnt++;
         he.ystar = v.coord.y + offset;
 
         pq.PQinsert(he);
-        PQcount++;
+        PQ_count++;
     }
 
-    public void PQdelete(HalfEdgeVoronoi he) {
+    public void PQ_delete(HalfEdgeVoronoi he) {
         if(he.vertex != null) {
             pq.PQdelete(he);
-            PQcount--;
+            PQ_count--;
             deref(he.vertex);
             he.vertex = null;
         }
@@ -403,7 +406,7 @@ public class Voronoi {
     public SiteVoronoi intersect(HalfEdgeVoronoi el1, HalfEdgeVoronoi el2) {
         EdgeVoronoi e1, e2, e;
         HalfEdgeVoronoi el;
-        float d, xint, yint;
+        float d, xInt, yInt;
         boolean right_of_site;
         SiteVoronoi v;
 
@@ -418,8 +421,8 @@ public class Voronoi {
         if ( (-1.0e-10 < d) && (d < 1.0e-10) )
             return(null);
 
-        xint = (e1.c * e2.b - e2.c * e1.b)/d;
-        yint = (e2.c * e1.a - e1.c * e2.a)/d;
+        xInt = (e1.c * e2.b - e2.c * e1.b)/d;
+        yInt = (e2.c * e1.a - e1.c * e2.a)/d;
 
         if ( (e1.reg[1].coord.y < e2.reg[1].coord.y) ||
                 ( (e1.reg[1].coord.y == e2.reg[1].coord.y) &&
@@ -430,19 +433,19 @@ public class Voronoi {
             el = el2;
             e = e2;
         }
-        right_of_site = (xint >= e.reg[1].coord.x);
+        right_of_site = (xInt >= e.reg[1].coord.x);
         if ( (right_of_site && el.ELpm == LE) ||
                 (!right_of_site && el.ELpm == RE) )
             return(null);
 
         v = new SiteVoronoi();
         v.refcnt = 0;
-        v.coord.x = xint;
-        v.coord.y = yint;
+        v.coord.x = xInt;
+        v.coord.y = yInt;
         return(v);
     }
 
-    public void ELinsert(HalfEdgeVoronoi lb, HalfEdgeVoronoi henew) {
+    public void EL_insert(HalfEdgeVoronoi lb, HalfEdgeVoronoi henew) {
         henew.ELleft = lb;
         henew.ELright = lb.ELright;
         (lb.ELright).ELleft = henew;
@@ -457,37 +460,37 @@ public class Voronoi {
 
     public EdgeVoronoi bisect(SiteVoronoi s1, SiteVoronoi s2) {
         float dx, dy, adx, ady;
-        EdgeVoronoi newedge;
+        EdgeVoronoi newEdge;
 
-        newedge = new EdgeVoronoi();
+        newEdge = new EdgeVoronoi();
 
-        newedge.reg[0] = s1;
-        newedge.reg[1] = s2;
+        newEdge.reg[0] = s1;
+        newEdge.reg[1] = s2;
         s1.refcnt++;
         s2.refcnt++;
-        newedge.ep[0] = null;
-        newedge.ep[1] = null;
+        newEdge.ep[0] = null;
+        newEdge.ep[1] = null;
 
         dx = s2.coord.x - s1.coord.x;
         dy = s2.coord.y - s1.coord.y;
         adx = (dx > 0) ? dx : -dx;
         ady = (dy > 0) ? dy : -dy;
-        newedge.c = s1.coord.x * dx + s1.coord.y * dy + (dx*dx + dy*dy) * 0.5f;
+        newEdge.c = s1.coord.x * dx + s1.coord.y * dy + (dx*dx + dy*dy) * 0.5f;
         if (adx > ady) {
-            newedge.a = 1.0f;
-            newedge.b = dy/dx;
-            newedge.c /= dx;
+            newEdge.a = 1.0f;
+            newEdge.b = dy/dx;
+            newEdge.c /= dx;
         } else {
-            newedge.b = 1.0f;
-            newedge.a = dx/dy;
-            newedge.c /= dy;
+            newEdge.b = 1.0f;
+            newEdge.a = dx/dy;
+            newEdge.c /= dy;
         }
 
-        newedge.edgenbr = nvedges;
-        if (cgng.delaunayB)
-            out_bisector(newedge);
-        nvedges++;
-        return(newedge);
+        newEdge.edgenbr = nVEdges;
+        if (cGNG.delaunayB)
+            out_bisector(newEdge);
+        nVEdges++;
+        return(newEdge);
     }
 
     public void endpoint(EdgeVoronoi e, int lr, SiteVoronoi s) {
@@ -495,87 +498,87 @@ public class Voronoi {
         s.refcnt++;
         if (e.ep[RE-lr] == null)
             return;
-        if (cgng.voronoiB)
+        if (cGNG.voronoiB)
             out_ep(e);
         deref(e.reg[LE]);
         deref(e.reg[RE]);
         e = null;
     }
 
-    public void makevertex(SiteVoronoi v) {
-        v.sitenbr = nvertices;
-        nvertices++;
+    public void makeVertex(SiteVoronoi v) {
+        v.sitenbr = nVertices;
+        nVertices++;
     }
 
-    public void ELdelete(HalfEdgeVoronoi he) {
+    public void EL_delete(HalfEdgeVoronoi he) {
         (he.ELleft).ELright = he.ELright;
         (he.ELright).ELleft = he.ELleft;
         he.ELedge = null;
     }
 
-    public SiteVoronoi rightreg(HalfEdgeVoronoi he) {
+    public SiteVoronoi rightReg(HalfEdgeVoronoi he) {
         if(he.ELedge == null)
-            return(bottomsite);
+            return(bottomSite);
         return( he.ELpm == LE ?
                 he.ELedge.reg[RE] :
                     he.ELedge.reg[LE] );
     }
 
-    public SiteVoronoi leftreg(HalfEdgeVoronoi he) {
+    public SiteVoronoi leftReg(HalfEdgeVoronoi he) {
         if (he.ELedge == null)
-            return(bottomsite);
+            return(bottomSite);
         return( he.ELpm == LE ?
                 he.ELedge.reg[LE] :
                     he.ELedge.reg[RE] );
     }
 
-    public void ELinitialize() {
+    public void EL_initialize() {
         list = new ListGNG();
-        ELleftend = new HalfEdgeVoronoi(null, 0);
-        ELrightend = new HalfEdgeVoronoi(null, 0);
-        ELleftend.ELleft = null;
-        ELleftend.ELright = ELrightend;
-        ELrightend.ELleft = ELleftend;
-        ELrightend.ELright = null;
-        list.insert(ELleftend, list.head);
-        list.insert(ELrightend, list.last());
+        EL_leftEnd = new HalfEdgeVoronoi(null, 0);
+        EL_rightEnd = new HalfEdgeVoronoi(null, 0);
+        EL_leftEnd.ELleft = null;
+        EL_leftEnd.ELright = EL_rightEnd;
+        EL_rightEnd.ELleft = EL_leftEnd;
+        EL_rightEnd.ELright = null;
+        list.insert(EL_leftEnd, list.head);
+        list.insert(EL_rightEnd, list.last());
     }
 
     public HalfEdgeVoronoi ELleftbnd(FPoint p) {
         HalfEdgeVoronoi he;
         he = (list.first()).elem;
-        // Now search linear list of halfedges for the correct one
-        if ( he == ELleftend  || (he != ELrightend && right_of(he,p)) ) {
+        // Now search linear list of half-edges for the correct one
+        if ( he == EL_leftEnd || (he != EL_rightEnd && right_of(he,p)) ) {
             do {
                 he = he.ELright;
-            } while ( (he != ELrightend) && right_of(he,p) );
+            } while ( (he != EL_rightEnd) && right_of(he,p) );
             he = he.ELleft;
         } else {
             do {
                 he = he.ELleft;
-            } while ( he != ELleftend && !right_of(he,p) );
+            } while ( he != EL_leftEnd && !right_of(he,p) );
         }
         return(he);
     }
 
-    // returns true if p is to right of halfedge e
+    // returns true if p is to right of half-edge e
     public boolean right_of(HalfEdgeVoronoi el, FPoint p) {
         EdgeVoronoi e;
-        SiteVoronoi topsite;
+        SiteVoronoi topSite;
         boolean right_of_site, above, fast;
         float dxp, dyp, dxs, t1, t2, t3, yl;
 
         e = el.ELedge;
-        topsite = e.reg[1];
-        right_of_site = p.x > topsite.coord.x;
+        topSite = e.reg[1];
+        right_of_site = p.x > topSite.coord.x;
         if(right_of_site && (el.ELpm == LE) )
             return(true);
         if(!right_of_site && (el.ELpm == RE) )
             return (false);
 
         if (e.a == 1.0) {
-            dyp = p.y - topsite.coord.y;
-            dxp = p.x - topsite.coord.x;
+            dyp = p.y - topSite.coord.y;
+            dxp = p.x - topSite.coord.x;
             fast = false;
             if ( (!right_of_site & e.b < 0.0) | (right_of_site & e.b >= 0.0) ) {
                 above = (dyp >= e.b * dxp);
@@ -589,7 +592,7 @@ public class Voronoi {
                     fast = true;
             }
             if (!fast) {
-                dxs = topsite.coord.x - (e.reg[0]).coord.x;
+                dxs = topSite.coord.x - (e.reg[0]).coord.x;
                 above = (e.b * (dxp*dxp - dyp*dyp)) <
                         (dxs * dyp * (1.0 + 2.0 * dxp/dxs + e.b * e.b));
                 if(e.b < 0.0)
@@ -598,17 +601,17 @@ public class Voronoi {
         } else {  // e.b == 1.0
                 yl = e.c - e.a * p.x;
                 t1 = p.y - yl;
-                t2 = p.x - topsite.coord.x;
-                t3 = yl - topsite.coord.y;
+                t2 = p.x - topSite.coord.x;
+                t3 = yl - topSite.coord.y;
                 above = t1*t1 > t2*t2 + t3*t3;
         }
         return (el.ELpm == LE ? above : !above);
     }
 
-    public SiteVoronoi nextsite() {
-        siteidx++;
-        if (siteidx > nsites)
+    public SiteVoronoi nextSite() {
+        siteIdx++;
+        if (siteIdx > nSites)
             return(null);
-        return(vsites[siteidx]);
+        return(vSites[siteIdx]);
     }
 }

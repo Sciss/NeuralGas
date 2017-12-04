@@ -25,7 +25,7 @@ package de.sciss.demogng;
  * @author B. Fritzke
  * enum for all learning methods
  */
-public enum Algo {
+public enum Algorithm {
     LBG("LBG (Linde,Buzo,Gray)","LBG"),
     LBGU("LBG-U (Fritzke)","LBGU"),
     HCL("Hard Competitive Learning","HCL"),
@@ -70,7 +70,7 @@ public enum Algo {
             return false;
     }
     private String mnemo;
-    private Algo(String name,String mnemo){
+    private Algorithm(String name, String mnemo){
         this.name=name;
         this.mnemo=mnemo;
     }

@@ -144,7 +144,7 @@ class NodeGNG {
      */
     protected int neighbor[] = new int[MAX_NEIGHBORS];
     /**
-     * The list of neighboring signals (specified by their number).
+     * The list of neighboring numSignals (specified by their number).
      */
     protected Vector<Integer> signals = new Vector<Integer>();
 
@@ -161,9 +161,9 @@ class NodeGNG {
         y += source.y;
     }
     /**
-     * Return number of neighboring signals.
+     * Return number of neighboring numSignals.
      *
-     * @return		number of signals
+     * @return		number of numSignals
      */
     protected int numSignals() {
         return(signals.size());

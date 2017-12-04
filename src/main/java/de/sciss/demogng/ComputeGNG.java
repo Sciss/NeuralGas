@@ -64,7 +64,7 @@ class ComputeGNG {
     /**
      * The maximum number of nodes.
      */
-    protected final int MAX_NODES = 30000;
+    protected static final int MAX_NODES = 30000;
 
     /**
      * The maximum number of edges (3 * maximum number of nodes).
@@ -82,7 +82,7 @@ class ComputeGNG {
     protected final int MIXTURE_SIZE = 500;
 
     /**
-     * The maximum number of discrete signals.
+     * The maximum number of discrete numSignals.
      */
     protected final int MAX_DISCRETE_SIGNALS = 20000;
 
@@ -112,14 +112,14 @@ class ComputeGNG {
     protected int lambdaGNG = 600;
 
     /**
-     * The current number of input signals used for adaptation.
+     * The current number of input numSignals used for adaptation.
      */
-    protected int sigs = 0;
+    protected int numSignals = 0;
 
     /**
      * The temporal backup of a run.
      */
-    protected int sigsTmp = 0;
+    protected int numSignalsTmp = 0;
 
     /**
      * The x-position of the actual signal.
@@ -133,13 +133,13 @@ class ComputeGNG {
 
     /**
      * The initial width of the drawing area.
-     * This value can only be changed by resizing the appletviewer.
+     * This value can only be changed by resizing the applet-viewer.
      */
     protected int panelWidth = 550;
 
     /**
      * The initial height of the drawing area.
-     * This value can only be changed by resizing the appletviewer.
+     * This value can only be changed by resizing the applet-viewer.
      */
     protected int panelHeight = 310;
 
@@ -166,42 +166,42 @@ class ComputeGNG {
     protected GridNodeGNG grid[][] = new GridNodeGNG[MAX_GRID_X][MAX_GRID_Y];
 
     /**
-     * The array of the last computed signals (x-coordinate).
+     * The array of the last computed numSignals (x-coordinate).
      */
     protected float lastSignalsX[] = new float[MAX_STEP_SIZE];
 
     /**
-     * The array of the last computed signals (y-coordinate).
+     * The array of the last computed numSignals (y-coordinate).
      */
     protected float lastSignalsY[] = new float[MAX_STEP_SIZE];
 
     /**
-     * The array of the discrete signals (x-coordinate).
+     * The array of the discrete numSignals (x-coordinate).
      */
     protected float discreteSignalsX[] = new float[MAX_DISCRETE_SIGNALS];
 
     /**
-     * The array of the discrete signals (y-coordinate).
+     * The array of the discrete numSignals (y-coordinate).
      */
     protected float discreteSignalsY[] = new float[MAX_DISCRETE_SIGNALS];
 
     /**
-     * The array of the best distance (discrete signals).
+     * The array of the best distance (discrete numSignals).
      */
     protected float discreteSignalsD1[] = new float[MAX_DISCRETE_SIGNALS];
 
     /**
-     * The array of the second best distance (discrete signals).
+     * The array of the second best distance (discrete numSignals).
      */
     protected float discreteSignalsD2[] = new float[MAX_DISCRETE_SIGNALS];
 
     /**
-     * The array of the second best distance (discrete signals).
+     * The array of the second best distance (discrete numSignals).
      */
-    protected FPoint Cbest[] = new FPoint[MAX_NODES];
+    protected FPoint C_best[] = new FPoint[MAX_NODES];
 
     /**
-     * The current number of discrete signals.
+     * The current number of discrete numSignals.
      */
     protected int numDiscreteSignals = 500;
 
@@ -227,7 +227,7 @@ class ComputeGNG {
     protected boolean fineTuningB = false;
 
     /**
-     * stop the algo when max number of nodes is reached
+     * stop the algorithm when max number of nodes is reached
      */
     protected boolean autoStopB = true;
 
@@ -254,12 +254,6 @@ class ComputeGNG {
      *  inserted.
      */
     protected boolean noNewNodesGGB = false;
-
-//    /**
-//     * The flag for stopping the demo.
-//     *  This variable can be set by the user. If true no calculation is done.
-//     */
-//    protected boolean stopB = false;
 
     /**
      * The flag for variable movement (HCL).
@@ -296,7 +290,7 @@ class ComputeGNG {
     /**
      * The selected algorithm.
      */
-    Algo algo = Algo.NG;
+    Algorithm algorithm = Algorithm.NG;
 
     /**
      * The current maximum number to delete an old edge (GNG,NGwCHL).
@@ -518,7 +512,7 @@ class ComputeGNG {
         //System.out.printf("addNode() and width is %d and rndInit is %s, x=%f, y=%f\n",d.width, rndInitB,n.x,n.y);
 
         n.nNeighbor = 0;
-        if (algo.isDiscrete())
+        if (algorithm.isDiscrete())
             n.hasMoved = true;
         nodes[nNodes] = n;
         nNodesChangedB = true;
@@ -539,7 +533,7 @@ class ComputeGNG {
         NodeGNG n = new NodeGNG();
         n.x = x;
         n.y = y;
-        if (algo.isDiscrete()) // LBG
+        if (algorithm.isDiscrete()) // LBG
             n.hasMoved = true;
         nodes[nNodes] = n;
         nNodesChangedB = true;
@@ -622,7 +616,7 @@ class ComputeGNG {
         }
         int i, j;
 
-        if (algo == Algo.SOM)
+        if (algorithm == Algorithm.SOM)
             maxNodes = width * height;
 
         //
@@ -993,7 +987,7 @@ class ComputeGNG {
         }
     }
     /**
-     * Generate discrete signals for the given distribution.
+     * Generate discrete numSignals for the given distribution.
      *  The result goes into the global arrays <TT> discreteSignalsX </TT>
      *  and <TT> discreteSignalsY </TT>.
      *
@@ -1952,9 +1946,9 @@ class ComputeGNG {
             r2 = wi/4;
             l2 = hi/4;
             ll = (int) (0.75 * (wi/2 +
-                    Math.IEEEremainder(0.2 * sigs,(wi))));
+                    Math.IEEEremainder(0.2 * numSignals,(wi))));
             lr = (int) (0.75 * (hi/2 +
-                    Math.IEEEremainder(0.2 * sigs,(hi))));
+                    Math.IEEEremainder(0.2 * numSignals,(hi))));
 
             SignalX = (int) (ll + (r2 * Math.random()));
             SignalY = (int) (lr + (l2 * Math.random()));
@@ -1963,8 +1957,8 @@ class ComputeGNG {
             r2 = wi/4;
             l2 = hi/4;
 
-            remainderX = Math.IEEEremainder(0.2 * sigs,(wi));
-            remainderY = Math.IEEEremainder(0.2 * sigs,(hi));
+            remainderX = Math.IEEEremainder(0.2 * numSignals,(wi));
+            remainderY = Math.IEEEremainder(0.2 * numSignals,(hi));
 
             if ( (bounceX_old > 0) && (remainderX < 0) )
                 bounceX = bounceX * (-1);
@@ -1985,7 +1979,7 @@ class ComputeGNG {
             r2 = wi/4;
             l2 = hi/4;
 
-            if (Math.ceil(Math.IEEEremainder(sigs, 1000.0)) == 0) {
+            if (Math.ceil(Math.IEEEremainder(numSignals, 1000.0)) == 0) {
                 jumpX = (int) ((wi - r2) * Math.random());
                 jumpY = (int) ((hi - l2) * Math.random());
             }
@@ -2010,7 +2004,7 @@ class ComputeGNG {
      * @param i          The start of the interval
      * @param k          The end of the interval
      */
-    protected void reheap_min(int i, int k) {
+    protected void buildMinimumHeap(int i, int k) {
         int j = i;
         int son;
 
@@ -2088,12 +2082,12 @@ class ComputeGNG {
 //        if (stopB)
 //            return;
         
-        // do stepSize adaption steps using random signals
+        // do stepSize adaption steps using random numSignals
         for (k = 0; k < stepSize; k++) {
 
-            sigs++;
+            numSignals++;
 
-            if (!algo.isDiscrete()) { // neither LBG nor LBG-U
+            if (!algorithm.isDiscrete()) { // neither LBG nor LBG-U
                 //
                 // generate random signal and determine winner etc.
                 //
@@ -2112,7 +2106,7 @@ class ComputeGNG {
                 // Get a random signal out of the selected distribution
                 getSignal(pd);
 
-                // Save the signals
+                // Save the numSignals
                 lastSignalsX[k] = SignalX;
                 lastSignalsY[k] = SignalY;
 
@@ -2121,7 +2115,7 @@ class ComputeGNG {
                     n_i = nodes[i];
                     n_i.isWinner = n_i.isSecond = n_i.hasMoved = false;
 
-                    if ((algo.isGNGType()) && (!noNewNodesGNGB) && ((sigs % lambdaGNG) == 0))
+                    if ((algorithm.isGNGType()) && (!noNewNodesGNGB) && ((numSignals % lambdaGNG) == 0))
                         n_i.isMostRecentlyInserted = false;
 
                     // Mark node without neighbors (one each run is enough)
@@ -2186,7 +2180,7 @@ class ComputeGNG {
                 //
                 // do adaptation ("learning") according to current model
                 //
-                switch (algo) {
+                switch (algorithm) {
                 //
                 // Growing Neural Gas
                 //
@@ -2246,10 +2240,10 @@ class ComputeGNG {
                     ageEdgesOfNode(curr1stIdx);
 
                     // Check inserting node and insert if necessary
-                    if ( (sigs % lambdaGNG) == 0 ) {
+                    if ( (numSignals % lambdaGNG) == 0 ) {
                         if (!noNewNodesGNGB) {
                             if (autoStopB) {
-                                if (nNodes >= maxNodes || (GNG_U_B && (sigs > 300000))) {
+                                if (nNodes >= maxNodes || (GNG_U_B && (numSignals > 300000))) {
                                     result.stop = true;
                                     break;
                                 }
@@ -2280,7 +2274,7 @@ class ComputeGNG {
                     // Hard Competitive Learning
                     //
                 case HCL:
-                    if ((sigs >= t_max) && (variableB || autoStopB)) {
+                    if ((numSignals >= t_max) && (variableB || autoStopB)) {
                         result.repaint  = true;
                         result.stop     = true;
                         break;
@@ -2288,7 +2282,7 @@ class ComputeGNG {
 
                     // Adapt picked node
                     if (variableB) {
-                        e_t = (float)(e_i * Math.pow(e_f/e_i, sigs/t_max));
+                        e_t = (float)(e_i * Math.pow(e_f/e_i, numSignals /t_max));
                         dx = e_t * (SignalX - curr1st.x);
                         dy = e_t * (SignalY - curr1st.y);
                         curr1st.adapt(dx,dy);
@@ -2304,7 +2298,7 @@ class ComputeGNG {
                     // Neural Gas
                     //
                 case NG:
-                    if (sigs >= t_max) {
+                    if (numSignals >= t_max) {
                         result.repaint  = true;
                         result.stop     = true;
                         break;
@@ -2317,12 +2311,12 @@ class ComputeGNG {
                         nNodesChangedB = false;
                     }
 
-                    l_t = (float)(l_i * Math.pow(l_f/l_i, sigs/t_max));
-                    e_t = (float)(e_i * Math.pow(e_f/e_i, sigs/t_max));
+                    l_t = (float)(l_i * Math.pow(l_f/l_i, numSignals /t_max));
+                    e_t = (float)(e_i * Math.pow(e_f/e_i, numSignals /t_max));
 
                     // Build a minimum heap
                     for (i = nNodes/2; i > 0; i--)
-                        reheap_min(i, nNodes);
+                        buildMinimumHeap(i, nNodes);
 
                     {
                         int decrNnodes = nNodes - 1;
@@ -2352,7 +2346,7 @@ class ComputeGNG {
                                     (i < decrNnodes) )
                                 break;
 
-                            reheap_min(1, i-1);
+                            buildMinimumHeap(1, i-1);
                         }
                     }
                     break;
@@ -2361,7 +2355,7 @@ class ComputeGNG {
                     // Neural Gas with Competitive Hebbian Learning
                     //
                 case NGCHL:
-                    if (sigs >= t_max) {
+                    if (numSignals >= t_max) {
                         result.repaint  = true;
                         result.stop     = true;
                         break;
@@ -2374,16 +2368,16 @@ class ComputeGNG {
                         nNodesChangedB = false;
                     }
 
-                    l_t = (float)(l_i * Math.pow(l_f/l_i, sigs/t_max));
-                    e_t = (float)(e_i * Math.pow(e_f/e_i, sigs/t_max));
+                    l_t = (float)(l_i * Math.pow(l_f/l_i, numSignals /t_max));
+                    e_t = (float)(e_i * Math.pow(e_f/e_i, numSignals /t_max));
 
                     // Calculate the new edge-deleting term
                     MAX_EDGE_AGE = (int) (delEdge_i *
-                            Math.pow(delEdge_f/delEdge_i, sigs/t_max));
+                            Math.pow(delEdge_f/delEdge_i, numSignals /t_max));
 
                     // Build a minimum heap
                     for (i = nNodes/2; i > 0; i--)
-                        reheap_min(i, nNodes);
+                        buildMinimumHeap(i, nNodes);
 
                     {
                         int decrNnodes = nNodes - 1;
@@ -2420,7 +2414,7 @@ class ComputeGNG {
                                     (i < decrNnodes) )
                                 break;
 
-                            reheap_min(1, i-1);
+                            buildMinimumHeap(1, i-1);
                         }
                     }
                     break;
@@ -2429,7 +2423,7 @@ class ComputeGNG {
                     // Competitive Hebbian Learning
                     //
                 case CHL:
-                    if ((sigs >= 50000) && autoStopB) {
+                    if ((numSignals >= 50000) && autoStopB) {
                         result.repaint  = true;
                         result.stop     = true;
                         break;
@@ -2470,18 +2464,18 @@ class ComputeGNG {
                         result.stop = true;
                         break;
                     }
-                    // count signals (leads to density estimation by node density)
+                    // count numSignals (leads to density estimation by node density)
                     grid[x][y].node.tau+=1.0;
 
                     if (fineTuningB) {
                         int percent;
                         // tmax proportional to network size
                         float tmax = gridWidth * gridHeight * l_f;
-                        if (algo.equals(Algo.GR)) {
+                        if (algorithm.equals(Algorithm.GR)) {
                             tmax = gridWidth * gridHeight * 10;
                         }
-                        e_t = (float)(e_i * Math.pow(e_f/e_i, (sigs-sigsTmp)/tmax));
-                        percent = (int) (((sigs-sigsTmp)*100)/tmax);
+                        e_t = (float)(e_i * Math.pow(e_f/e_i, (numSignals - numSignalsTmp)/tmax));
+                        percent = (int) (((numSignals - numSignalsTmp)*100)/tmax);
                         if (percent >= 100) {
                             fineTuningS = "Fine-tuning (100%)";
                             log("fine tuning at 100%, calling stop ....");
@@ -2518,7 +2512,7 @@ class ComputeGNG {
                     }
 
                     // Check inserting nodes and insert if necessary
-                    if ( (sigs % (gridWidth * gridHeight * l_i) == 0) && (!fineTuningB) ) {
+                    if ( (numSignals % (gridWidth * gridHeight * l_i) == 0) && (!fineTuningB) ) {
                         if (!noNewNodesGGB) {
                             if(enlargeGrid()) {
                                 result.insertedSound = true;
@@ -2529,7 +2523,7 @@ class ComputeGNG {
                                 log("fine-tuning .....");
 
                             }
-                            sigsTmp = sigs;
+                            numSignalsTmp = numSignals;
 //							if (inserted) {
 //								break;
 //							}
@@ -2542,7 +2536,7 @@ class ComputeGNG {
                     // Self-Organizing Map
                     //
                 case SOM:
-                    if (sigs >= t_max){
+                    if (numSignals >= t_max){
                         result.stop = true; // stop adaptation
                         break;
                     }
@@ -2551,8 +2545,8 @@ class ComputeGNG {
                     x = curr1st.x_grid;
                     y = curr1st.y_grid;
 
-                    e_t = (float)(e_i * Math.pow(e_f/e_i, sigs/t_max));
-                    sigma = (float)(sigma_i * Math.pow(sigma_f, sigs/t_max));
+                    e_t = (float)(e_i * Math.pow(e_f/e_i, numSignals /t_max));
+                    sigma = (float)(sigma_i * Math.pow(sigma_f, numSignals /t_max));
 
                     for (i = 0; i < gridWidth; i++) {
                         for (j = 0; j < gridHeight; j++) {
@@ -2588,7 +2582,7 @@ class ComputeGNG {
             } else
             {
                 //
-                // discrete algo (LBG/LBG-U)
+                // discrete algorithm (LBG/LBG-U)
                 //
                 readyLBG_B = true;
                 int noOfSignals, sig;
@@ -2603,7 +2597,7 @@ class ComputeGNG {
 
                 curr1stIdx = 0;
 
-                // loop over finite set of input signals
+                // loop over finite set of input numSignals
                 for (j = 0; j < numDiscreteSignals; j++) {
                     curr1st = nodes[0];
                     curr2nd = nodes[0];
@@ -2713,7 +2707,7 @@ class ComputeGNG {
                     if (readyLBG_B && (errorAct < errorBestLBG_U) ) {
                         // Save old positions
                         for (i = 0; i < nNodes; i++) {
-                            Cbest[i] = new FPoint(nodes[i].x,
+                            C_best[i] = new FPoint(nodes[i].x,
                                     nodes[i].y);
                         }
                         readyLBG_B = false;
@@ -2728,8 +2722,8 @@ class ComputeGNG {
                     } else if (readyLBG_B && (errorAct > errorBestLBG_U) ) {
                         // Restore old positions
                         for (i = 0; i < nNodes; i++) {
-                            nodes[i].x = Cbest[i].x;
-                            nodes[i].y = Cbest[i].y;
+                            nodes[i].x = C_best[i].x;
+                            nodes[i].y = C_best[i].y;
                         }
                     }
                 }
@@ -2738,7 +2732,7 @@ class ComputeGNG {
                     result.stop     = true;
                 }
 
-            } // if (algo.isDiscrete())
+            } // if (algorithm.isDiscrete())
 //            if (stopB==true)
 //                break;
 

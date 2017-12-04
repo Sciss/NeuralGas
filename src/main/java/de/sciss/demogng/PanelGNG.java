@@ -17,6 +17,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
+import static de.sciss.demogng.ComputeGNG.MAX_NODES;
+
 @SuppressWarnings("serial")
 class PanelGNG extends JPanel implements
         Runnable,
@@ -50,155 +52,23 @@ class PanelGNG extends JPanel implements
         str = format.format(new java.util.Date())+"."+String.format("%03d",lDateTime%1000);
         return str;
     }
-    /**
-     * The flag for debugging.
-     */
-    protected final boolean DEBUG = false;
-    /**
-     * The maximum number of elements to draw/calculate for the distributions.
-     */
-    protected final int MAX_COMPLEX = 58;
-    /**
-     * The maximum number of nodes.
-     */
-    protected final int MAX_NODES = 30000;
-    /**
-     * The maximum number of edges (3 * maximum number of nodes).
-     */
-    protected final int MAX_EDGES = 6 * MAX_NODES;
+
     /**
      * The maximum number of Voronoi lines (5 * maximum number of nodes).
      */
     protected final int MAX_V_LINES = 6 * MAX_NODES;
-    /**
-     * The maximum stepsize.
-     */
-    protected final int MAX_STEPSIZE = 500;
-    /**
-     * The size of the DiscreteMixture signal set.
-     */
-    protected final int MIXTURE_SIZE = 500;
-    /**
-     * The maximum number of discrete signals.
-     */
-    protected final int MAX_DISCRETE_SIGNALS = 20000;
-    /**
-     * The maximum x size of the grid array.
-     */
-    protected final int MAX_GRID_X = 10000;
-    /**
-     * The maximum y size of the grid array.
-     */
-    protected final int MAX_GRID_Y = 100;
 
-    /**
-     * The factor for the ring-thickness (distribution).
-     */
-    protected final float RING_FACTOR = 0.4f;	// Factor < 1
     /**
      * The version of the Growing Neural Gas Demo.
      */
-    protected static final String DGNG_VERSION = "v2.2.0-SNAPSHOT"; // Version
-    /**
-     * The current maximum number of nodes.
-     */
-    protected int maxNodes = 100;
-    /**
-     * The current number of runs to insert a new node (GNG).
-     */
-    protected int lambdaGNG = 600;
-    /**
-     * The current number of input signals used for adaptation.
-     */
-    protected int sigs = 0;
-
-    /**
-     * The temporal backup of a run.
-     */
-    protected int sigsTmp = 0;
-    /**
-     * The x-position of the actual signal.
-     */
-    protected float SignalX = 0f;
-    /**
-     * The y-position of the actual signal.
-     */
-    protected float SignalY = 0f;
-    /**
-     * The initial width of the drawing area.
-     * This value can only be changed by resizing the appletviewer.
-     */
-    protected int panelWidth = 550;
-    /**
-     * The initial height of the drawing area.
-     * This value can only be changed by resizing the appletviewer.
-     */
-    protected int panelHeight = 310;
+    protected static final String DEMO_GNG_VERSION = "v2.2.0-SNAPSHOT"; // Version
 
     protected DemoGNG graph;
-    /**
-     * The actual number of nodes.
-     */
-    protected int nNodes = 0;
-    /**
-     * The array of the actual used nodes.
-     */
-    protected NodeGNG nodes[] = new NodeGNG[MAX_NODES];
-    /**
-     * The sorted array of indices of nodes.
-     * The indices of the nodes are sorted by their distance from the actual
-     * signal. sNodes[1] is the index of the nearest node.
-     */
-    protected int sNodes[] = new int[MAX_NODES + 1];
-    /**
-     * The array of the nodes in the grid.
-     */
-    protected GridNodeGNG grid[][] = new GridNodeGNG[MAX_GRID_X][MAX_GRID_Y];
-    /**
-     * The array of the last computed signals (x-coordinate).
-     */
-    protected float lastSignalsX[] = new float[MAX_STEPSIZE];
-    /**
-     * The array of the last computed signals (y-coordinate).
-     */
-    protected float lastSignalsY[] = new float[MAX_STEPSIZE];
-    /**
-     * The array of the discrete signals (x-coordinate).
-     */
-    protected float discreteSignalsX[] = new float[MAX_DISCRETE_SIGNALS];
-    /**
-     * The array of the discrete signals (y-coordinate).
-     */
-    protected float discreteSignalsY[] = new float[MAX_DISCRETE_SIGNALS];
-    /**
-     * The array of the best distance (discrete signals).
-     */
-    protected float discreteSignalsD1[] = new float[MAX_DISCRETE_SIGNALS];
-    /**
-     * The array of the second best distance (discrete signals).
-     */
-    protected float discreteSignalsD2[] = new float[MAX_DISCRETE_SIGNALS];
-    /**
-     * The array of the second best distance (discrete signals).
-     */
-    protected FPoint Cbest[] = new FPoint[MAX_NODES];
 
-    /**
-     * The current number of discrete signals.
-     */
-    protected int numDiscreteSignals = 500;
-    /**
-     * The actual number of edges.
-     */
-    protected int nEdges = 0;
-    /**
-     * The array of the actual used edges.
-     */
-    protected EdgeGNG edges[] = new EdgeGNG[MAX_EDGES];
     /**
      * The actual number of Voronoi lines.
      */
-    protected int nlines = 0;
+    protected int nLines = 0;
     /**
      * The array of the actual used lines.
      */
@@ -210,35 +80,24 @@ class PanelGNG extends JPanel implements
 
     Thread relaxer;
     GraphGNG errorGraph;
-    ComputeGNG compute;
-    ComputeGNG.Result result;
+    final ComputeGNG compute;
+    final ComputeGNG.Result result;
 
     /**
      * The flag for playing the sound for a new inserted node.
      */
     protected boolean insertedSoundB = false;
+
     /**
-     * The flag for a white background. Useful for making hardcopies
+     * The flag for a white background. Useful for making hard-copies
      */
     protected boolean whiteB = false;
-    /**
-     * The flag for random init. The nodes will be placed only in the specified
-     *  distribution or not.
-     */
-    protected boolean rndInitB = false;
-    /**
-     * The flag for entering the fine-tuning phase (GG).
-     */
-    protected boolean fineTuningB = false;
+
     /**
      * The flag for showing the signal.
-     *  This variable can be set by the user and shows the last input signals.
+     *  This variable can be set by the user and shows the last input numSignals.
      */
     protected boolean signalsB = false;
-    /**
-     * stop the algo when max number of nodes is reached
-     */
-    protected boolean autoStopB = true;
 
     /**
      * display GG network in mapSpace
@@ -252,40 +111,18 @@ class PanelGNG extends JPanel implements
      * The flag for displaying tau values
      */
     protected boolean tauB = false;
-    /**
-     * close GG to a torus
-     */
-    protected boolean torusGGB = false;
-    /**
-     * close SOM to a torus
-     */
-    protected boolean torusSOMB = false;
+
     /**
      * The flag for displaying usage
      */
     protected boolean usageB = false;
-    /**
-     * The flag for inserting new nodes in GNG.
-     *  This variable can be set by the user. If true no new nodes are
-     *  inserted.
-     */
-    protected boolean noNewNodesGNGB = false;
-    /**
-     * The flag for inserting new nodes in GG.
-     *  This variable can be set by the user. If true no new nodes are
-     *  inserted.
-     */
-    protected boolean noNewNodesGGB = false;
-    /**
-     * The flag for stopping the demo.
-     *  This variable can be set by the user. If true no calculation is done.
-     */
-    private boolean stopB = false;
+
     /**
      * The flag for the sound.
      *  This variable can be set by the user. If false no sound is played.
      */
     protected boolean soundB = false;
+
     /**
      * The flag for the teach-mode.
      *  This variable can be set by the user. If true a legend is displayed
@@ -293,26 +130,25 @@ class PanelGNG extends JPanel implements
      *  all calculation is very slow.
      */
     protected boolean teachB = false;
-    /**
-     * The flag for variable movement (HCL).
-     *  This variable can be set by the user.
-     */
-    protected boolean variableB = false;
+
     /**
      * The flag for displaying the edges.
      *  This variable can be set by the user.
      */
     protected boolean edgesB = true;
+
     /**
      * The flag for displaying the nodes.
      *  This variable can be set by the user.
      */
     protected boolean nodesB = true;
+
     /**
      * The flag for displaying the (motion) traces.
      *  This variable can be set by the user.
      */
     protected boolean tracesB = false;
+
     /**
      * The flag for displaying the error graph.
      *  This variable can be set by the user.
@@ -325,51 +161,24 @@ class PanelGNG extends JPanel implements
      */
     protected boolean probDistB = true;
 
-
     /**
      * The flag for displaying the Voronoi diagram.
      *  This variable can be set by the user.
      */
     protected boolean voronoiB = false;
+
     /**
      * The flag for displaying the Delaunay triangulation.
      *  This variable can be set by the user.
      */
     protected boolean delaunayB = false;
+
     /**
      * The flag for any moved nodes (to compute the Voronoi diagram/Delaunay
      *  triangulation).
      */
     protected boolean nodesMovedB = true;
-    /**
-     * The flag for using utility (GNG-U).
-     */
-    protected boolean GNG_U_B = false;
-    /**
-     * The flag for changed number of nodes.
-     */
-    protected boolean nNodesChangedB = true;
 
-    /**
-     * The flag for LBG-U method
-     */
-    protected boolean LBG_U_B = false;
-    /**
-     * The flag for end of calculation (LBG)
-     */
-    protected boolean readyLBG_B = false;
-
-    /**
-     * The current maximum number to delete an old edge (GNG,NGwCHL).
-     *  This variable can be set by the user.
-     */
-    protected int MAX_EDGE_AGE = 88;
-    /**
-     * The current number of calculations done in one step.
-     *  This variable can be set by the user. After <TT> stepSize </TT>
-     *  calculations the result is displayed.
-     */
-    protected int stepSize = 50;
     /**
      * This variable determines how long the compute thread sleeps. In this time
      *  the user can interact with the program. Slow machines and/or slow
@@ -377,24 +186,6 @@ class PanelGNG extends JPanel implements
      *  This variable can be set by the user.
      */
     protected int tSleep = 10; //should be taken from the speed choice
-
-    /**
-     * This value is displayed in the error graph.
-     */
-    protected float valueGraph = 0.0f;
-    /**
-     * This value contains the best error value for LBG-U up to now.
-     */
-    protected float errorBestLBG_U = Float.MAX_VALUE;
-    /**
-     * The string shown in the fine-tuning phase of the method GG.
-     */
-    protected String fineTuningS = "";
-
-    /**
-     * The actual number of Voronoi lines.
-     */
-    protected int nLines = 0;
 
     /**
      * The constructor.
@@ -408,6 +199,7 @@ class PanelGNG extends JPanel implements
         this.graph      = graph;
         this.voro       = new Voronoi(this);
         this.compute    = graph.compute;
+        this.result     = new ComputeGNG.Result();
     }
 
     /**
@@ -422,39 +214,48 @@ class PanelGNG extends JPanel implements
             log("run(): gui already initialized ....");
         } else {
             log("run(): gui not yet initialized ....");
-            //graph.prepareAlgo(algo);
+            //graph.prepareAlgo(algorithm);
         }
         while (true) {
 
             // Relativate Positions
             Dimension d = getSize();
-            if ( (d.width != panelWidth) || (d.height != panelHeight) ) {
+            if ( (d.width != compute.panelWidth) || (d.height != compute.panelHeight) ) {
                 //
                 // panel size has changed! ==> rescaling needed
                 //
                 nodesMovedB = true; // for Voronoi
                 NodeGNG n;
+                final int nNodes        = compute.nNodes;
+                final NodeGNG[] nodes   = compute.nodes;
+                final int panelWidth    = compute.panelWidth;
+                final int panelHeight   = compute.panelHeight;
                 for (i = 0 ; i < nNodes ; i++) {
                     n = nodes[i];
 
-                    n.x = n.x * d.width / panelWidth;
+                    n.x = n.x * d.width  / panelWidth;
                     n.y = n.y * d.height / panelHeight;
                 }
 
-                if (compute.pd == PD.DiscreteMixture || compute.algo.isDiscrete()){
+                if (compute.pd == PD.DiscreteMixture || compute.algorithm.isDiscrete()){
                     compute.rescaleDiscreteSignals(1.0*d.width / panelWidth, 1.0*d.height / panelHeight);
                 }
-                panelWidth = d.width;
-                panelHeight = d.height;
+                compute.panelWidth  = d.width;
+                compute.panelHeight = d.height;
                 //initDiscreteSignals(pd);
-                if ( ( nNodes == 0) && (compute.algo.isDiscrete()) ) {
+                if ( ( nNodes == 0) && (compute.algorithm.isDiscrete()) ) {
                     // can this happen???
                     // Generate some nodes
+                    final int numDiscreteSignals = compute.numDiscreteSignals;
                     int z = (int) (numDiscreteSignals * Math.random());
                     int mod = 0;
+                    final float[] discreteSignalsX = compute.discreteSignalsX;
+                    final float[] discreteSignalsY = compute.discreteSignalsY;
+                    final int maxNodes = compute.maxNodes;
                     for (i = 0; i < maxNodes; i++) {
                         mod = (z+i)%numDiscreteSignals;
-                        compute.addNode(Math.round(discreteSignalsX[mod]),
+                        compute.addNode(
+                                Math.round(discreteSignalsX[mod]),
                                 Math.round(discreteSignalsY[mod]));
                     }
                 }
@@ -462,16 +263,22 @@ class PanelGNG extends JPanel implements
             }
 
             // Calculate the new positions
-            if (!stopB) {
+            if (!result.stop) {
                 compute.learn(result);
+                if (result.repaint) {
+                    repaint();
+                }
+                if (result.stop) {
+                    graph.stop();
+                }
                 nodesMovedB = true;
             }
 
             // update error graph
-            if (errorGraphB && !stopB)
-                errorGraph.graph.add(valueGraph);
+            if (errorGraphB && !result.stop)
+                errorGraph.graph.add(compute.valueGraph);
 
-            if (stopB)
+            if (result.stop)
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -508,7 +315,7 @@ class PanelGNG extends JPanel implements
     protected boolean pickFixed;
 
     /**
-     * The color of input signals
+     * The color of input numSignals
      */
     protected final Color signalsColor = Color.red;
     /**
@@ -581,9 +388,9 @@ class PanelGNG extends JPanel implements
     public void paintNode(Graphics g, NodeGNG n) {
         int RADIUS = 10;
         Color col = nodeColor;
-        final Algo algo = compute.algo;
+        final Algorithm algorithm = compute.algorithm;
 
-        if (teachB && (!algo.isDiscrete()) ) {
+        if (teachB && (!algorithm.isDiscrete()) ) {
             if (n.isWinner) {
                 RADIUS += 5;
                 col = winnerColor;
@@ -597,7 +404,7 @@ class PanelGNG extends JPanel implements
 //			}
         }
 
-        if (algo.isSOMType() && usageB){
+        if (algorithm.isSOMType() && usageB){
             if (n.tau < 1.0){
                 //Color c = nodeColor;
                 //col = new Color(c.getRed(),c.getGreen(),c.getBlue(),(int)(100*n.tau));
@@ -610,19 +417,19 @@ class PanelGNG extends JPanel implements
             col = insertedColor;
         }
 
-        if ( (algo.isDiscrete()) && (!n.hasMoved) ) {
+        if ( (algorithm.isDiscrete()) && (!n.hasMoved) ) {
             RADIUS += 4;
             col = movedColor;
         }
 
         g.setColor(col);
-        if (mapSpaceGGB && (algo==Algo.GG||algo==Algo.GR) || mapSpaceSOMB && algo==Algo.SOM) {
+        if (mapSpaceGGB && (algorithm == Algorithm.GG|| algorithm == Algorithm.GR) || mapSpaceSOMB && algorithm == Algorithm.SOM) {
             g.fillOval((int)(gx2x((int)n.x_grid) - (RADIUS/2)), (int)(gy2y((int)n.y_grid) - (RADIUS/2)), RADIUS, RADIUS);
         } else {
             g.fillOval((int)n.x - (RADIUS/2), (int)n.y - (RADIUS/2), RADIUS, RADIUS);
         }
         g.setColor(Color.black);
-        if (mapSpaceGGB && (algo==Algo.GG||algo==Algo.GR) || mapSpaceSOMB && algo==Algo.SOM) {
+        if (mapSpaceGGB && (algorithm == Algorithm.GG|| algorithm == Algorithm.GR) || mapSpaceSOMB && algorithm == Algorithm.SOM) {
             g.drawOval((int)gx2x(n.x_grid) - (RADIUS/2), (int)gy2y(n.y_grid) - (RADIUS/2), RADIUS, RADIUS);
         } else {
             g.drawOval((int)n.x - (RADIUS/2), (int)n.y - (RADIUS/2), RADIUS, RADIUS);
@@ -651,14 +458,14 @@ class PanelGNG extends JPanel implements
 
     protected void drawPD(final Graphics g, final Dimension d) {
         int ll,lr,r2,l2;
-        int xA[] = new int[MAX_COMPLEX];
-        int yA[] = new int[MAX_COMPLEX];
+        int xA[] = new int[compute.MAX_COMPLEX];
+        int yA[] = new int[compute.MAX_COMPLEX];
         int w;
         int h;
-        int mindim;
+        int minDim;
         int ringRadius;
         int i, x, y;
-        mindim = (d.width < d.height) ? d.width : d.height;
+        minDim = (d.width < d.height) ? d.width : d.height;
 
         switch (compute.pd) {
             case Rectangle: // Rectangle
@@ -670,7 +477,7 @@ class PanelGNG extends JPanel implements
                 break;
             case Circle: // Circle
 
-                l2 = mindim*9/10; // Diameter is proportional to the smallest panel dimension
+                l2 = minDim*9/10; // Diameter is proportional to the smallest panel dimension
 
                 ll = d.width/2 -l2/2;
                 lr = d.height/2 -l2/2;
@@ -702,7 +509,7 @@ class PanelGNG extends JPanel implements
 
                 ll = cx - l2;
                 lr = cy - l2;
-                ringRadius = (int) (l2 * RING_FACTOR);
+                ringRadius = (int) (l2 * compute.RING_FACTOR);
 
                 g.fillOval(ll, lr, 2*l2, 2*l2);
                 if (whiteB)
@@ -932,17 +739,20 @@ class PanelGNG extends JPanel implements
                 xA[1] = 5 * w;
                 yA[1] = 1 * h;
 
-                final Algo algo = compute.algo;
-                if (!algo.isDiscrete())
+                final Algorithm algorithm = compute.algorithm;
+                if (!algorithm.isDiscrete())
                     g.setColor(highDistribColor);
                 g.fillRect(xA[0], yA[0], w, h);
-                if (!algo.isDiscrete())
+                if (!algorithm.isDiscrete())
                     g.setColor(lowDistribColor);
                 g.fillRect(xA[1], yA[1], 4 * w, 8 * h);
                 break;
 
             case DiscreteMixture: // discrete
                 //int RADIUS = 2;
+                final float[] discreteSignalsX  = compute.discreteSignalsX;
+                final float[] discreteSignalsY  = compute.discreteSignalsY;
+                final int numDiscreteSignals    = compute.numDiscreteSignals;
                 for (i = 0; i < numDiscreteSignals; i++) {
                     x = Math.round(discreteSignalsX[i]);
                     y = Math.round(discreteSignalsY[i]);
@@ -1020,21 +830,23 @@ class PanelGNG extends JPanel implements
             case MoveJump: // Moving and Jumping Rectangle
                 r2 = d.width/4;
                 l2 = d.height/4;
+                final int ns0 = compute.numSignals;
                 ll = (int) (0.75 * (d.width/2 +
-                        Math.IEEEremainder(0.2 * sigs,(d.width))));
+                        Math.IEEEremainder(0.2 * ns0,(d.width))));
                 lr = (int) (0.75 * (d.height/2 +
-                        Math.IEEEremainder(0.2 * sigs,(d.height))));
+                        Math.IEEEremainder(0.2 * ns0,(d.height))));
 
                 g.fillRect(ll, lr, r2, l2);
                 break;
             case Move: // Moving Rectangle
                 r2 = d.width/4;
                 l2 = d.height/4;
+                final int ns1 = compute.numSignals;
                 ll = (int) (0.75 * (d.width/2 +
-                        compute.bounceX * Math.IEEEremainder(0.2 * sigs,
+                        compute.bounceX * Math.IEEEremainder(0.2 * ns1,
                                 (d.width))));
                 lr = (int) (0.75 * (d.height/2 +
-                        compute.bounceY * Math.IEEEremainder(0.2 * sigs,
+                        compute.bounceY * Math.IEEEremainder(0.2 * ns1,
                                 (d.height))));
 
                 g.fillRect(ll, lr, r2, l2);
@@ -1058,12 +870,12 @@ class PanelGNG extends JPanel implements
 
     public synchronized void paintComponent(Graphics g) {
 
-        //log("paintComponent() CGNG " + String.valueOf(paintCounter)+" signals:"+String.valueOf(sigs) + "delta-sig:"+String.valueOf(sigs - prevSigs));
+        //log("paintComponent() CGNG " + String.valueOf(paintCounter)+" numSignals:"+String.valueOf(numSignals) + "delta-sig:"+String.valueOf(numSignals - prevSigs));
         paintCounter +=1;
-        prevSigs = sigs;
+        prevSigs = compute.numSignals;
         Dimension d = getSize();
         int i, x, y;
-        final Algo algo = compute.algo;
+        final Algorithm algorithm = compute.algorithm;
 
         if (whiteB)
             g.setColor(Color.white);
@@ -1074,7 +886,7 @@ class PanelGNG extends JPanel implements
 
         // recompute Delaunay/Voronoi
         if ((delaunayB || voronoiB) && nodesMovedB) {
-            nlines = 0;
+            nLines = 0;
             voro.computeVoronoi();// TODO: analyze
         }
         nodesMovedB = false;
@@ -1084,7 +896,7 @@ class PanelGNG extends JPanel implements
         //
 
         // Set color for distribution
-        if (!algo.isDiscrete())
+        if (!algorithm.isDiscrete())
             g.setColor(distribColor);
 
         if (probDistB) drawPD(g, d);
@@ -1096,9 +908,12 @@ class PanelGNG extends JPanel implements
         if (edgesB) {
             int x1, y1, x2, y2;
             EdgeGNG e;
+            final int nEdges = compute.nEdges;
+            final EdgeGNG[] edges = compute.edges;
+            final NodeGNG[] nodes = compute.nodes;
             for (i = 0 ; i < nEdges ; i++) {
                 e = edges[i];
-                if (mapSpaceGGB && (algo==Algo.GG||algo==Algo.GR) || mapSpaceSOMB && algo==Algo.SOM) {
+                if (mapSpaceGGB && (algorithm == Algorithm.GG|| algorithm == Algorithm.GR) || mapSpaceSOMB && algorithm == Algorithm.SOM) {
                     x1 = gx2x(nodes[e.from].x_grid);
                     y1 = gy2y(nodes[e.from].y_grid);
                     x2 = gx2x(nodes[e.to].x_grid);
@@ -1112,10 +927,11 @@ class PanelGNG extends JPanel implements
                 g.setColor(edgeColor);
                 g.drawLine(x1, y1, x2, y2);
             }
-        } else if (algo.isSOMType()) {
+        } else if (algorithm.isSOMType()) {
             g.setColor(edgeColor);
             // draw the outer edges, i.e. where for *both* endpoints holds:
             // gridx=0 or gridy=0 or gridx = width-1 or grid y= height-1
+            final GridNodeGNG[][] grid = compute.grid;
             for (i = 0; i < gridWidth-1; i++) {
                 NodeGNG n1 = grid[i][0].node;
                 NodeGNG n2 = grid[i+1][0].node;
@@ -1135,7 +951,7 @@ class PanelGNG extends JPanel implements
         }
 
         // draw the filled polygons of fixed-dimensional networks (SOM, GG. eventually GCS)
-        if (algo.isSOMType()){
+        if (algorithm.isSOMType()){
             Color c = somColor;
             Color cT = new Color(c.getRed(),c.getGreen(),c.getBlue(),80);
             //Color dd = Color.black;
@@ -1148,7 +964,7 @@ class PanelGNG extends JPanel implements
                 for (i = 0; i < gridWidth-1; i++) {
                     for (j = 0; j < gridHeight-1; j++) {
                         // draw polygon i,j;i+1,j;i+1,j+1;i,j+1;i,j
-                        if (mapSpaceGGB && (algo==Algo.GG||algo==Algo.GR) || mapSpaceSOMB && algo==Algo.SOM) {
+                        if (mapSpaceGGB && (algorithm == Algorithm.GG|| algorithm == Algorithm.GR) || mapSpaceSOMB && algorithm == Algorithm.SOM) {
                             xPoints[0]=gx2x(i);
                             xPoints[1]=gx2x(i+1);
                             xPoints[2]=gx2x(i+1);
@@ -1162,6 +978,7 @@ class PanelGNG extends JPanel implements
                             yPoints[4]=gy2y(j);
 
                         } else {
+                            final GridNodeGNG[][] grid = compute.grid;
                             xPoints[0]=(int)grid[i][j].node.x;
                             xPoints[1]=(int)grid[i+1][j].node.x;
                             xPoints[2]=(int)grid[i+1][j+1].node.x;
@@ -1180,11 +997,12 @@ class PanelGNG extends JPanel implements
                         //g.drawPolygon(xPoints,yPoints,5);
                     }
                 }
-            } else if ((algo==Algo.SOM && torusSOMB) || ((algo==Algo.GG||algo==Algo.GR) && torusGGB)){
+            } else if ((algorithm == Algorithm.SOM && compute.torusSOMB) || ((algorithm == Algorithm.GG|| algorithm == Algorithm.GR) && compute.torusGGB)){
                 c = torusColor;
                 cT = new Color(c.getRed(),c.getGreen(),c.getBlue(),80);
                 g.setColor(cT);
                 Polygon p = new Polygon();
+                final GridNodeGNG[][] grid = compute.grid;
                 for (i = 0; i < gridWidth-1; i++) {
                     p.addPoint((int)grid[i][0].node.x,(int)grid[i][0].node.y);
                 }
@@ -1195,7 +1013,7 @@ class PanelGNG extends JPanel implements
         // Draw the Voronoi or Delaunay diagram
         if (voronoiB || delaunayB) {
             LineGNG l;
-            for (i = 0; i < nlines; i++) {
+            for (i = 0; i < nLines; i++) {
                 l = lines[i];
                 if (vd[i])
                     // voronoi
@@ -1208,14 +1026,18 @@ class PanelGNG extends JPanel implements
         }
 
         // Draw the nodes
-        if (nodesB)
+        if (nodesB) {
+            final int nNodes = compute.nNodes;
+            final NodeGNG[] nodes = compute.nodes;
             for (i = 0; i < nNodes; i++)
                 paintNode(g, nodes[i]);
+        }
 
         // draw the tau values
-        if ((algo==Algo.GG||algo==Algo.GR) && tauB){
+        if ((algorithm == Algorithm.GG|| algorithm == Algorithm.GR) && tauB){
             g.setColor(Color.black);
             int j;
+            final GridNodeGNG[][] grid = compute.grid;
             for (i = 0; i < gridWidth; i++) {
                 for (j = 0; j < gridHeight; j++) {
                     GridNodeGNG xx = grid[i][j];
@@ -1240,8 +1062,10 @@ class PanelGNG extends JPanel implements
         }
 
         // Draw the motion traces
-        if (tracesB && !algo.isLBGType()){ // traces not working for LBG for some reason
+        if (tracesB && !algorithm.isLBGType()){ // traces not working for LBG for some reason
             g.setColor(Color.black);
+            final int nNodes = compute.nNodes;
+            final NodeGNG[] nodes = compute.nodes;
             for (i = 0; i < nNodes; i++) {
                 Vector<Float> tr = nodes[i].getTrace();
                 if (tr.size()<4)
@@ -1267,7 +1091,7 @@ class PanelGNG extends JPanel implements
             int offset2_x = offset_x + 5;
             int offset_y = d.height/4;
 
-            if (algo.isDiscrete()) {
+            if (algorithm.isDiscrete()) {
                 // Draw legend
                 g.setColor(Color.black);
                 g.drawString("Legend:", 	2, offset_y); offset_y += 15;
@@ -1279,7 +1103,7 @@ class PanelGNG extends JPanel implements
                         offset_y); offset_y += 15;
             } else {
                 g.setColor(signalColor);
-                g.fillOval((int) SignalX - r/2, (int) SignalY - r/2, r, r);
+                g.fillOval((int) compute.SignalX - r/2, (int) compute.SignalY - r/2, r, r);
 
                 // Draw legend
                 g.setColor(Color.black);
@@ -1290,14 +1114,14 @@ class PanelGNG extends JPanel implements
                 g.setColor(Color.black);
                 g.drawString("Winner", offset2_x, offset_y); offset_y += 15;
 
-                if (algo != Algo.HCL) {
+                if (algorithm != Algorithm.HCL) {
                     g.setColor(secondColor);
                     g.fillOval(offset_x - r, offset_y - r, r, r);
                     g.setColor(Color.black);
                     g.drawString("Second", offset2_x, offset_y); offset_y += 15;
                 }
 
-                if (algo == Algo.GNG) {
+                if (algorithm == Algorithm.GNG) {
                     g.setColor(movedColor);
                     g.fillOval(offset_x - r, offset_y - r, r, r);
                     g.setColor(Color.black);
@@ -1317,25 +1141,28 @@ class PanelGNG extends JPanel implements
         }
 
         g.setColor(Color.black);
-        g.drawString("Signals: "+String.valueOf(sigs), 10, 10);
-        if (maxNodes == 1)
-            g.drawString(String.valueOf(nNodes) + " node",
+        g.drawString("Signals: "+String.valueOf(compute.numSignals), 10, 10);
+        if (compute.maxNodes == 1)
+            g.drawString(String.valueOf(compute.nNodes) + " node",
                     10, d.height - 10);
         else
-            g.drawString("Nodes: "+String.valueOf(nNodes),
+            g.drawString("Nodes: "+String.valueOf(compute.nNodes),
                     10, d.height - 10);
 
-        g.drawString("DemoGNG "+DGNG_VERSION, d.width - 130, 10);
-        if ( readyLBG_B && (algo.isLBGType()) ) {
+        g.drawString("DemoGNG "+ DEMO_GNG_VERSION, d.width - 130, 10);
+        if ( compute.readyLBG_B && (algorithm.isLBGType()) ) {
             g.drawString("READY!", d.width-50, d.height-10);
         }
-        if ( fineTuningB && (algo==Algo.GG||algo==Algo.GR) )
-            g.drawString(fineTuningS, d.width-130, d.height-10);
+        if ( compute.fineTuningB && (algorithm == Algorithm.GG|| algorithm == Algorithm.GR) )
+            g.drawString(compute.fineTuningS, d.width-130, d.height-10);
 
         //
-        // draw signals
+        // draw numSignals
         //
-        if ( signalsB && (!algo.isDiscrete()) ) {
+        if ( signalsB && (!algorithm.isDiscrete()) ) {
+            final float[] lastSignalsX = compute.lastSignalsX;
+            final float[] lastSignalsY = compute.lastSignalsY;
+            final int stepSize = compute.stepSize;
             for (i = 0; i < stepSize; i++) {
                 x = (int) (lastSignalsX[i]);
                 y = (int) (lastSignalsY[i]);
@@ -1359,7 +1186,10 @@ class PanelGNG extends JPanel implements
             insertedSoundB = false;
         }
 
-        if (algo.isDiscrete()) {
+        if (algorithm.isDiscrete()) {
+            final int numDiscreteSignals    = compute.numDiscreteSignals;
+            final float[] discreteSignalsX  = compute.discreteSignalsX;
+            final float[] discreteSignalsY  = compute.discreteSignalsY;
             for (i = 0; i < numDiscreteSignals; i++) {
                 x = Math.round(discreteSignalsX[i]);
                 y = Math.round(discreteSignalsY[i]);
@@ -1407,6 +1237,8 @@ class PanelGNG extends JPanel implements
             NodeGNG n;
             float dist;
 
+            final int nNodes = compute.nNodes;
+            final NodeGNG[] nodes = compute.nodes;
             for (int i = 0 ; i < nNodes ; i++) {
                 n = nodes[i];
                 dist = (n.x - x) * (n.x - x) + (n.y - y) * (n.y - y);
@@ -1420,7 +1252,7 @@ class PanelGNG extends JPanel implements
             pick.x = x;
             pick.y = y;
 
-            if (compute.algo.isDiscrete())
+            if (compute.algorithm.isDiscrete())
                 pick.hasMoved = true;
 
             nodesMovedB = true;
@@ -1520,7 +1352,7 @@ class PanelGNG extends JPanel implements
     }
 
     public void start() {
-        stopB = false;
+        result.stop = false;
         log("start() ......");
         relaxer = new Thread(this);
         relaxer.start();
@@ -1531,7 +1363,7 @@ class PanelGNG extends JPanel implements
 
     public void stop(){
         log("stop() ......");
-        stopB =true;
+        result.stop = true;
         if (relaxer != null) {
             relaxer.interrupt(); //!!!!
             relaxer = null;
