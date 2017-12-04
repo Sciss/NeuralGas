@@ -1,12 +1,13 @@
 package de.sciss.demogng;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
 /**
  * @author Hanns Holger Rutz
  */
-public class ImageComputeGNG extends ComputeGNG {
+public class ImagePD implements PD {
     private final BufferedImage img;
     private final long[] dots;
     private final int    numDots;
@@ -14,7 +15,7 @@ public class ImageComputeGNG extends ComputeGNG {
 
     public int getNumDots() { return numDots; }
 
-    public ImageComputeGNG(DemoGNG graph, BufferedImage img, boolean invert) {
+    public ImagePD(BufferedImage img, boolean invert) {
         super();
         final int w = img.getWidth();
         final int h = img.getHeight();
@@ -40,21 +41,31 @@ public class ImageComputeGNG extends ComputeGNG {
     }
 
     @Override
-    protected void getSignal(PD pd) {
-        final int wi    = panelWidth;
-        final int hi    = panelHeight;
+    public void getSignal(final ComputeGNG compute) {
+        final int wi    = compute.panelWidth;
+        final int hi    = compute.panelHeight;
         final long dot  = dots[(int) (Math.random() * numDots)];
         final int xIn   = (int) (dot >>> 32);
         final int yIn   = (int) dot;
 
-        SignalX = (float) (xIn * wi) / imgW;
-        SignalY = (float) (yIn * hi) / imgH;
+        compute.SignalX = (float) (xIn * wi) / imgW;
+        compute.SignalY = (float) (yIn * hi) / imgH;
     }
 
-//    @Override
-//    protected void drawPD(final Graphics g, Dimension d) {
-//        final int wi = panelWidth;
-//        final int hi = panelHeight;
-//        g.drawImage(img, 0, 0, wi, hi, null);
-//    }
+    @Override
+    public void draw(final PanelGNG panel, final Graphics g, Dimension d) {
+        final int wi = d.width; // panelWidth;
+        final int hi = d.height; // panelHeight;
+        g.drawImage(img, 0, 0, wi, hi, null);
+    }
+
+    @Override
+    public String getName() {
+        return "Image";
+    }
+
+    @Override
+    public int ordinal() {
+        return -1;
+    }
 }

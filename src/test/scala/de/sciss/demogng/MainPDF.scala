@@ -39,7 +39,7 @@ object MainPDF {
       f.revalidate()
       f.pack()
 
-      val c = main.getDemo.getComputation.asInstanceOf[ImageComputeGNG]
+      val c = main.getDemo.getComputation.pd.asInstanceOf[ImagePD]
       println(s"num-dots: ${c.getNumDots}")
     }
   }

@@ -50,7 +50,8 @@ public final class Main implements Runnable, AppletStub {
 
     public void run() {
         f       = new JFrame("Demo GNG");
-        applet  = hasImage ? new ImageDemoGNG(img, imgInvert) : new DemoGNG();
+        applet  = new DemoGNG();
+        final PD pd = hasImage ? new ImagePD(img, imgInvert) : PD.Rectangle;
         f.getContentPane().add(applet);
         f.setMinimumSize(new Dimension(768, 768));
         f.pack();
@@ -59,6 +60,7 @@ public final class Main implements Runnable, AppletStub {
         f.setVisible(true);
         applet.setStub(this);
         applet.init();
+        applet.setDist(pd);
         applet.start();
     }
 

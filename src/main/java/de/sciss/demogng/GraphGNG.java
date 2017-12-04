@@ -43,11 +43,11 @@ DemoGNG demo;
   TextField error;
 
   /**
-   * The name of the clear button.
+   * The getName of the clear button.
    */
   protected final static String CLEAR = "Clear";
   /**
-   * The name of the close button.
+   * The getName of the close button.
    */
   protected final static String CLOSE = "Close";
 

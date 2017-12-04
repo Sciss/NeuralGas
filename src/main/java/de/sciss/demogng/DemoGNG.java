@@ -61,9 +61,12 @@ import javax.swing.event.ChangeListener;
 public class DemoGNG extends JApplet {
     public DemoGNG(){
         super();
+        compute = createComputation();
     }
     static int shown=0;
     private boolean needReset = false;
+
+    protected ComputeGNG createComputation() { return new ComputeGNG(); }
 
     void log(String prefix, String txt) {
         System.out.println(timeStamp()+" D: "+prefix+txt);
@@ -517,7 +520,7 @@ public class DemoGNG extends JApplet {
 //					}
                     // default
                     compute.pd=PD.Rectangle;
-                    for (PD p:PD.values()) {
+                    for (PD p:PD.values) {
                         if (p.ordinal() == distrib_choice.getSelectedIndex()) {
                             compute.pd = p;
                             log(">>> Distribution: "+p.getName());
@@ -789,96 +792,96 @@ public class DemoGNG extends JApplet {
     };
 
     /**
-     * The name of the demo button.
+     * The getName of the demo button.
      */
     protected final static String BUTTON_Random = "Random";
     /**
-     * The name of the start button.
+     * The getName of the start button.
      */
     protected final static String BUTTON_Start = "Start";
     /**
-     * The name of the stop button.
+     * The getName of the stop button.
      */
     protected final static String BUTTON_Stop = "Stop";
     /**
-     * The name of the reset button.
+     * The getName of the reset button.
      */
     protected final static String BUTTON_Reset = "Reset";
     /**
-     * The name of the reset button.
+     * The getName of the reset button.
      */
     protected final static String BUTTON_Restart = "Restart";
     /**
-     * The name of the signal checkbox.
+     * The getName of the signal checkbox.
      */
     protected final static String SIGNALS    	= " numSignals";
     /**
-     * The name of the no_new_nodes checkbox.
+     * The getName of the no_new_nodes checkbox.
      */
     protected final static String NO_NEW_NODES 	= " no new nodes";
     /**
-     * The name of the utility checkbox.
+     * The getName of the utility checkbox.
      */
     protected final static String UTILITY_GNG 	= " Utility   UtilityFactor:";
     /**
-     * The name of the LBG-U checkbox.
+     * The getName of the LBG-U checkbox.
      */
     protected final static String LBG_U 	= " LBG-U";
     /**
-     * The name of the sound checkbox.
+     * The getName of the sound checkbox.
      */
     protected final static String SOUND      	= " sound";
     /**
-     * The name of the hardcopy checkbox.
+     * The getName of the hardcopy checkbox.
      */
     protected final static String AUTOSTOP      	= " autoStop";
     /**
-     * The name of the hardcopy checkbox.
+     * The getName of the hardcopy checkbox.
      */
     protected final static String WHITE      	= " White";
     /**
-     * The name of the random-init checkbox.
+     * The getName of the random-init checkbox.
      */
     protected final static String RNDINIT    	= " random init";
     /**
-     * The name of the teach checkbox.
+     * The getName of the teach checkbox.
      */
     protected final static String TEACH      	= " teach";
     /**
-     * The name of the variable checkbox (HCL).
+     * The getName of the variable checkbox (HCL).
      */
     protected final static String VARIABLE   	= " variable";
     /**
-     * The name of the edges checkbox.
+     * The getName of the edges checkbox.
      */
     protected final static String EDGES   	= " edges";
     /**
-     * The name of the nodes checkbox.
+     * The getName of the nodes checkbox.
      */
     protected final static String NODES   	= " nodes";
     /**
-     * The name of the nodes checkbox.
+     * The getName of the nodes checkbox.
      */
     protected final static String TRACES   	= " traces";
     /**
-     * The name of the probability distribution checkbox.
+     * The getName of the probability distribution checkbox.
      */
     protected final static String PROB_DIST   = " prob dist";
     /**
-     * The name of the error graph checkbox.
+     * The getName of the error graph checkbox.
      */
     protected final static String ERRORGRAPH   = " error graph";
     /**
-     * The name of the Voronoi checkbox.
+     * The getName of the Voronoi checkbox.
      */
     protected final static String VORONOI   	= " Voronoi";
     /**
-     * The name of the Delaunay checkbox.
+     * The getName of the Delaunay checkbox.
      */
     protected final static String DELAUNAY   	= " Delaunay";
     private volatile boolean guiInitialized = false;
     boolean virgin = true;
-    ComputeGNG compute;
+    final ComputeGNG compute;
     PanelGNG panel;
     MyPanel cards;
     MyPanel pan_GNG;
@@ -1263,15 +1266,12 @@ public class DemoGNG extends JApplet {
     }
     public void setDist(PD pd){
         compute.pd = pd;
-        distrib_choice.setSelectedIndex(pd.ordinal());
+        final int i = pd.ordinal();
+        if (i >= 0) distrib_choice.setSelectedIndex(i);
     }
-    void setAlgo(Algorithm x){
+    void setAlgorithm(Algorithm x){
         compute.algorithm = x;
         algo_choice.setSelectedIndex(x.ordinal());
-    }
-
-    protected ComputeGNG createComputation() {
-        return new ComputeGNG();
     }
 
     public ComputeGNG getComputation() { return compute; }
@@ -1309,7 +1309,6 @@ public class DemoGNG extends JApplet {
         //
 
         // Create the GNG-MyPanel and center it
-        compute = createComputation();
         panel   = new PanelGNG(this);
         add("Center", panel);
 
@@ -1384,7 +1383,7 @@ public class DemoGNG extends JApplet {
 
         // Create a menu of distributions and add it to the MyPanel.
         curcb = distrib_choice = new MyComboBox("input signal probability distribution");
-        for (PD pd:PD.values()) {
+        for (PD pd:PD.values) {
             distrib_choice.addItem(pd.getName());
         }
         cp_distrib.add(new MyLabel("prob. Distrib.:", SwingConstants.RIGHT,curcb.getToolTipText()));
@@ -1809,7 +1808,7 @@ public class DemoGNG extends JApplet {
 
 
         if (distributionParam != null) {
-            for (PD pd:PD.values()) {
+            for (PD pd:PD.values) {
                 if (distributionParam.equals(pd.getName())) {
                     setDist(pd);
                     break;
@@ -1944,16 +1943,18 @@ public class DemoGNG extends JApplet {
         setGuiInitialized(true);
         syslog("createGUI() end XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
     }
-    public void randomizeSimulation() {
-        setAlgo(selectRandomAlgorithm());
-        do {
-            setDist(selectRandomPD());
-        } while (compute.pd == PD.DiscreteMixture
-                || compute.pd == PD.Jump
-                || compute.pd == PD.RightMouseB
-                || compute.pd == PD.Move
-                || compute.pd == PD.MoveJump);
-        //setAlgo(Algorithm.GG);
+    public void randomizeSimulation(boolean randomizePD) {
+        setAlgorithm(selectRandomAlgorithm());
+        if (randomizePD) {
+            do {
+                setDist(selectRandomPD());
+            } while (compute.pd == PD.DiscreteMixture
+                    || compute.pd == PD.Jump
+                    || compute.pd == PD.RightMouseB
+                    || compute.pd == PD.Move
+                    || compute.pd == PD.MoveJump);
+        }
+        //setAlgorithm(Algorithm.GG);
         log("randomize: algorithm="+compute.algorithm.getName());
         log("randomize:   PD="+compute.pd.getName());
         prepareAlgo(compute.algorithm);
@@ -1978,7 +1979,7 @@ public class DemoGNG extends JApplet {
         public void run() {
             log("T H R E A D ! ! ! RandomSimThread run()");
             stop();
-            randomizeSimulation();
+            randomizeSimulation(true);
             startNow();
             log("T H R E A D ! ! ! RandomSimThread done");
         }
@@ -1989,7 +1990,7 @@ public class DemoGNG extends JApplet {
     }
     public PD selectRandomPD() {
         Random random = new Random();
-        return PD.values()[random.nextInt(PD.values().length-1)];  //-1 to prevent RightMouseButton PD
+        return PD.values[random.nextInt(PD.values.length-1)];  //-1 to prevent RightMouseButton PD
     }
     public Algorithm selectRandomAlgorithm() {
         Random random = new Random();
@@ -2003,7 +2004,7 @@ public class DemoGNG extends JApplet {
             log("T H R E A D ! ! ! StartThread run()");
             if (virgin) {
                 do {
-                    randomizeSimulation();
+                    randomizeSimulation(false);
                 } while (compute.algorithm.isLBGType());
                 virgin = false;
             }
@@ -2111,7 +2112,7 @@ public class DemoGNG extends JApplet {
                             "CHL, LBG, LBG-U, GG, SOM)",
                 "The starting algorithm"},
                 {"distribution\t",
-                    "The name of a distribution (Rectangle, Ring, Circle, UNI, " +
+                    "The getName of a distribution (Rectangle, Ring, Circle, UNI, " +
                             "Small Spirals, Large Spirals, HiLo Density, Discrete, UNIT, " +
                             "Move & Jump, Move, Jump, Right MouseB)",
                 "The initial distribution"}
