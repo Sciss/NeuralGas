@@ -19,11 +19,11 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 import java.awt.Dimension;
 
-import static de.sciss.demogng.ComputeGNG.MAX_NODES;
+import static de.sciss.neuralgas.ComputeGNG.MAX_NODES;
 
 /**
  * Compute Voronoi diagram.

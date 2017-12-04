@@ -1,4 +1,4 @@
-package de.sciss.demogng
+package de.sciss.neuralgas
 
 import java.awt.event.{InputEvent, KeyEvent}
 import java.awt.{Dimension, Graphics2D}

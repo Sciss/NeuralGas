@@ -1,4 +1,4 @@
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;

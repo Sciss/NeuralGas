@@ -19,7 +19,7 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;

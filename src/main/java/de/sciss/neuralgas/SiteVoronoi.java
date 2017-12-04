@@ -19,62 +19,51 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.demogng;
-
-import java.awt.BorderLayout;
-import java.awt.Button;
-import java.awt.Event;
-import java.awt.Frame;
-import java.awt.Label;
-import java.awt.Panel;
-import java.awt.TextField;
+package de.sciss.neuralgas;
 
 /**
- * A class implementing the error graph.
+ * A class representing a site in the Voronoi diagram
  *
  */
-class GraphGNG extends Frame {
+class SiteVoronoi {
   /**
-     *
-     */
-    private static final long serialVersionUID = 1L;
-DemoGNG demo;
-  SelGraphics graph;
-  TextField error;
-
-  /**
-   * The getName of the clear button.
+   * The coordinate
    */
-  protected final static String CLEAR = "Clear";
+  public FPoint coord = null;
   /**
-   * The getName of the close button.
+   * The number of the site
    */
-  protected final static String CLOSE = "Close";
+  public int sitenbr = 0;
+  /**
+   * The reference counter of the site
+   */
+  public int refcnt = 0;
 
-  GraphGNG(DemoGNG demo) {
-    this.demo = demo;
-    graph = new SelGraphics();
-    setTitle("ErrorGraph");
-
-    setLayout(new BorderLayout());
-    add("North",new Label("  Error Graph"));
-    add("Center",graph);
-    Panel pSouth = new Panel();
-    pSouth.add(new Button(CLEAR));
-    pSouth.add(new Button(CLOSE));
-    add("South", pSouth);
-    pack();
+  /**
+   * The constructor of the SiteVoronoi class.
+   * 
+   */
+  public SiteVoronoi() {
+    coord = new FPoint();
+    sitenbr = -1;
+    refcnt = 0;
+  }
+  /**
+   * The constructor of the SiteVoronoi class.
+   * 
+   * @param p        The coordinates
+   * @param sitenbr  The identifier of the site
+   */
+  public SiteVoronoi(FPoint p, int sitenbr) {
+    coord = p;
+    this.sitenbr = sitenbr;
+    refcnt = 0;
   }
 
-  public boolean handleEvent(Event evt) {
-    if (CLEAR.equals(evt.arg)) {
-      graph.clear();
-      return true;
-    } else if (CLOSE.equals(evt.arg)) {
-      demo.graphClose();
-      return true;
-    }
-    return super.handleEvent(evt);
+  public void print() {
+    System.out.println("Site: (Nr. " + sitenbr + "):" + 
+               coord.x + ", " + coord.y +
+               " (refcnt = " + refcnt + ")");
   }
 
 }

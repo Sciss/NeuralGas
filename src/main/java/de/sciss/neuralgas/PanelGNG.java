@@ -1,4 +1,4 @@
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 import javax.swing.JPanel;
 import javax.swing.JSlider;
@@ -17,7 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-import static de.sciss.demogng.ComputeGNG.MAX_NODES;
+import static de.sciss.neuralgas.ComputeGNG.MAX_NODES;
 
 @SuppressWarnings("serial")
 class PanelGNG extends JPanel implements
@@ -443,8 +443,8 @@ class PanelGNG extends JPanel implements
 //	 *
 //	 * @param g          The graphic context
 //	 */
-    static int paintCounter =0;
-    static int prevSigs=0;
+//    static int paintCounter =0;
+//    static int prevSigs=0;
 
     // helper function to compute mapspace coordinates for SOM-like networks
     public int gx2x(int gx){
@@ -463,8 +463,8 @@ class PanelGNG extends JPanel implements
     public synchronized void paintComponent(Graphics g) {
 
         //log("paintComponent() CGNG " + String.valueOf(paintCounter)+" numSignals:"+String.valueOf(numSignals) + "delta-sig:"+String.valueOf(numSignals - prevSigs));
-        paintCounter +=1;
-        prevSigs = compute.numSignals;
+//        paintCounter +=1;
+//        prevSigs = compute.numSignals;
         Dimension d = getSize();
         int i, x, y;
         final Algorithm algorithm = compute.algorithm;

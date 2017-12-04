@@ -19,7 +19,7 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 /**
  * A class which implements a double linked list and a priority queue.

@@ -19,74 +19,48 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 /**
- * A class representing a float point in the plane.
+ * A class representing an edge. 
+ *  For example:
+ * <pre>
+ *    EdgeGNG e = new EdgeGNG();
+ *    e.from(Node1);
+ *    e.to(Node2);
+ * </pre>
  *
  */
-class FPoint {
+class EdgeGNG {
   /**
-   * The x coordinate
+   * The starting point of the edge
+   * @see EdgeGNG
    */
-  public float x;
+  protected int from = -1;
   /**
-   * The y coordinate
+   * The end point of the edge
+   * @see EdgeGNG
    */
-  public float y;
+  protected int to = -1;
+  /**
+   * The age of this edge.
+   * @see EdgeGNG
+   */
+  protected int age = 0;
 
   /**
-   * Constructor.
+   * Replace a node with a new one. This is necessary after deleting a node
+   *  in the static array. In most cases the deleted node will be replaced by
+   *  the last node in the static array.
    * 
+   * @param old        The index of a node
+   * @param newN       The index of a node
+   * @see ComputeGNG#deleteNode
    */
-  public FPoint() {
-    this.x = -1.0f;
-    this.y = -1.0f;
-  }
-
-  /**
-   * Constructor, allows setting the coordinates.
-   * 
-   * @param x        The x coordinate
-   * @param y        The y coordinate
-   */
-  public FPoint(float x, float y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  /**
-   * Set the member variables.
-   * 
-   * @param x        The x coordinate
-   * @param y        The y coordinate
-   */
-  public void set(float x, float y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  /**
-   * Set the member variables.
-   * 
-   * @param p        The coordinates
-   */
-  public void set(FPoint p) {
-    x = p.x;
-    y = p.y;
-  }
-
-  /**
-   * Test the member variables.
-   * 
-   * @param x        The x coordinate
-   * @param y        The y coordinate
-   * @return	     Equal?
-   */
-  public boolean equal(float x, float y) {
-    if ( (this.x == x) && (this.y == y) )
-      return(true);
-    else
-      return(false);
+  protected void replace(int old, int newN) {
+    if (from == old)
+      from = newN;
+    if (to == old)
+      to = newN;
   }
 }

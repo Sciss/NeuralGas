@@ -19,7 +19,7 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 import java.util.*;
 

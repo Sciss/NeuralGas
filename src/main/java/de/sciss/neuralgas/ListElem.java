@@ -19,40 +19,65 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 /**
- * A class representing an edge in the Voronoi diagram
+ * A class which represents the elements of the double linked list class
+ *  ListGNG.
  *
  */
-class EdgeVoronoi {
-  /**
-   * One part of line equation.
-   * (equation: ax + by = c)
-   */
-  public float a;
-  /**
-   * One part of line equation.
-   * (equation: ax + by = c)
-   */
-  public float b;
-  /**
-   * One part of line equation.
-   * (equation: ax + by = c)
-   */
-  public float c;
-  /**
-   * The number of the edge
-   */
-  public int edgenbr = 0;
+class ListElem {
 
   /**
-   * The sites of the edge
+   * The left neighbour.
    */
-  public SiteVoronoi ep[] = new SiteVoronoi[2];
+  ListElem		left;
   /**
-   * The next region
+   * The right neighbour.
    */
-  public SiteVoronoi reg[] = new SiteVoronoi[2];
+  ListElem		right;
+  /**
+   * The element is a halfedge.
+   */
+  HalfEdgeVoronoi	elem;
 
+  /**
+   * Constructor, initializes member data.
+   */
+  ListElem() {
+    left = null;
+    right = null;
+    elem = null;
+  }
+
+  /**
+   * Constructor, allows setting data.
+   *
+   * @param elem 	The data elem
+   */
+  ListElem(HalfEdgeVoronoi elem) {
+    left = right = null;
+    this.elem = elem;
+  }
+
+  /**
+   * Constructor, allows setting neighbors and data.
+   *
+   * @param l 		Left neighbor
+   * @param r 		Right neighbor
+   * @param elem 	The data elem
+   */
+  ListElem(ListElem l, ListElem r, HalfEdgeVoronoi elem) {
+    left = l;
+    right = r;
+    this.elem = elem;
+  }
+
+  /**
+   * Print the element.
+   */
+  public void print() {
+    if(elem != null)
+      elem.print();
+  }
 }

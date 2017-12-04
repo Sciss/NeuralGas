@@ -1,4 +1,4 @@
-name              := "DemoGNG"
+name              := "NeuralGas"
 organization      := "de.sciss"
 version           := "2.2.0-SNAPSHOT"
 scalaVersion      := "2.12.3"

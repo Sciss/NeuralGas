@@ -19,48 +19,29 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 /**
- * A class representing an edge. 
- *  For example:
- * <pre>
- *    EdgeGNG e = new EdgeGNG();
- *    e.from(Node1);
- *    e.to(Node2);
- * </pre>
+ * A class representing a node in the grid.
  *
  */
-class EdgeGNG {
-  /**
-   * The starting point of the edge
-   * @see EdgeGNG
-   */
-  protected int from = -1;
-  /**
-   * The end point of the edge
-   * @see EdgeGNG
-   */
-  protected int to = -1;
-  /**
-   * The age of this edge.
-   * @see EdgeGNG
-   */
-  protected int age = 0;
+class GridNodeGNG {
+  NodeGNG node;
+  int index;
 
   /**
-   * Replace a node with a new one. This is necessary after deleting a node
-   *  in the static array. In most cases the deleted node will be replaced by
-   *  the last node in the static array.
-   * 
-   * @param old        The index of a node
-   * @param newN       The index of a node
-   * @see ComputeGNG#deleteNode
+   * Construct the default grid node.
    */
-  protected void replace(int old, int newN) {
-    if (from == old)
-      from = newN;
-    if (to == old)
-      to = newN;
+  GridNodeGNG() {
+    index = -1;
   }
+
+  /**
+   * Construct the grid node and sets the index and node.
+   */
+  GridNodeGNG(int index, NodeGNG node) {
+    this.index = index;
+    this.node = node;
+  }
+
 }

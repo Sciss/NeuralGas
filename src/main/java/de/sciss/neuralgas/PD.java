@@ -19,7 +19,7 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -27,7 +27,7 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.geom.Point2D;
 
-import static de.sciss.demogng.ComputeGNG.RING_FACTOR;
+import static de.sciss.neuralgas.ComputeGNG.RING_FACTOR;
 
 /**
  * @author B. Fritzke

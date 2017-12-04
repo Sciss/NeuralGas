@@ -1,4 +1,4 @@
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 import java.awt.Dimension;
 import java.awt.Graphics;

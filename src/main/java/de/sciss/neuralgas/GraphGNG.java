@@ -19,58 +19,62 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.demogng;
+package de.sciss.neuralgas;
+
+import java.awt.BorderLayout;
+import java.awt.Button;
+import java.awt.Event;
+import java.awt.Frame;
+import java.awt.Label;
+import java.awt.Panel;
+import java.awt.TextField;
 
 /**
- * A class representing a halfedge in the Voronoi diagram
+ * A class implementing the error graph.
  *
  */
-class HalfEdgeVoronoi {
-  public HalfEdgeVoronoi ELleft;
-  public HalfEdgeVoronoi ELright;
-  public EdgeVoronoi ELedge = null;
-  public SiteVoronoi vertex = null;
-  public int ELpm = -1;
-  public int ELrefcnt = -1;
-  public float ystar = -1.0f;
-
-  public HalfEdgeVoronoi() {
-    ELedge = new EdgeVoronoi();
-    vertex = new SiteVoronoi();
-    ELpm = 0;
-    ystar = 0.0f;
-  }
-
-  public HalfEdgeVoronoi(EdgeVoronoi e, int pm) {
-    ELedge = e;
-    ELpm = pm;
-    vertex = null;
-    ELrefcnt = 0;
-  }
+class GraphGNG extends Frame {
+  /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
+DemoGNG demo;
+  SelGraphics graph;
+  TextField error;
 
   /**
-   * Returns whether this edge is greater than the passed edge.
-   *
-   * @param he	 	The edge to compare this edge to.
+   * The getName of the clear button.
    */
-  public boolean greaterThan(HalfEdgeVoronoi he) {
-    return ystar > he.ystar;
-  }
-  
+  protected final static String CLEAR = "Clear";
   /**
-   * Returns whether this edge is equal to the passed edge.
-   *
-   * @param he	 	The edge to compare this edge to.
+   * The getName of the close button.
    */
-  public boolean equal(HalfEdgeVoronoi he) {
-    return ystar == he.ystar;
+  protected final static String CLOSE = "Close";
+
+  GraphGNG(DemoGNG demo) {
+    this.demo = demo;
+    graph = new SelGraphics();
+    setTitle("ErrorGraph");
+
+    setLayout(new BorderLayout());
+    add("North",new Label("  Error Graph"));
+    add("Center",graph);
+    Panel pSouth = new Panel();
+    pSouth.add(new Button(CLEAR));
+    pSouth.add(new Button(CLOSE));
+    add("South", pSouth);
+    pack();
   }
-  
-  /**
-   * Prints this edge.
-   */
-  public void print() {
-    System.out.println("HE: ystar = " + ystar + ", ELpm = " + ELpm);
+
+  public boolean handleEvent(Event evt) {
+    if (CLEAR.equals(evt.arg)) {
+      graph.clear();
+      return true;
+    } else if (CLOSE.equals(evt.arg)) {
+      demo.graphClose();
+      return true;
+    }
+    return super.handleEvent(evt);
   }
 
 }

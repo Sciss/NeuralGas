@@ -19,29 +19,58 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 /**
- * A class representing a node in the grid.
+ * A class representing a halfedge in the Voronoi diagram
  *
  */
-class GridNodeGNG {
-  NodeGNG node;
-  int index;
+class HalfEdgeVoronoi {
+  public HalfEdgeVoronoi ELleft;
+  public HalfEdgeVoronoi ELright;
+  public EdgeVoronoi ELedge = null;
+  public SiteVoronoi vertex = null;
+  public int ELpm = -1;
+  public int ELrefcnt = -1;
+  public float ystar = -1.0f;
 
-  /**
-   * Construct the default grid node.
-   */
-  GridNodeGNG() {
-    index = -1;
+  public HalfEdgeVoronoi() {
+    ELedge = new EdgeVoronoi();
+    vertex = new SiteVoronoi();
+    ELpm = 0;
+    ystar = 0.0f;
+  }
+
+  public HalfEdgeVoronoi(EdgeVoronoi e, int pm) {
+    ELedge = e;
+    ELpm = pm;
+    vertex = null;
+    ELrefcnt = 0;
   }
 
   /**
-   * Construct the grid node and sets the index and node.
+   * Returns whether this edge is greater than the passed edge.
+   *
+   * @param he	 	The edge to compare this edge to.
    */
-  GridNodeGNG(int index, NodeGNG node) {
-    this.index = index;
-    this.node = node;
+  public boolean greaterThan(HalfEdgeVoronoi he) {
+    return ystar > he.ystar;
+  }
+  
+  /**
+   * Returns whether this edge is equal to the passed edge.
+   *
+   * @param he	 	The edge to compare this edge to.
+   */
+  public boolean equal(HalfEdgeVoronoi he) {
+    return ystar == he.ystar;
+  }
+  
+  /**
+   * Prints this edge.
+   */
+  public void print() {
+    System.out.println("HE: ystar = " + ystar + ", ELpm = " + ELpm);
   }
 
 }

@@ -19,51 +19,60 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.demogng;
+package de.sciss.neuralgas;
 
 /**
- * A class representing a site in the Voronoi diagram
- *
+ * @author B. Fritzke
+ * enum for all learning methods
  */
-class SiteVoronoi {
-  /**
-   * The coordinate
-   */
-  public FPoint coord = null;
-  /**
-   * The number of the site
-   */
-  public int sitenbr = 0;
-  /**
-   * The reference counter of the site
-   */
-  public int refcnt = 0;
+public enum Algorithm {
+    LBG("LBG (Linde,Buzo,Gray)","LBG"),
+    LBGU("LBG-U (Fritzke)","LBGU"),
+    HCL("Hard Competitive Learning","HCL"),
+    CHL("Competitive Hebbian Learning  (Martinetz)","CHL"),
+    NG("Neural Gas  (Martinetz)","NG"),
+    NGCHL("Neural Gas with CHL  (Martinetz)","NGwCHL"),
+    GNG("Growing Neural Gas (Fritzke)","GNG"),
+    GNGU("Growing Neural Gas with Utility (Fritzke)","GNGU"),
+    SOM("The Self-Organizing Map  (Kohonen)","SOM"),
+    GG("Growing Grid  (Fritzke)","GG"),
+    GR("Growing Ring  (Fritzke)","GR");
+    private String name;
+    public String getName() {
+        return name;
+    }
+    public String getMnemo() {
+        return mnemo;
+    }
+    public boolean isLBGType(){
+        if (this==LBG | this == LBGU)
+            return true;
+        else
+            return false;
 
-  /**
-   * The constructor of the SiteVoronoi class.
-   * 
-   */
-  public SiteVoronoi() {
-    coord = new FPoint();
-    sitenbr = -1;
-    refcnt = 0;
-  }
-  /**
-   * The constructor of the SiteVoronoi class.
-   * 
-   * @param p        The coordinates
-   * @param sitenbr  The identifier of the site
-   */
-  public SiteVoronoi(FPoint p, int sitenbr) {
-    coord = p;
-    this.sitenbr = sitenbr;
-    refcnt = 0;
-  }
-
-  public void print() {
-    System.out.println("Site: (Nr. " + sitenbr + "):" + 
-               coord.x + ", " + coord.y +
-               " (refcnt = " + refcnt + ")");
-  }
-
+    }
+    public boolean isGNGType(){
+        if (this==GNG | this == GNGU)
+            return true;
+        else
+            return false;
+    }
+    public boolean isSOMType(){
+        if (this==SOM | this == GG | this == GR)
+            return true;
+        else
+            return false;
+    }
+    public boolean isDiscrete(){
+        if (ordinal()==0 || ordinal() ==1)
+            return true;
+        else
+            return false;
+    }
+    private String mnemo;
+    private Algorithm(String name, String mnemo){
+        this.name=name;
+        this.mnemo=mnemo;
+    }
 }
+
