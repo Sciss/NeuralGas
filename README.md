@@ -1,6 +1,7 @@
 # NeuralGas
 
 [![Build Status](https://travis-ci.org/Sciss/NeuralGas.svg?branch=master)](https://travis-ci.org/Sciss/NeuralGas)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.sciss/neuralgas/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.sciss/neuralgas)
 
 ## statement
 
@@ -22,3 +23,12 @@ Changes in summary:
 - added JFrame wrapper
 - includes `sbt` script by [Paul Philips](https://github.com/paulp/sbt-extras), provided under BSD-style license
 - to run demo, execute `./sbt ui/run`
+
+## linking
+
+The following artifact is available from Maven Central:
+
+    "de.sciss" %% "neuralgas" % v
+
+The current version `v` is `"2.2.0"`.
+
