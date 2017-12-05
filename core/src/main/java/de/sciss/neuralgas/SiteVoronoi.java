@@ -19,42 +19,49 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.neuralgas.ui;
+package de.sciss.neuralgas;
 
 /**
- * A class representing a Voronoi line. 
+ * A class representing a site in the Voronoi diagram
  *
  */
-class LineGNG {
-  /**
-   * The first point (x) of the line
-   */
-  protected int x1 = -1;
-  /**
-   * The first point (y) of the line
-   */
-  protected int y1 = -1;
-  /**
-   * The last point (x) of the line
-   */
-  protected int x2 = -1;
-  /**
-   * The last point (y) of the line
-   */
-  protected int y2 = -1;
+public class SiteVoronoi {
+    /**
+     * The coordinate
+     */
+    public PointFloat2D coord = null;
 
-  /**
-   * Constructor, allows setting the coordinates.
-   * 
-   * @param x1        The first x coordinate
-   * @param y1        The first y coordinate
-   * @param x2        The second x coordinate
-   * @param y2        The second y coordinate
-   */
-  public LineGNG (int x1, int y1, int x2, int y2) {
-    this.x1 = x1;
-    this.y1 = y1;
-    this.x2 = x2;
-    this.y2 = y2;
-  }
+    /**
+     * The number of the site
+     */
+    public int idx = 0;
+
+    /**
+     * The reference counter of the site
+     */
+    public int refCnt = 0;
+
+    /**
+     * The constructor of the SiteVoronoi class.
+     */
+    public SiteVoronoi() {
+        coord = new PointFloat2D();
+        idx = -1;
+    }
+
+    /**
+     * The constructor of the SiteVoronoi class.
+     *
+     * @param p       The coordinates
+     * @param siteNBR The identifier of the site
+     */
+    public SiteVoronoi(PointFloat2D p, int siteNBR) {
+        coord = p;
+        this.idx = siteNBR;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("SiteVoronoi(idx: %d, coord: %s)", idx, coord);
+    }
 }

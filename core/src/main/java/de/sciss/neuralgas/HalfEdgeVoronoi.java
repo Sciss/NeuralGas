@@ -19,53 +19,58 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.neuralgas.ui;
-
-import de.sciss.neuralgas.FPoint;
+package de.sciss.neuralgas;
 
 /**
- * A class representing a site in the Voronoi diagram
+ * A class representing a half-edge in the Voronoi diagram
  *
  */
-class SiteVoronoi {
-  /**
-   * The coordinate
-   */
-  public FPoint coord = null;
-  /**
-   * The number of the site
-   */
-  public int sitenbr = 0;
-  /**
-   * The reference counter of the site
-   */
-  public int refcnt = 0;
+class HalfEdgeVoronoi {
+  public HalfEdgeVoronoi EL_left;
+  public HalfEdgeVoronoi EL_right;
+  public EdgeVoronoi EL_edge  = null;
+  public SiteVoronoi vertex   = null;
+  public int EL_pm            = -1;
+  public int EL_refCnt        = -1;
+  public float yStar          = -1.0f;
 
-  /**
-   * The constructor of the SiteVoronoi class.
-   * 
-   */
-  public SiteVoronoi() {
-    coord = new FPoint();
-    sitenbr = -1;
-    refcnt = 0;
-  }
-  /**
-   * The constructor of the SiteVoronoi class.
-   * 
-   * @param p        The coordinates
-   * @param sitenbr  The identifier of the site
-   */
-  public SiteVoronoi(FPoint p, int sitenbr) {
-    coord = p;
-    this.sitenbr = sitenbr;
-    refcnt = 0;
+  public HalfEdgeVoronoi() {
+    EL_edge   = new EdgeVoronoi();
+    vertex    = new SiteVoronoi();
+    EL_pm     = 0;
+    yStar     = 0.0f;
   }
 
+  public HalfEdgeVoronoi(EdgeVoronoi e, int pm) {
+    EL_edge   = e;
+    EL_pm     = pm;
+    vertex    = null;
+    EL_refCnt = 0;
+  }
+
+  /**
+   * Returns whether this edge is greater than the passed edge.
+   *
+   * @param he	 	The edge to compare this edge to.
+   */
+  public boolean greaterThan(HalfEdgeVoronoi he) {
+    return yStar > he.yStar;
+  }
+  
+  /**
+   * Returns whether this edge is equal to the passed edge.
+   *
+   * @param he	 	The edge to compare this edge to.
+   */
+  public boolean equal(HalfEdgeVoronoi he) {
+    return yStar == he.yStar;
+  }
+  
+  /**
+   * Prints this edge.
+   */
   public void print() {
-    System.out.println("Site: (Nr. " + sitenbr + "):" + 
-               coord.x + ", " + coord.y +
-               " (refcnt = " + refcnt + ")");
+    System.out.println("HE: yStar = " + yStar + ", EL_pm = " + EL_pm);
   }
 
 }

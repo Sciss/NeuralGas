@@ -23,70 +23,71 @@ package de.sciss.neuralgas;
 
 /**
  * A class representing a float point in the plane.
- *
  */
-public class FPoint {
-  /**
-   * The x coordinate
-   */
-  public float x;
-  /**
-   * The y coordinate
-   */
-  public float y;
+public class PointFloat2D {
+    /**
+     * The x coordinate
+     */
+    public float x;
 
-  /**
-   * Constructor.
-   * 
-   */
-  public FPoint() {
-    this.x = -1.0f;
-    this.y = -1.0f;
-  }
+    /**
+     * The y coordinate
+     */
+    public float y;
 
-  /**
-   * Constructor, allows setting the coordinates.
-   * 
-   * @param x        The x coordinate
-   * @param y        The y coordinate
-   */
-  public FPoint(float x, float y) {
-    this.x = x;
-    this.y = y;
-  }
+    /**
+     * Constructor.
+     */
+    public PointFloat2D() {
+        this.x = -1.0f;
+        this.y = -1.0f;
+    }
 
-  /**
-   * Set the member variables.
-   * 
-   * @param x        The x coordinate
-   * @param y        The y coordinate
-   */
-  public void set(float x, float y) {
-    this.x = x;
-    this.y = y;
-  }
+    /**
+     * Constructor, allows setting the coordinates.
+     *
+     * @param x The x coordinate
+     * @param y The y coordinate
+     */
+    public PointFloat2D(float x, float y) {
+        this.x = x;
+        this.y = y;
+    }
 
-  /**
-   * Set the member variables.
-   * 
-   * @param p        The coordinates
-   */
-  public void set(FPoint p) {
-    x = p.x;
-    y = p.y;
-  }
+    /**
+     * Set the member variables.
+     *
+     * @param x The x coordinate
+     * @param y The y coordinate
+     */
+    public void set(float x, float y) {
+        this.x = x;
+        this.y = y;
+    }
 
-  /**
-   * Test the member variables.
-   * 
-   * @param x        The x coordinate
-   * @param y        The y coordinate
-   * @return	     Equal?
-   */
-  public boolean equal(float x, float y) {
-    if ( (this.x == x) && (this.y == y) )
-      return(true);
-    else
-      return(false);
-  }
+    /**
+     * Set the member variables.
+     *
+     * @param p The coordinates
+     */
+    public void set(PointFloat2D p) {
+        x = p.x;
+        y = p.y;
+    }
+
+    /**
+     * Test the member variables.
+     *
+     * @param x The x coordinate
+     * @param y The y coordinate
+     * @return Equal?
+     */
+    public boolean equal(float x, float y) {
+        return (this.x == x) && (this.y == y);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("PointFloat2D(x: %s, y: %s)", x, y);
+    }
 }

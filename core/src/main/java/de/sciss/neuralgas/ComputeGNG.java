@@ -192,7 +192,7 @@ public class ComputeGNG {
     /**
      * The array of the second best distance (discrete numSignals).
      */
-    protected FPoint C_best[] = new FPoint[MAX_NODES];
+    protected PointFloat2D C_best[] = new PointFloat2D[MAX_NODES];
 
     /**
      * The current number of discrete numSignals.
@@ -1639,7 +1639,7 @@ public class ComputeGNG {
      *   Self-Organizing Map (SOM).
      *
      */
-    public void learn(Result result) {
+    public synchronized void learn(Result result) {
         result.reset();
         //
         // learning is done for stepSize steps
@@ -2177,7 +2177,7 @@ public class ComputeGNG {
                 float error = 0.0f;
                 float maxErrorLBG = 0.0f;
                 float errorAct = 0.0f;
-                FPoint tmpFP;
+                PointFloat2D tmpFP;
 
                 curr1stIdx = 0;
 
@@ -2240,7 +2240,7 @@ public class ComputeGNG {
                 // Adapt selected nodes
                 for (l = 0; l < nNodes; l++) {
                     n_i = nodes[l];
-                    tmpFP = new FPoint(n_i.x, n_i.y);
+                    tmpFP = new PointFloat2D(n_i.x, n_i.y);
                     utility = 0.0f;
                     error = 0.0f;
 
@@ -2291,7 +2291,7 @@ public class ComputeGNG {
                     if (readyLBG_B && (errorAct < errorBestLBG_U) ) {
                         // Save old positions
                         for (i = 0; i < nNodes; i++) {
-                            C_best[i] = new FPoint(nodes[i].x,
+                            C_best[i] = new PointFloat2D(nodes[i].x,
                                     nodes[i].y);
                         }
                         readyLBG_B = false;

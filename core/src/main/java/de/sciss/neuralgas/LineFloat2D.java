@@ -19,65 +19,49 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.neuralgas.ui;
+package de.sciss.neuralgas;
 
 /**
- * A class which represents the elements of the double linked list class
- *  ListGNG.
- *
+ * A class representing a Voronoi line. 
  */
-class ListElem {
+public class LineFloat2D {
+    /**
+     * The first point (x) of the line
+     */
+    public final float x1;
 
-  /**
-   * The left neighbour.
-   */
-  ListElem		left;
-  /**
-   * The right neighbour.
-   */
-  ListElem		right;
-  /**
-   * The element is a halfedge.
-   */
-  HalfEdgeVoronoi	elem;
+    /**
+     * The first point (y) of the line
+     */
+    public final float y1;
 
-  /**
-   * Constructor, initializes member data.
-   */
-  ListElem() {
-    left = null;
-    right = null;
-    elem = null;
-  }
+    /**
+     * The last point (x) of the line
+     */
+    public final float x2;
 
-  /**
-   * Constructor, allows setting data.
-   *
-   * @param elem 	The data elem
-   */
-  ListElem(HalfEdgeVoronoi elem) {
-    left = right = null;
-    this.elem = elem;
-  }
+    /**
+     * The last point (y) of the line
+     */
+    public final float y2;
 
-  /**
-   * Constructor, allows setting neighbors and data.
-   *
-   * @param l 		Left neighbor
-   * @param r 		Right neighbor
-   * @param elem 	The data elem
-   */
-  ListElem(ListElem l, ListElem r, HalfEdgeVoronoi elem) {
-    left = l;
-    right = r;
-    this.elem = elem;
-  }
+    /**
+     * Constructor, allows setting the coordinates.
+     *
+     * @param x1 The first x coordinate
+     * @param y1 The first y coordinate
+     * @param x2 The second x coordinate
+     * @param y2 The second y coordinate
+     */
+    public LineFloat2D(float x1, float y1, float x2, float y2) {
+        this.x1 = x1;
+        this.y1 = y1;
+        this.x2 = x2;
+        this.y2 = y2;
+    }
 
-  /**
-   * Print the element.
-   */
-  public void print() {
-    if(elem != null)
-      elem.print();
-  }
+    @Override
+    public String toString() {
+        return String.format("LineFloat2D(x1: %s, y1: %s, x2: %s, y2: %s)", x1, y1, x2, y2);
+    }
 }

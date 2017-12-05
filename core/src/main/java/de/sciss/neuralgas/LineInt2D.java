@@ -19,58 +19,49 @@
 //                                                                            ;
 // ========================================================================== ;
 
-package de.sciss.neuralgas.ui;
+package de.sciss.neuralgas;
 
 /**
- * A class representing a halfedge in the Voronoi diagram
- *
+ * A class representing a Voronoi line. 
  */
-class HalfEdgeVoronoi {
-  public HalfEdgeVoronoi ELleft;
-  public HalfEdgeVoronoi ELright;
-  public EdgeVoronoi ELedge = null;
-  public SiteVoronoi vertex = null;
-  public int ELpm = -1;
-  public int ELrefcnt = -1;
-  public float ystar = -1.0f;
+public class LineInt2D {
+    /**
+     * The first point (x) of the line
+     */
+    public final int x1;
 
-  public HalfEdgeVoronoi() {
-    ELedge = new EdgeVoronoi();
-    vertex = new SiteVoronoi();
-    ELpm = 0;
-    ystar = 0.0f;
-  }
+    /**
+     * The first point (y) of the line
+     */
+    public final int y1;
 
-  public HalfEdgeVoronoi(EdgeVoronoi e, int pm) {
-    ELedge = e;
-    ELpm = pm;
-    vertex = null;
-    ELrefcnt = 0;
-  }
+    /**
+     * The last point (x) of the line
+     */
+    public final int x2;
 
-  /**
-   * Returns whether this edge is greater than the passed edge.
-   *
-   * @param he	 	The edge to compare this edge to.
-   */
-  public boolean greaterThan(HalfEdgeVoronoi he) {
-    return ystar > he.ystar;
-  }
-  
-  /**
-   * Returns whether this edge is equal to the passed edge.
-   *
-   * @param he	 	The edge to compare this edge to.
-   */
-  public boolean equal(HalfEdgeVoronoi he) {
-    return ystar == he.ystar;
-  }
-  
-  /**
-   * Prints this edge.
-   */
-  public void print() {
-    System.out.println("HE: ystar = " + ystar + ", ELpm = " + ELpm);
-  }
+    /**
+     * The last point (y) of the line
+     */
+    public final int y2;
 
+    /**
+     * Constructor, allows setting the coordinates.
+     *
+     * @param x1 The first x coordinate
+     * @param y1 The first y coordinate
+     * @param x2 The second x coordinate
+     * @param y2 The second y coordinate
+     */
+    public LineInt2D(int x1, int y1, int x2, int y2) {
+        this.x1 = x1;
+        this.y1 = y1;
+        this.x2 = x2;
+        this.y2 = y2;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("LineInt2D(x1: %d, y1: %d, x2: %d, y2: %d)", x1, y1, x2, y2);
+    }
 }

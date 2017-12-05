@@ -155,7 +155,6 @@ public class NodeGNG {
                 x, y, error, sqrDist, utility, nNeighbor, isWinner, isSecond, hasMoved);
     }
 
-
     public void assignVector(NodeGNG source){
         x = source.x;
         y = source.y;

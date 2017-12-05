@@ -19,9 +19,10 @@ Changes in summary:
 - using sbt to build the application
 - using dedicated namespace `de.sciss.neuralgas`
 - using two sub-modules `core` (algorithms) and `ui` (AWT front-end)
+- code clean up
 - image based probability distribution
 - added JFrame wrapper
-- includes `sbt` script by [Paul Philips](https://github.com/paulp/sbt-extras), provided under BSD-style license
+- includes `sbt` script by [Paul Phillips](https://github.com/paulp/sbt-extras), provided under BSD-style license
 - to run demo, execute `./sbt ui/run`
 
 ## linking
@@ -30,5 +31,4 @@ The following artifact is available from Maven Central:
 
     "de.sciss" %% "neuralgas" % v
 
-The current version `v` is `"2.2.0"`.
-
+The current version `v` is `"2.3.0"`.

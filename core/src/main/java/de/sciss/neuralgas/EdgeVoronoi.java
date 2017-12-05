@@ -22,49 +22,41 @@
 package de.sciss.neuralgas;
 
 /**
- * A class representing an edge. 
- *  For example:
- * <pre>
- *    EdgeGNG e = new EdgeGNG();
- *    e.from(Node1);
- *    e.to(Node2);
- * </pre>
+ * A class representing an edge in the Voronoi diagram
  */
-public class EdgeGNG {
+class EdgeVoronoi {
     /**
-     * The starting point of the edge
-     *
-     * @see EdgeGNG
+     * One part of line equation.
+     * (equation: ax + by = c)
      */
-    public int from = -1;
+    public float a;
 
     /**
-     * The end point of the edge
-     *
-     * @see EdgeGNG
+     * One part of line equation.
+     * (equation: ax + by = c)
      */
-    public int to = -1;
+    public float b;
 
     /**
-     * The age of this edge.
-     *
-     * @see EdgeGNG
+     * One part of line equation.
+     * (equation: ax + by = c)
      */
-    public int age = 0;
+    public float c;
 
     /**
-     * Replace a node with a new one. This is necessary after deleting a node
-     * in the static array. In most cases the deleted node will be replaced by
-     * the last node in the static array.
-     *
-     * @param old  The index of a node
-     * @param newN The index of a node
-     * @see ComputeGNG#deleteNode
+     * The number of the edge
      */
-    protected void replace(int old, int newN) {
-        if (from == old)
-            from = newN;
-        if (to == old)
-            to = newN;
-    }
+    public int edgeIdx = 0;
+
+    /**
+     * The sites of the edge
+     * (vertices of the voronoi structure)
+     */
+    public SiteVoronoi ep[] = new SiteVoronoi[2];
+
+    /**
+     * The next region
+     * (the two sites separated by the this edge)
+     */
+    public SiteVoronoi reg[] = new SiteVoronoi[2];
 }

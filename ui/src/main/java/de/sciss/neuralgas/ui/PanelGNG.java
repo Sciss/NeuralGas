@@ -4,9 +4,11 @@ import de.sciss.neuralgas.Algorithm;
 import de.sciss.neuralgas.ComputeGNG;
 import de.sciss.neuralgas.EdgeGNG;
 import de.sciss.neuralgas.GridNodeGNG;
+import de.sciss.neuralgas.LineFloat2D;
 import de.sciss.neuralgas.NodeGNG;
 import de.sciss.neuralgas.PD;
 import de.sciss.neuralgas.PanelLike;
+import de.sciss.neuralgas.Voronoi;
 
 import javax.swing.JPanel;
 import javax.swing.JSlider;
@@ -15,17 +17,17 @@ import javax.swing.event.ChangeListener;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.geom.Line2D;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
-
-import static de.sciss.neuralgas.ComputeGNG.MAX_NODES;
 
 @SuppressWarnings("serial")
 class PanelGNG extends JPanel implements
@@ -63,29 +65,11 @@ class PanelGNG extends JPanel implements
     }
 
     /**
-     * The maximum number of Voronoi lines (5 * maximum number of nodes).
-     */
-    protected final int MAX_V_LINES = 6 * MAX_NODES;
-
-    /**
      * The version of the Growing Neural Gas Demo.
      */
     protected static final String DEMO_GNG_VERSION = "v2.2.0-SNAPSHOT"; // Version
 
     protected DemoGNG graph;
-
-    /**
-     * The actual number of Voronoi lines.
-     */
-    protected int nLines = 0;
-    /**
-     * The array of the actual used lines.
-     */
-    protected LineGNG lines[] = new LineGNG[MAX_V_LINES];
-    /**
-     * The array of boolean to distinguish between Voronoi and Delaunay lines.
-     */
-    protected boolean vd[] = new boolean[MAX_V_LINES];
 
     Thread relaxer;
     GraphGNG errorGraph;
@@ -180,18 +164,6 @@ class PanelGNG extends JPanel implements
     protected boolean probDistB = true;
 
     /**
-     * The flag for displaying the Voronoi diagram.
-     *  This variable can be set by the user.
-     */
-    protected boolean voronoiB = false;
-
-    /**
-     * The flag for displaying the Delaunay triangulation.
-     *  This variable can be set by the user.
-     */
-    protected boolean delaunayB = false;
-
-    /**
      * The flag for any moved nodes (to compute the Voronoi diagram/Delaunay
      *  triangulation).
      */
@@ -216,7 +188,7 @@ class PanelGNG extends JPanel implements
         addComponentListener(this);
         this.graph      = graph;
         this.compute    = graph.compute;
-        this.voro       = new Voronoi(this);
+        this.voro       = new Voronoi(compute);
         this.result     = new ComputeGNG.Result();
     }
 
@@ -491,7 +463,8 @@ class PanelGNG extends JPanel implements
         compute.pd.draw(compute, this, g, d);
     }
 
-    public synchronized void paintComponent(Graphics g) {
+    public synchronized void paintComponent(Graphics g0) {
+        final Graphics2D g = (Graphics2D) g0;
 //        if (true) {
 //            System.out.println(compute.nNodes);
 //            return;
@@ -512,8 +485,9 @@ class PanelGNG extends JPanel implements
         g.fillRect(0, 0, d.width, d.height);
 
         // recompute Delaunay/Voronoi
-        if ((delaunayB || voronoiB) && nodesMovedB) {
-            nLines = 0;
+        if ((voro.delaunayB || voro.voronoiB) && nodesMovedB) {
+//            nLines = 0;
+            voro.setSize(getSize());
             voro.computeVoronoi();// TODO: analyze
         }
         nodesMovedB = false;
@@ -638,17 +612,20 @@ class PanelGNG extends JPanel implements
         }
 
         // Draw the Voronoi or Delaunay diagram
-        if (voronoiB || delaunayB) {
-            LineGNG l;
+        if (voro.voronoiB || voro.delaunayB) {
+            LineFloat2D l;
+            final Line2D ln = new Line2D.Float();
+            final int nLines = voro.nLines;
             for (i = 0; i < nLines; i++) {
-                l = lines[i];
-                if (vd[i])
+                l = voro.lines[i];
+                if (voro.vd[i])
                     // voronoi
                     g.setColor(voronoiColor);
                 else
                     // delaunay
                     g.setColor(delaunayColor);
-                g.drawLine(l.x1, l.y1, l.x2, l.y2);
+                ln.setLine(l.x1, l.y1, l.x2, l.y2);
+                g.draw(ln); // drawLine(l.x1, l.y1, l.x2, l.y2);
             }
         }
 
@@ -1073,9 +1050,5 @@ class PanelGNG extends JPanel implements
         if (true/*!source.getValueIsAdjusting()*/) {
             delay = (50-(int)source.getValue())*10;
         }
-
-
-
     }
-
 }

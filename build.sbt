@@ -4,8 +4,8 @@ lazy val baseName       = "NeuralGas"
 lazy val baseNameL      = baseName.toLowerCase()
 lazy val baseDescr      = "Neural network simulator based on growing neural gas (GNG)"
 
-lazy val projectVersion = "2.2.1-SNAPSHOT"
-lazy val mimaVersion    = "2.2.0"
+lazy val projectVersion = "2.3.0"
+lazy val mimaVersion    = "2.3.0"
 
 lazy val commonJavaOptions = Seq("-source", "1.6")
 

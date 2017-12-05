@@ -161,10 +161,10 @@ public class DemoGNG extends JApplet {
                 } else if (cb.getText().equals(ERROR_GRAPH)) {
                     panel.errorGraphB = value;
                 } else if (cb.getText().equals(VORONOI)) {
-                    panel.voronoiB = value;
+                    panel.voro.voronoiB = value;
                     panel.nodesMovedB = true;
                 } else if (cb.getText().equals(DELAUNAY)) {
-                    panel.delaunayB = value;
+                    panel.voro.delaunayB = value;
                     panel.nodesMovedB = true;
                 } else if (cb.getText().equals(TEACH)) {
                     panel.teachB = value;
