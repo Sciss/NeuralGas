@@ -24,7 +24,7 @@ package de.sciss.neuralgas;
 /**
  * A class representing an edge in the Voronoi diagram
  */
-class EdgeVoronoi {
+public class EdgeVoronoi {
     /**
      * One part of line equation.
      * (equation: ax + by = c)

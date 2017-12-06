@@ -1,4 +1,6 @@
-package de.sciss.neuralgas
+package de.sciss.ng_test
+
+import de.sciss.neuralgas.{ComputeGNG, EdgeVoronoi, LineFloat2D, NodeGNG, SiteVoronoi, Voronoi}
 
 import scala.collection.mutable
 import scala.language.implicitConversions
