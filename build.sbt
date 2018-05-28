@@ -29,6 +29,15 @@ lazy val javaSettings = Seq(
   javacOptions in doc := commonJavaOptions  // cf. sbt issue #355
 )
 
+lazy val deps = new {
+  val test = new {
+    val fileUtil  = "1.1.3"
+    val jzy3d     = "1.0.2"
+    val pdflitz   = "1.2.2"
+    val swingPlus = "0.3.0"
+  }
+}
+
 lazy val publishSettings = Seq(
   developers := List(
 //    Developer(
@@ -82,7 +91,7 @@ lazy val core = project.withId(s"$baseNameL-core").in(file("core"))
     licenses    := Seq(gpl2),
     description := s"$baseDescr - algorithms",
     libraryDependencies ++= Seq(
-      "org.scala-lang" %  "scala-library" % scalaVersion.value % "test"
+      "org.scala-lang" %  "scala-library" % scalaVersion.value % Test
     )
   )
 
@@ -96,9 +105,9 @@ lazy val ui = project.withId(s"$baseNameL-ui").in(file("ui"))
     description := s"$baseDescr - user interface",
     mainClass in (Compile, run) := Some("de.sciss.neuralgas.ui.Main"),
     libraryDependencies ++= Seq(
-      "org.scala-lang" %  "scala-library" % scalaVersion.value % "test",
-      "de.sciss"       %% "fileutil"      % "1.1.3"            % "test",
-      "de.sciss"       %% "pdflitz"       % "1.2.2"            % "test"
+      "org.scala-lang" %  "scala-library" % scalaVersion.value % Test,
+      "de.sciss"       %% "fileutil"      % deps.test.fileUtil % Test,
+      "de.sciss"       %% "pdflitz"       % deps.test.pdflitz  % Test
     )
   )
 
@@ -107,5 +116,10 @@ lazy val sphere = project.withId(s"$baseNameL-sphere").in(file("sphere"))
   .settings(
     name        := s"$baseName-sphere",
     licenses    := Seq(lgpl2),
-    description := "GNG-U implementation in Scala for spherical coordinates"
+    description := "GNG-U implementation in Scala for spherical coordinates",
+    resolvers   += "jzv3d releases" at "http://maven.jzy3d.org/releases",
+    libraryDependencies ++= Seq(
+      "org.jzy3d" %   "jzy3d-api" % deps.test.jzy3d     % Test,
+      "de.sciss"  %%  "swingplus" % deps.test.swingPlus % Test
+    )
   )

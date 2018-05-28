@@ -14,14 +14,13 @@
 package de.sciss.neuralgas.sphere
 package impl
 
-import de.sciss.neuralgas.sphere.SphereGNG.{Config, Edge, Loc, Node}
+import de.sciss.neuralgas.sphere.SphereGNG.{Config, Edge, Node}
 
 object SphereGNGImpl {
-  def apply(config: Config): SphereGNG = new Impl(config)
-
-  private final class LocVar(var theta: Double, var phi: Double) extends Loc {
-    val cosTheta: Double = Math.cos(theta)
-    val sinTheta: Double = Math.sin(theta)
+  def apply(config: Config): SphereGNG = {
+    val res = new Impl(config)
+    res.init()
+    res
   }
 
   private final class Impl(val config: Config) extends SphereGNG {
@@ -40,6 +39,22 @@ object SphereGNGImpl {
 
     def maxNodes_=(value: Int): Unit =
       _maxNodes = value
+
+    def init(): Unit = {
+      nodes(0) = mkRandomNode()
+      nodes(1) = mkRandomNode()
+      numNodes = 2
+      addEdge(0, 1)
+    }
+
+    private def mkRandomNode(): Node = {
+      val res   = new Node(config.maxNeighbors)
+      config.pd.poll(loc)
+      res.theta = loc.theta
+      res.phi   = loc.phi
+      res.updateTri()
+      res
+    }
 
     def step(): Unit = {
       import config._
@@ -105,6 +120,7 @@ object SphereGNGImpl {
         while (i < numNb) {
           val nn = winner.neighbor(i)
           val nb = nodes(nn)
+          assert(nb != null)
           adaptNode(n = nb, n1 = nb, n2 = loc, d = nb.distance, f = epsilon2)
           i += 1
         }
@@ -128,9 +144,14 @@ object SphereGNGImpl {
       }
     }
 
+    def nodeIterator: Iterator[Polar]           = nodes.iterator.map(_.toPolar).take(numNodes)
+    def edgeIterator: Iterator[(Polar, Polar)]  = edges.iterator.map { e =>
+      nodes(e.from).toPolar -> nodes(e.to).toPolar
+    } .take(numEdges)
+
     private def maxErrorNeighbor(ni: Int): Int = {
       var resErr  = Double.NegativeInfinity
-      var resIdx  = -1
+      var resIdx  = ni // -1
       val n       = nodes(ni)
       val nNb     = n.numNeighbors
       var i       = 0

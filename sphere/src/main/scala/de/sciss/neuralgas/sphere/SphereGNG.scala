@@ -16,18 +16,6 @@ package de.sciss.neuralgas.sphere
 import de.sciss.neuralgas.sphere.SphereGNG.Config
 
 object SphereGNG {
-  trait Loc {
-    def theta     : Double
-    def phi       : Double
-
-    def cosTheta  : Double
-    def sinTheta  : Double
-  }
-
-  trait PD {
-    def poll(loc: Loc): Unit
-  }
-
   final class Node(maxNeighbors: Int) extends Loc {
     private[this] var _numNeighbors = 0
     private[this] val neighbors = new Array[Int](maxNeighbors)
@@ -40,6 +28,8 @@ object SphereGNG {
 
     var cosTheta  = 1.0
     var sinTheta  = 0.0
+
+    def toPolar: Polar = Polar(theta = theta, phi = phi)
 
     def canAddNeighbor: Boolean = _numNeighbors < neighbors.length
 
@@ -59,7 +49,7 @@ object SphereGNG {
         }
         i += 1
       }
-      throw new IllegalArgumentException(s"No neighbor $ni found")
+      // throw new IllegalArgumentException(s"No neighbor $ni found")
     }
 
     def replaceNeighbor(before: Int, now: Int): Unit = {
@@ -71,7 +61,7 @@ object SphereGNG {
         }
         i += 1
       }
-      throw new IllegalArgumentException(s"No neighbor $before found")
+      // throw new IllegalArgumentException(s"No neighbor $before found")
     }
 
     def neighbor(idx: Int): Int = neighbors(idx)
@@ -99,7 +89,7 @@ object SphereGNG {
     def replace(before: Int, now: Int): Unit = {
       if      (from == before) from = now
       else if (to   == before) to   = now
-      else throw new IllegalArgumentException(s"No connecting node $before found")
+      // else throw new IllegalArgumentException(s"No connecting node $before found")
     }
   }
 
@@ -152,4 +142,7 @@ trait SphereGNG {
   def step(): Unit
 
   var maxNodes: Int
+
+  def nodeIterator: Iterator[Polar]
+  def edgeIterator: Iterator[(Polar, Polar)]
 }
