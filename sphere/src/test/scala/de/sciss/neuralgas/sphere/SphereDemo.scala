@@ -2,7 +2,7 @@ package de.sciss.neuralgas.sphere
 
 import org.jzy3d.chart.{AWTChart, ChartLauncher}
 import org.jzy3d.colors.Color
-import org.jzy3d.maths.Coord3d
+import org.jzy3d.maths.{Coord3d, Scale}
 import org.jzy3d.plot3d.primitives.{LineStrip, Point}
 import org.jzy3d.plot3d.rendering.canvas.Quality
 
@@ -17,8 +17,8 @@ object SphereDemo {
 //      loc.theta = 0.0
 //      loc.phi   = rnd.nextDouble() * math.Pi * 2
 
-      loc.theta = (rnd.nextDouble() * 2 - 1) * math.Pi
-      loc.phi   = 0.0
+      loc.theta = rnd.nextInt(4) * math.Pi / 4 //  rnd.nextDouble() * math.Pi
+      loc.phi   = rnd.nextInt(4) * math.Pi / 2 // 0.0
     }
   }
 
@@ -30,6 +30,7 @@ object SphereDemo {
     def poll(loc: LocVar): Unit = {
       loc.theta = rnd.nextDouble() * PI
       loc.phi   = rnd.nextDouble() * PI * 2
+//      loc.phi   = (rnd.nextDouble() * 2 - 1) * PI
     }
 
 //    @tailrec
@@ -98,7 +99,8 @@ object SphereDemo {
 
       val numIntp = math.max(2, (Polar.centralAngle(p1, p2) * 20).toInt)
       val c = Vector.tabulate(numIntp) { i =>
-        val p = Polar.interpolate(p1, p2, i.toDouble / (numIntp - 1))
+        val f = i.toDouble / (numIntp - 1)
+        val p = Polar.interpolate(p1, p2, f)
         import p._
         val sinTheta  = sin(theta)
         val x         = sinTheta * cos(phi)
@@ -138,8 +140,13 @@ object SphereDemo {
 //    val f = new FrameAWT(chart, new Rectangle(0, 0, 800, 600), "Sphere")
 
     // chart.setScale(new Scale(-1, +1))
+    val view = chart.getView
+    view.setScaleX(new Scale(-1, +1))
+    view.setScaleY(new Scale(-1, +1))
+    view.setScaleZ(new Scale(-1, +1))
 
     ChartLauncher.openChart(chart)
+
 //
 //    new MainFrame {
 //

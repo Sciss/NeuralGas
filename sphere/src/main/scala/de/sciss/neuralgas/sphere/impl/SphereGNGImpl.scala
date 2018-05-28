@@ -148,7 +148,9 @@ object SphereGNGImpl {
       // step += 1
     }
 
-    private def checkConsistency(): Unit = {
+    private def checkConsistency(): Unit = ()
+
+    private def checkConsistency_HA(): Unit = {
       require (numNodes >= 0 && numEdges >= 0)
       for (ni <- 0 until numNodes) {
         val n = nodes(ni)
