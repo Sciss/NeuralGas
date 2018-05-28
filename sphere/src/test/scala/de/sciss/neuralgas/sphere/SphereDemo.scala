@@ -17,8 +17,13 @@ object SphereDemo {
 //      loc.theta = 0.0
 //      loc.phi   = rnd.nextDouble() * math.Pi * 2
 
-      loc.theta = rnd.nextInt(4) * math.Pi / 4 //  rnd.nextDouble() * math.Pi
-      loc.phi   = rnd.nextInt(4) * math.Pi / 2 // 0.0
+      loc.phi   = 0.0 // rnd.nextInt(4) * math.Pi / 4 //  rnd.nextDouble() * math.Pi
+      loc.theta = rnd.nextDouble() * math.Pi // 0.0 // rnd.nextInt(4) * math.Pi / 2 // 0.0
+//
+//      val p   = Polar(loc.theta, loc.phi)
+//      val xyz = p.toCartesian
+////      val isNorm = xyz == xyz.normalized
+//      println(s"Drew $p -- $xyz")
     }
   }
 
@@ -69,7 +74,7 @@ object SphereDemo {
       lambda      = 1.0/50
     )
     val sphere = SphereGNG(config)
-    for (_ <- 0 until 10000) sphere.step()
+    for (_ <- 0 until 30000) sphere.step()
 
 //    val line = new LineStrip(intpCoords)
 //    line.setWireframeColor(Color.BLACK)
@@ -77,6 +82,15 @@ object SphereDemo {
     val chart = new AWTChart(Quality.Intermediate)
     val sq = sphere.nodeIterator.toList
     println(s"sq.size = ${sq.size}")
+
+    def mkCoord(in: Polar): Coord3d = {
+      import in._
+      val sinTheta  = sin(theta)
+      val x         = sinTheta * cos(phi)
+      val y         = sinTheta * sin(phi)
+      val z         = cos(theta)
+      new Coord3d(x, y, z)
+    }
 
     sphere.edgeIterator.foreach { case (p1, p2) =>
 //      val c1 = {
@@ -101,12 +115,7 @@ object SphereDemo {
       val c = Vector.tabulate(numIntp) { i =>
         val f = i.toDouble / (numIntp - 1)
         val p = Polar.interpolate(p1, p2, f)
-        import p._
-        val sinTheta  = sin(theta)
-        val x         = sinTheta * cos(phi)
-        val y         = sinTheta * sin(phi)
-        val z         = cos(theta)
-        new Coord3d(x, y, z)
+        mkCoord(p)
       }
 
 //      val ln = new LineStrip(c1, c2)
@@ -115,18 +124,17 @@ object SphereDemo {
       chart.add(ln)
     }
 
-    sq.foreach { p =>
-      //      val theta = math.random() * math.Pi
-      //      val phi   = math.random() * math.Pi * 2
-      val c = {
-        import p._
-        val sinTheta  = sin(theta)
-        val x         = sinTheta * cos(phi)
-        val y         = sinTheta * sin(phi)
-        val z         = cos(theta)
-        new Coord3d(x, y, z)
-      }
+    val loc = new LocVar(0.0, 0.0)
+    val sq1 = Vector.fill(100) { config.pd.poll(loc); Polar(loc.theta, loc.phi) }
+
+    sq1.foreach { p =>
+      val c = mkCoord(p)
       chart.add(new Point(c, Color.BLUE, 5f))
+    }
+
+    sq.foreach { p =>
+      val c = mkCoord(p)
+      chart.add(new Point(c, Color.RED, 5f))
     }
 
     //    chart.add(line)

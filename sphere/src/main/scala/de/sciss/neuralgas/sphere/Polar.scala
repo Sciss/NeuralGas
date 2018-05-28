@@ -41,4 +41,14 @@ object Polar {
     Polar(theta = theta, phi = phi)
   }
 }
-final case class Polar(theta: Double, phi: Double)
+final case class Polar(theta: Double, phi: Double) {
+  import Math._
+
+  def toCartesian: Pt3 = {
+    val sinTheta = sin(theta)
+    val x = sinTheta * cos(phi)
+    val y = sinTheta * sin(phi)
+    val z = cos(theta)
+    Pt3(x, y, z)
+  }
+}
