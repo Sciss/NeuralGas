@@ -64,7 +64,7 @@ object SphereDemo {
 
   def run(): Unit = {
     val config = SphereGNG.Config(
-      pd          = new RandomEquatorPD(2), // new RandomPD(1),
+      pd          = new RandomPD(2), // new RandomPD(1),
       maxEdgeAge  = 5000,
       utility     = 1000,
       beta        = 0.0005,
@@ -74,14 +74,17 @@ object SphereDemo {
       lambda      = 1.0/50
     )
     val sphere = SphereGNG(config)
-    for (_ <- 0 until 30000) sphere.step()
+    sphere.step()
+    val t0 = System.currentTimeMillis()
+    for (_ <- 0 until 40000) sphere.step()
+    val t1 = System.currentTimeMillis()
 
 //    val line = new LineStrip(intpCoords)
 //    line.setWireframeColor(Color.BLACK)
 
     val chart = new AWTChart(Quality.Intermediate)
     val sq = sphere.nodeIterator.toList
-    println(s"sq.size = ${sq.size}")
+    println(s"took ${t1-t0}ms. sq.size = ${sq.size}") // 7.3s
 
     def mkCoord(in: Polar): Coord3d = {
       import in._
@@ -124,13 +127,13 @@ object SphereDemo {
       chart.add(ln)
     }
 
-    val loc = new LocVar
-    val sq1 = Vector.fill(100) { config.pd.poll(loc); Polar(loc.theta, loc.phi) }
-
-    sq1.foreach { p =>
-      val c = mkCoord(p)
-      chart.add(new Point(c, Color.BLUE, 5f))
-    }
+//    val loc = new LocVar
+//    val sq1 = Vector.fill(100) { config.pd.poll(loc); Polar(loc.theta, loc.phi) }
+//
+//    sq1.foreach { p =>
+//      val c = mkCoord(p)
+//      chart.add(new Point(c, Color.BLUE, 5f))
+//    }
 
     sq.foreach { p =>
       val c = mkCoord(p)
