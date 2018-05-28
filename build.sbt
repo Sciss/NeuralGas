@@ -4,7 +4,7 @@ lazy val baseName       = "NeuralGas"
 lazy val baseNameL      = baseName.toLowerCase()
 lazy val baseDescr      = "Neural network simulator based on growing neural gas (GNG)"
 
-lazy val projectVersion = "2.3.1"
+lazy val projectVersion = "2.3.2-SNAPSHOT"
 lazy val mimaVersion    = "2.3.0"
 
 lazy val commonJavaOptions = Seq("-source", "1.6")
@@ -12,17 +12,22 @@ lazy val commonJavaOptions = Seq("-source", "1.6")
 lazy val githubUser     = "Sciss"
 lazy val projectURL	= url(s"https://github.com/$githubUser/$baseName")
 
+lazy val gpl2   = "GPL v2+"     -> url("https://www.gnu.org/licenses/gpl-2.0.txt")
+lazy val lgpl2  = "LGPL v2.1+"  -> url("https://www.gnu.org/licenses/lgpl-2.1.txt")
+
 lazy val commonSettings = Seq(
   organization        := "de.sciss",
   version             := projectVersion,
-  scalaVersion        := "2.12.4",
-  licenses            := Seq("GPL v2+" -> url("https://www.gnu.org/licenses/gpl-2.0.txt")),
+  scalaVersion        := "2.12.6",
+  homepage            := Some(projectURL)
+) ++ publishSettings
+
+lazy val javaSettings = Seq(
   crossPaths          := false,
   autoScalaLibrary    := false,
-  homepage            := Some(projectURL),
   javacOptions        := commonJavaOptions ++ Seq("-target", "1.6", "-g", "-Xlint:deprecation"),
   javacOptions in doc := commonJavaOptions  // cf. sbt issue #355
-) ++ publishSettings
+)
 
 lazy val publishSettings = Seq(
   developers := List(
@@ -43,7 +48,7 @@ lazy val publishSettings = Seq(
       name  = "Hanns Holger Rutz",
       email = "contact@sciss.de",
       url   = url("https://github.com/Sciss")
-    ),
+    )
   ),
   scmInfo := Some(ScmInfo(
     projectURL,
@@ -61,28 +66,33 @@ lazy val publishSettings = Seq(
 )
 
 lazy val root = project.in(file("."))
-  .aggregate(core, ui)
+  .aggregate(core, ui, sphere)
   .settings(commonSettings)
   .settings(
     name        := baseName,
-    description := baseDescr
+    description := baseDescr,
+    licenses    := Seq(lgpl2)
   )
 
-lazy val core = project.in(file("core"))
+lazy val core = project.withId(s"$baseNameL-core").in(file("core"))
   .settings(commonSettings)
+  .settings(javaSettings)
   .settings(
     name        := s"$baseName-core",
+    licenses    := Seq(gpl2),
     description := s"$baseDescr - algorithms",
     libraryDependencies ++= Seq(
       "org.scala-lang" %  "scala-library" % scalaVersion.value % "test"
     )
   )
 
-lazy val ui = project.in(file("ui"))
+lazy val ui = project.withId(s"$baseNameL-ui").in(file("ui"))
   .dependsOn(core)
   .settings(commonSettings)
+  .settings(javaSettings)
   .settings(
     name        := s"$baseName-ui",
+    licenses    := Seq(gpl2),
     description := s"$baseDescr - user interface",
     mainClass in (Compile, run) := Some("de.sciss.neuralgas.ui.Main"),
     libraryDependencies ++= Seq(
@@ -92,3 +102,10 @@ lazy val ui = project.in(file("ui"))
     )
   )
 
+lazy val sphere = project.withId(s"$baseNameL-sphere").in(file("sphere"))
+  .settings(commonSettings)
+  .settings(
+    name        := s"$baseName-sphere",
+    licenses    := Seq(lgpl2),
+    description := "GNG-U implementation in Scala for spherical coordinates"
+  )

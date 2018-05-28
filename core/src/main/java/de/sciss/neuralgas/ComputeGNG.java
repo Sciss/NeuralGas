@@ -565,9 +565,9 @@ public class ComputeGNG {
 
     /**
      * Add a node. The new node will be placed between the
-     *  given nodes which must be connected. The existing edge is splitted.
-     *  The new node gets the average of the interesting values of
-     *  the two given nodes.
+     * given nodes which must be connected. The existing edge is split.
+     * The new node gets the average of the interesting values of
+     * the two given nodes.
      *
      * @param n1         The index of a node
      * @param n2         The index of a node
@@ -579,7 +579,7 @@ public class ComputeGNG {
         if ( (n1 < 0) || (n2 < 0) )
             return -1;
         NodeGNG n = new NodeGNG();
-        float dx = (nodes[n1].x - nodes[n2].x) / 2.0f;
+        float dx = (nodes[n1].x - nodes[n2].x) / 2.0f;  // XXX TODO --- could interpolate directly
         float dy = (nodes[n1].y - nodes[n2].y) / 2.0f;
         // reduce errors of neighbor nodes of the new unit
         nodes[n1].error *= (1.0f - alphaGNG);
@@ -590,7 +590,7 @@ public class ComputeGNG {
         // interpolate utility from neighbors
         n.utility = (nodes[n1].utility + nodes[n2].utility)/2.0f;
         // interpolate coordinates
-        n.x = nodes[n1].x - dx;
+        n.x = nodes[n1].x - dx;     // XXX TODO --- could interpolate directly
         n.y = nodes[n1].y - dy;
         n.isMostRecentlyInserted = true;
         nodes[nNodes] = n;
@@ -872,7 +872,7 @@ public class ComputeGNG {
         nodes[n] = nodes[nNodes];
         nodes[nNodes] = null;
 
-        // Now rename all occurances of nodes[nnodes] to nodes[n]
+        // Now rename all occurrences of nodes[nnodes] to nodes[n]
         for (i = 0 ; i < nNodes ; i++)
             nodes[i].replaceNeighbor(nNodes, n);
         for (i = 0 ; i < nEdges ; i++)
@@ -1803,7 +1803,7 @@ public class ComputeGNG {
                         nn = curr1st.neighbor(i);
 
                         nodes[nn].hasMoved = true;
-                        curr2nd.x_old = curr2nd.x;
+                        curr2nd.x_old = curr2nd.x;  // XXX TODO -- doesn't make sense, should probably be `nodes[nn]`
                         curr2nd.y_old = curr2nd.y;
 
                         dx = epsilonGNG2 * (SignalX - nodes[nn].x);
