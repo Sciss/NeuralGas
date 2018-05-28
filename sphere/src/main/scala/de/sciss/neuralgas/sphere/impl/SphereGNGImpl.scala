@@ -140,7 +140,23 @@ object SphereGNGImpl {
           deleteNode(minUtilityIdx)
         }
 
+        checkConsistency()
+
         step += 1
+      }
+    }
+
+    private def checkConsistency(): Unit = {
+      require (numNodes >= 0 && numEdges >= 0)
+      for (ni <- 0 until numNodes) {
+        val n = nodes(ni)
+        require (n != null)
+        for (j <- 0 until n.numNeighbors) {
+          val nn = n.neighbor(j)
+          require (nn >= 0 && nn < numNodes)
+          val m = nodes(nn)
+          require (m.isNeighbor(ni))
+        }
       }
     }
 
