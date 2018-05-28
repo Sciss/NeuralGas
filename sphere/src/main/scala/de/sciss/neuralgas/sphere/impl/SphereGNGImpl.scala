@@ -59,96 +59,93 @@ object SphereGNGImpl {
 
     def step(): Unit = {
       import config._
-      var step = 0
-      while (step < stepSize) {
-        // stepCount += 1
-        
-        var maxError        = 0.0
-        var maxErrorIdx     = 0
-        var minUtility      = Double.PositiveInfinity
-        var minUtilityIdx   = 0
-        var minDist         = Double.PositiveInfinity
-        var minDistIdx      = 0
-        var nextMinDist     = Double.PositiveInfinity
-        var nextMinDistIdx  = 0
-        var toDelete        = -1
+      // stepCount += 1
 
-        pd.poll(loc)
+      var maxError        = 0.0
+      var maxErrorIdx     = 0
+      var minUtility      = Double.PositiveInfinity
+      var minUtilityIdx   = 0
+      var minDist         = Double.PositiveInfinity
+      var minDistIdx      = 0
+      var nextMinDist     = Double.PositiveInfinity
+      var nextMinDistIdx  = 0
+      var toDelete        = -1
 
-        var i = 0
-        while (i < numNodes) {
-          val n = nodes(i)
+      pd.poll(loc)
 
-          // Mark a node without neighbors for deletion
-          if (n.numNeighbors == 0) toDelete = i
+      var i = 0
+      while (i < numNodes) {
+        val n = nodes(i)
 
-//          val d = centralAngle(n.theta, n.phi, loc.theta, loc.phi)
-          val d = centralAngle(n, loc)
-          n.distance  = d
-          n.error    *= decay
-          n.utility  *= decay
+        // Mark a node without neighbors for deletion
+        if (n.numNeighbors == 0) toDelete = i
 
-          if (d < minDist) {
-            nextMinDist     = minDist
-            nextMinDistIdx  = minDistIdx
-            minDist         = d
-            minDistIdx      = i
-          } else if (d < nextMinDist) {
-            nextMinDist     = d
-            nextMinDistIdx  = i
-          }
+        // val d = centralAngle(n.theta, n.phi, loc.theta, loc.phi)
+        val d = centralAngle(n, loc)
+        n.distance  = d
+        n.error    *= decay
+        n.utility  *= decay
 
-          if (n.error > maxError) {
-            maxError        = n.error
-            maxErrorIdx     = i
-          }
-
-          if (n.utility < minUtility) {
-            minUtility      = n.utility
-            minUtilityIdx   = i
-          }
-
-          i += 1
+        if (d < minDist) {
+          nextMinDist     = minDist
+          nextMinDistIdx  = minDistIdx
+          minDist         = d
+          minDistIdx      = i
+        } else if (d < nextMinDist) {
+          nextMinDist     = d
+          nextMinDistIdx  = i
         }
 
-        val winner = nodes(minDistIdx)
-        adaptNode(n = winner, n1 = winner, n2 = loc, d = winner.distance, f = epsilon)
-        winner.error    += minDist
-        winner.utility  += nextMinDist - minDist
-
-        val numNb = winner.numNeighbors
-        i = 0
-        while (i < numNb) {
-          val nn = winner.neighbor(i)
-          val nb = nodes(nn)
-          assert(nb != null)
-          adaptNode(n = nb, n1 = nb, n2 = loc, d = nb.distance, f = epsilon2)
-          i += 1
+        if (n.error > maxError) {
+          maxError        = n.error
+          maxErrorIdx     = i
         }
 
-        // Connect two winning nodes
-        if (minDistIdx != nextMinDistIdx) addEdge(minDistIdx, nextMinDistIdx)
-
-        // Calculate the age of the connected edges and delete too old edges
-        ageEdgesOfNode(minDistIdx)
-
-        checkConsistency()
-
-        // Insert and delete nodes
-        if (rnd.nextDouble() < lambda && numNodes < _maxNodes) {
-          insertNodeBetween(maxErrorIdx, maxErrorNeighbor(maxErrorIdx))
-          checkConsistency()
+        if (n.utility < minUtility) {
+          minUtility      = n.utility
+          minUtilityIdx   = i
         }
 
-        if ((numNodes > 2) && (numNodes > _maxNodes || maxError > minUtility * utility)) {
-          deleteNode(minUtilityIdx)
-          checkConsistency()
-        }
-
-        checkConsistency()
-
-        step += 1
+        i += 1
       }
+
+      val winner = nodes(minDistIdx)
+      adaptNode(n = winner, n1 = winner, n2 = loc, d = winner.distance, f = epsilon)
+      winner.error    += minDist
+      winner.utility  += nextMinDist - minDist
+
+      val numNb = winner.numNeighbors
+      i = 0
+      while (i < numNb) {
+        val nn = winner.neighbor(i)
+        val nb = nodes(nn)
+        assert(nb != null)
+        adaptNode(n = nb, n1 = nb, n2 = loc, d = nb.distance, f = epsilon2)
+        i += 1
+      }
+
+      // Connect two winning nodes
+      if (minDistIdx != nextMinDistIdx) addEdge(minDistIdx, nextMinDistIdx)
+
+      // Calculate the age of the connected edges and delete too old edges
+      ageEdgesOfNode(minDistIdx)
+
+      checkConsistency()
+
+      // Insert and delete nodes
+      if (rnd.nextDouble() < lambda && numNodes < _maxNodes) {
+        insertNodeBetween(maxErrorIdx, maxErrorNeighbor(maxErrorIdx))
+        checkConsistency()
+      }
+
+      if ((numNodes > 2) && (numNodes > _maxNodes || maxError > minUtility * utility)) {
+        deleteNode(minUtilityIdx)
+        checkConsistency()
+      }
+
+      checkConsistency()
+
+      // step += 1
     }
 
     private def checkConsistency(): Unit = {

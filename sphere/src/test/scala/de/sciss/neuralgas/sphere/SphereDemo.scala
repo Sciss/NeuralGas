@@ -3,10 +3,9 @@ package de.sciss.neuralgas.sphere
 import org.jzy3d.chart.{AWTChart, ChartLauncher}
 import org.jzy3d.colors.Color
 import org.jzy3d.maths.Coord3d
-import org.jzy3d.plot3d.primitives.Point
+import org.jzy3d.plot3d.primitives.{LineStrip, Point}
 import org.jzy3d.plot3d.rendering.canvas.Quality
 
-import scala.annotation.tailrec
 import scala.math.{cos, sin}
 import scala.swing.Swing
 
@@ -48,13 +47,16 @@ object SphereDemo {
   def run(): Unit = {
     val config = SphereGNG.Config(
       pd          = new RandomPD(1),
-      stepSize    = 30000,
       maxEdgeAge  = 5000,
       utility     = 1000,
+      beta        = 0.0005,
+      epsilon     = 0.1,
+      epsilon2    = 0.001,
+      alpha       = 0.5,
       lambda      = 1.0/50
     )
     val sphere = SphereGNG(config)
-    sphere.step()
+    for (_ <- 0 until 10000) sphere.step()
 
 //    val line = new LineStrip(intpCoords)
 //    line.setWireframeColor(Color.BLACK)
@@ -62,21 +64,58 @@ object SphereDemo {
     val chart = new AWTChart(Quality.Intermediate)
     val sq = sphere.nodeIterator.toList
     println(s"sq.size = ${sq.size}")
-    sq.foreach { p =>
-      import p._
-      val theta = math.random() * math.Pi
-      val phi   = math.random() * math.Pi * 2
-      val c = {
+
+    sphere.edgeIterator.foreach { case (p1, p2) =>
+//      val c1 = {
+//        import p1._
+//        val sinTheta  = sin(theta)
+//        val x         = sinTheta * cos(phi)
+//        val y         = sinTheta * sin(phi)
+//        val z         = cos(theta)
+//        new Coord3d(x, y, z)
+//      }
+//
+//      val c2 = {
+//        import p2._
+//        val sinTheta  = sin(theta)
+//        val x         = sinTheta * cos(phi)
+//        val y         = sinTheta * sin(phi)
+//        val z         = cos(theta)
+//        new Coord3d(x, y, z)
+//      }
+
+      val numIntp = math.max(2, (Polar.centralAngle(p1, p2) * 20).toInt)
+      val c = Vector.tabulate(numIntp) { i =>
+        val p = Polar.interpolate(p1, p2, i.toDouble / (numIntp - 1))
+        import p._
         val sinTheta  = sin(theta)
         val x         = sinTheta * cos(phi)
         val y         = sinTheta * sin(phi)
         val z         = cos(theta)
         new Coord3d(x, y, z)
       }
-      chart.add(new Point(c, Color.BLUE, 3f))
+
+//      val ln = new LineStrip(c1, c2)
+      val ln = new LineStrip(c: _*)
+      ln.setWireframeColor(Color.BLACK)
+      chart.add(ln)
     }
 
-//    chart.add(line)
+    sq.foreach { p =>
+      //      val theta = math.random() * math.Pi
+      //      val phi   = math.random() * math.Pi * 2
+      val c = {
+        import p._
+        val sinTheta  = sin(theta)
+        val x         = sinTheta * cos(phi)
+        val y         = sinTheta * sin(phi)
+        val z         = cos(theta)
+        new Coord3d(x, y, z)
+      }
+      chart.add(new Point(c, Color.BLUE, 5f))
+    }
+
+    //    chart.add(line)
 //    chart.add(ctlPts .asJava)
 //    chart.add(intpPts.asJava)
 //    chart

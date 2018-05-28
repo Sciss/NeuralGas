@@ -96,7 +96,6 @@ object SphereGNG {
   /** Configuration of the algorithm.
     *
     * @param pd         probability distribution function
-    * @param stepSize   number of iterations to perform in each step
     * @param epsilon    adaptation factor for 'winner'
     *                   (factor of moving winner node towards pd-emitted position)
     * @param epsilon2   adaptation factor for neighbours of 'winner'
@@ -114,7 +113,6 @@ object SphereGNG {
     */
   final case class Config(
                            pd           : PD,
-                           stepSize     : Int     = 10,
                            epsilon      : Double  = 0.02,
                            epsilon2     : Double  = 0.01,
                            beta         : Double  = 0.001,
