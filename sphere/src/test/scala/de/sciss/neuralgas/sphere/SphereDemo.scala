@@ -10,6 +10,18 @@ import scala.math.{cos, sin}
 import scala.swing.Swing
 
 object SphereDemo {
+  final class RandomEquatorPD(seed: Long) extends PD {
+    private[this] val rnd = new util.Random(seed)
+
+    def poll(loc: LocVar): Unit = {
+//      loc.theta = 0.0
+//      loc.phi   = rnd.nextDouble() * math.Pi * 2
+
+      loc.theta = (rnd.nextDouble() * 2 - 1) * math.Pi
+      loc.phi   = 0.0
+    }
+  }
+
   final class RandomPD(seed: Long) extends PD {
     import Math._
 
@@ -46,7 +58,7 @@ object SphereDemo {
 
   def run(): Unit = {
     val config = SphereGNG.Config(
-      pd          = new RandomPD(1),
+      pd          = new RandomEquatorPD(1), // new RandomPD(1),
       maxEdgeAge  = 5000,
       utility     = 1000,
       beta        = 0.0005,
