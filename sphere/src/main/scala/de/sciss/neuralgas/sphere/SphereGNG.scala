@@ -29,6 +29,8 @@ object SphereGNG {
     var cosTheta  = 1.0
     var sinTheta  = 0.0
 
+    override def toString = f"Node($theta%g, $phi%g); error = $error%g, utility = $utility%g, distance = $distance%g"
+
     def toPolar: Polar = Polar(theta = theta, phi = phi)
 
     def canAddNeighbor: Boolean = _numNeighbors < neighbors.length

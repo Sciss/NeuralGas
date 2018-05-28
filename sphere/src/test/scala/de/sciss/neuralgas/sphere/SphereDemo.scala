@@ -17,7 +17,7 @@ object SphereDemo {
 //      loc.theta = 0.0
 //      loc.phi   = rnd.nextDouble() * math.Pi * 2
 
-      loc.phi   = 0.0 // rnd.nextInt(4) * math.Pi / 4 //  rnd.nextDouble() * math.Pi
+      loc.phi   = rnd.nextInt(2) * math.Pi // 0.0 // 0.0 // rnd.nextInt(4) * math.Pi / 4 //  rnd.nextDouble() * math.Pi
       loc.theta = rnd.nextDouble() * math.Pi // 0.0 // rnd.nextInt(4) * math.Pi / 2 // 0.0
 //
 //      val p   = Polar(loc.theta, loc.phi)
@@ -64,7 +64,7 @@ object SphereDemo {
 
   def run(): Unit = {
     val config = SphereGNG.Config(
-      pd          = new RandomEquatorPD(1), // new RandomPD(1),
+      pd          = new RandomEquatorPD(2), // new RandomPD(1),
       maxEdgeAge  = 5000,
       utility     = 1000,
       beta        = 0.0005,
@@ -124,7 +124,7 @@ object SphereDemo {
       chart.add(ln)
     }
 
-    val loc = new LocVar(0.0, 0.0)
+    val loc = new LocVar
     val sq1 = Vector.fill(100) { config.pd.poll(loc); Polar(loc.theta, loc.phi) }
 
     sq1.foreach { p =>

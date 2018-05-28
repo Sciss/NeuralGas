@@ -1,6 +1,15 @@
 package de.sciss.neuralgas.sphere
 
-final class LocVar(var theta: Double, var phi: Double) extends Loc {
-  val cosTheta: Double = Math.cos(theta)  // lazy?
-  val sinTheta: Double = Math.sin(theta)  // lazy?
+final class LocVar extends Loc {
+  var theta   : Double = 0.0
+  var phi     : Double = 0.0
+  var cosTheta: Double = 1.0
+  var sinTheta: Double = 0.0
+
+  def updateTri(): Unit = {
+    cosTheta = Math.cos(theta)
+    sinTheta = Math.sin(theta)
+  }
+
+  override def toString = f"LocVar($theta%g, $phi%g)"
 }

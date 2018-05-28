@@ -24,7 +24,7 @@ object SphereGNGImpl {
   }
 
   private final class Impl(val config: Config) extends SphereGNG {
-    private[this] val loc         = new LocVar(0.0, 0.0)
+    private[this] val loc         = new LocVar
 
     private[this] val nodes       = new Array[Node](config.maxNodes0)
     private[this] val edges       = new Array[Edge](config.maxEdges0)
@@ -72,6 +72,7 @@ object SphereGNGImpl {
       var toDelete        = -1
 
       pd.poll(loc)
+      loc.updateTri()
 
       var i = 0
       while (i < numNodes) {
@@ -150,22 +151,22 @@ object SphereGNGImpl {
 
     private def checkConsistency(): Unit = ()
 
-    private def checkConsistency_HA(): Unit = {
-      require (numNodes >= 0 && numEdges >= 0)
-      for (ni <- 0 until numNodes) {
-        val n = nodes(ni)
-        require (n != null)
-        for (j <- 0 until n.numNeighbors) {
-          val nj = n.neighbor(j)
-          require (nj >= 0 && nj < numNodes)
-          val m = nodes(nj)
-          require (m.isNeighbor(ni))
-
-          val ei = findEdge(ni, nj)
-          require (ei >= 0 && ei < numEdges)
-        }
-      }
-    }
+//    private def checkConsistency(): Unit = {
+//      require (numNodes >= 0 && numEdges >= 0)
+//      for (ni <- 0 until numNodes) {
+//        val n = nodes(ni)
+//        require (n != null)
+//        for (j <- 0 until n.numNeighbors) {
+//          val nj = n.neighbor(j)
+//          require (nj >= 0 && nj < numNodes)
+//          val m = nodes(nj)
+//          require (m.isNeighbor(ni))
+//
+//          val ei = findEdge(ni, nj)
+//          require (ei >= 0 && ei < numEdges)
+//        }
+//      }
+//    }
 
     def nodeIterator: Iterator[Polar]           = nodes.iterator.map(_.toPolar).take(numNodes)
     def edgeIterator: Iterator[(Polar, Polar)]  = edges.iterator.map { e =>
@@ -224,7 +225,8 @@ object SphereGNGImpl {
       // interpolate data
       n.error   = (n1.error   + n2.error  ) / 2.0
       n.utility = (n1.utility + n2.utility) / 2.0
-      adaptNode(n = n, n1 = n1, n2 = n2, d = centralAngle(n1, n2), f = 0.5)
+      val d     = centralAngle(n1, n2)
+      adaptNode(n = n, n1 = n1, n2 = n2, d = d, f = 0.5)
 
       val numOld = numNodes
       nodes(numOld) = n
