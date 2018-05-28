@@ -45,6 +45,7 @@ object SphereGNGImpl {
       nodes(1) = mkRandomNode()
       numNodes = 2
       addEdge(0, 1)
+      checkConsistency()
     }
 
     private def mkRandomNode(): Node = {
@@ -131,13 +132,17 @@ object SphereGNGImpl {
         // Calculate the age of the connected edges and delete too old edges
         ageEdgesOfNode(minDistIdx)
 
+        checkConsistency()
+
         // Insert and delete nodes
         if (rnd.nextDouble() < lambda && numNodes < _maxNodes) {
           insertNodeBetween(maxErrorIdx, maxErrorNeighbor(maxErrorIdx))
+          checkConsistency()
         }
 
         if ((numNodes > 2) && (numNodes > _maxNodes || maxError > minUtility * utility)) {
           deleteNode(minUtilityIdx)
+          checkConsistency()
         }
 
         checkConsistency()
@@ -152,10 +157,13 @@ object SphereGNGImpl {
         val n = nodes(ni)
         require (n != null)
         for (j <- 0 until n.numNeighbors) {
-          val nn = n.neighbor(j)
-          require (nn >= 0 && nn < numNodes)
-          val m = nodes(nn)
+          val nj = n.neighbor(j)
+          require (nj >= 0 && nj < numNodes)
+          val m = nodes(nj)
           require (m.isNeighbor(ni))
+
+          val ei = findEdge(ni, nj)
+          require (ei >= 0 && ei < numEdges)
         }
       }
     }
@@ -228,16 +236,16 @@ object SphereGNGImpl {
     }
 
     private def findEdge(i: Int, j: Int): Int = {
-      var i = 0
-      val e = edges
-      val n = numEdges
-      while (i < n) { // XXX TODO: not efficient
-        val ei = e(i)
+      var ni = 0
+      val e  = edges
+      val n  = numEdges
+      while (ni < n) { // XXX TODO: not efficient
+        val ei = e(ni)
         if ((ei.from == i && ei.to == j) ||
             (ei.from == j && ei.to == i))
-          return i
+          return ni
 
-        i += 1
+        ni += 1
       }
       -1
     }
