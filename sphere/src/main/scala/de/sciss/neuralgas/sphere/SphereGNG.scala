@@ -18,7 +18,7 @@ import de.sciss.neuralgas.sphere.SphereGNG.Config
 object SphereGNG {
   final class Node(val id: Int, maxNeighbors: Int) extends Loc {
     private[this] var _numNeighbors = 0
-    private[this] val neighbors = new Array[Int](maxNeighbors)
+    private[this] val neighbors = new Array[Node](maxNeighbors)
 
     var theta     = 0.0
     var phi       = 0.0
@@ -35,18 +35,19 @@ object SphereGNG {
 
     def canAddNeighbor: Boolean = _numNeighbors < neighbors.length
 
-    def addNeighbor(ni: Int): Unit = {
-      neighbors(_numNeighbors) = ni
+    def addNeighbor(n: Node): Unit = {
+      neighbors(_numNeighbors) = n
       _numNeighbors += 1
     }
 
-    def removeNeighbor(ni: Int): Unit = {
+    def removeNeighbor(n: Node): Unit = {
+      val ni = n.id
       var i = 0
       while (i < _numNeighbors) {
-        if (neighbors(i) == ni) {
-          _numNeighbors -= 1
-          neighbors(i)             = neighbors(_numNeighbors)
-          neighbors(_numNeighbors) = -1
+        if (neighbors(i).id == ni) {
+          _numNeighbors  -= 1
+          neighbors(i)    = neighbors(_numNeighbors)
+          neighbors(_numNeighbors) = null
           return
         }
         i += 1
@@ -54,10 +55,11 @@ object SphereGNG {
       // throw new IllegalArgumentException(s"No neighbor $ni found")
     }
 
-    def replaceNeighbor(before: Int, now: Int): Unit = {
+    def replaceNeighbor(before: Node, now: Node): Unit = {
+      val ni = before.id
       var i = 0
       while (i < _numNeighbors) {
-        if (neighbors(i) == before) {
+        if (neighbors(i).id == ni) {
           neighbors(i) = now
           return
         }
@@ -66,7 +68,7 @@ object SphereGNG {
       // throw new IllegalArgumentException(s"No neighbor $before found")
     }
 
-    def neighbor(idx: Int): Int = neighbors(idx)
+    def neighbor(idx: Int): Node = neighbors(idx)
 
     def updateTri(theta: Double, phi: Double): Unit = {
       this.theta  = theta
@@ -77,17 +79,22 @@ object SphereGNG {
 
     def numNeighbors: Int = _numNeighbors
 
-    def isNeighbor(ni: Int): Boolean = {
+    def isNeighbor(n: Node): Boolean = {
+      val ni = n.id
       var i = 0
       while (i < _numNeighbors) {
-        if (neighbors(i) == ni) return true
+        if (neighbors(i).id == ni) return true
         i += 1
       }
       false
     }
   }
 
-  final class Edge(var from: Int, var to: Int) {
+  final class Edge(val from: Node, val to: Node) {
+    var age: Int = 0
+  }
+
+  final class EdgeOLD(var from: Int, var to: Int) {
     var age: Int = 0
 
     def replace(before: Int, now: Int): Unit = {

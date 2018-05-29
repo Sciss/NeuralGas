@@ -16,6 +16,8 @@ package impl
 
 import de.sciss.neuralgas.sphere.SphereGNG.{Config, Edge, Node}
 
+import scala.collection.mutable
+
 object SphereGNGImpl {
   def apply(config: Config): SphereGNG = {
     val res = new Impl(config)
@@ -27,10 +29,8 @@ object SphereGNGImpl {
     private[this] val loc         = new LocVar
 
     private[this] val nodes       = new Array[Node](config.maxNodes0)
-    private[this] val edges       = new Array[Edge](config.maxEdges0)
+    private[this] val edgeMap     = mutable.Map.empty[Int, mutable.Buffer[Edge]]
     private[this] var numNodes    = 0
-    private[this] var numEdges    = 0
-//    private[this] var stepCount   = 0
     private[this] val decay       = 1.0 - config.beta
     private[this] val rnd         = new util.Random(config.seed)
     private[this] var _maxNodes   = config.maxNodes0
@@ -42,10 +42,12 @@ object SphereGNGImpl {
       _maxNodes = value
 
     def init(): Unit = {
-      nodes(0) = mkRandomNode()
-      nodes(1) = mkRandomNode()
+      val n1 = mkRandomNode()
+      val n2 = mkRandomNode()
+      nodes(0) = n1
+      nodes(1) = n2
       numNodes = 2
-      addEdge(0, 1)
+      addEdge(n1, n2)
       checkConsistency()
     }
 
@@ -59,9 +61,6 @@ object SphereGNGImpl {
       val res   = mkNode()
       config.pd.poll(loc)
       res.updateTri(loc.theta, loc.phi)
-
-//      require (!hasNaNs(res), "Oh noes 4")
-
       res
     }
 
@@ -70,13 +69,13 @@ object SphereGNGImpl {
       // stepCount += 1
 
       var maxError        = 0.0
-      var maxErrorIdx     = 0
+      var maxErrorN       = null : Node
       var minUtility      = Double.PositiveInfinity
       var minUtilityIdx   = 0
       var minDist         = Double.PositiveInfinity
-      var minDistIdx      = 0
+      var minDistN        = null : Node
       var nextMinDist     = Double.PositiveInfinity
-      var nextMinDistIdx  = 0
+      var nextMinDistN    = null : Node
       var toDelete        = -1
 
       pd.poll(loc)
@@ -89,41 +88,37 @@ object SphereGNGImpl {
         // Mark a node without neighbors for deletion
         if (n.numNeighbors == 0) toDelete = i
 
-        // val d = centralAngle(n.theta, n.phi, loc.theta, loc.phi)
         val d = centralAngle(n, loc)
         n.distance  = d
         n.error    *= decay
         n.utility  *= decay
 
         if (d < minDist) {
-          nextMinDist     = minDist
-          nextMinDistIdx  = minDistIdx
-          minDist         = d
-          minDistIdx      = i
+          nextMinDist   = minDist
+          nextMinDistN  = minDistN
+          minDist       = d
+          minDistN      = n
         } else if (d < nextMinDist) {
-          nextMinDist     = d
-          nextMinDistIdx  = i
+          nextMinDist   = d
+          nextMinDistN  = n
         }
 
         if (n.error > maxError) {
-          maxError        = n.error
-          maxErrorIdx     = i
+          maxError      = n.error
+          maxErrorN     = n
         }
 
         if (n.utility < minUtility) {
-          minUtility      = n.utility
-          minUtilityIdx   = i
+          minUtility    = n.utility
+//          minUtilityN   = n
+          minUtilityIdx = i
         }
 
         i += 1
       }
 
-      val winner = nodes(minDistIdx)
+      val winner = minDistN // nodes(minDistIdx)
       adaptNode(n = winner, n1 = winner, n2 = loc, d = winner.distance, f = epsilon)
-
-//      if (hasNaNs(winner)) {
-//        println("Oh noes 1")
-//      }
 
       winner.error    += minDist
       winner.utility  += nextMinDist - minDist
@@ -131,33 +126,28 @@ object SphereGNGImpl {
       val numNb = winner.numNeighbors
       i = 0
       while (i < numNb) {
-        val nn = winner.neighbor(i)
-        val nb = nodes(nn)
+        val nb = winner.neighbor(i)
         assert(nb != null)
         adaptNode(n = nb, n1 = nb, n2 = loc, d = nb.distance, f = epsilon2)
-
-//        if (hasNaNs(nb)) {
-//          println("Oh noes 2")
-//        }
-
         i += 1
       }
 
       // Connect two winning nodes
-      if (minDistIdx != nextMinDistIdx) addEdge(minDistIdx, nextMinDistIdx)
+      if (minDistN != nextMinDistN) addEdge(minDistN, nextMinDistN)
 
       // Calculate the age of the connected edges and delete too old edges
-      ageEdgesOfNode(minDistIdx)
+      ageEdgesOfNode(minDistN)
 
       checkConsistency()
 
       // Insert and delete nodes
       if (rnd.nextDouble() < lambda && numNodes < _maxNodes) {
-        insertNodeBetween(maxErrorIdx, maxErrorNeighbor(maxErrorIdx))
+        insertNodeBetween(maxErrorN, maxErrorNeighbor(maxErrorN))
         checkConsistency()
       }
 
       if ((numNodes > 2) && (numNodes > _maxNodes || maxError > minUtility * utility)) {
+//        deleteNode(minUtilityN)
         deleteNode(minUtilityIdx)
         checkConsistency()
       }
@@ -191,54 +181,51 @@ object SphereGNGImpl {
 //    }
 
     def nodeIterator: Iterator[Polar]           = nodes.iterator.map(_.toPolar).take(numNodes)
-    def edgeIterator: Iterator[(Polar, Polar)]  = edges.iterator.map { e =>
-      nodes(e.from).toPolar -> nodes(e.to).toPolar
-    } .take(numEdges)
+    def edgeIterator: Iterator[(Polar, Polar)]  = edgeMap.valuesIterator.flatMap { buf =>
+      buf.iterator.collect {
+        case e if e.from.id < e.to.id => (e.from.toPolar, e.to.toPolar)
+      }
+    }
 
-    private def maxErrorNeighbor(ni: Int): Int = {
+    private def maxErrorNeighbor(n: Node): Node = {
       var resErr  = Double.NegativeInfinity
-      var resIdx  = ni // -1
-      val n       = nodes(ni)
+      var res     = n
       val nNb     = n.numNeighbors
       var i       = 0
       while (i < nNb) {
-        val nn  = n.neighbor(i)
-        val nb = nodes(nn)
+        val nb = n.neighbor(i)
         if (nb.error > resErr) {
-          resErr = nb.error
-          resIdx = nn
+          resErr  = nb.error
+          res     = nb
         }
         i += 1
       }
 
-      resIdx
+      res
     }
 
-    private def addEdge(from: Int, to: Int): Unit =
-      if (nodes(from).isNeighbor(to)) {
-        val i = findEdge(from, to)
-        if (i != -1) edges(i).age = 0
+    private def addEdge(from: Node, to: Node): Unit =
+      if (from.isNeighbor(to)) {
+        val fromId  = from.id
+        val buf     = edgeMap(fromId)
+        val e       = buf.find(e => e.from.id == fromId || e.to.id == fromId).get
+        e.age = 0
 
-      } else if (numEdges < config.maxEdges0) {
-        val nFrom = nodes(from)
-        val nTo   = nodes(to  )
+      } else {
+        if (from.canAddNeighbor && to.canAddNeighbor) {
+          from.addNeighbor(to  )
+          to  .addNeighbor(from)
 
-        if (nFrom.canAddNeighbor && nTo.canAddNeighbor) {
-          nFrom.addNeighbor(to  )
-          nTo  .addNeighbor(from)
-
-          val e   = new Edge(from, to)
-          e.from  = from
-          e.to    = to
-          edges(numEdges) = e
-          numEdges += 1
+          val bufFrom = edgeMap.getOrElseUpdate(from.id, mutable.Buffer.empty)
+          val bufTo   = edgeMap.getOrElseUpdate(to  .id, mutable.Buffer.empty)
+          val e       = new Edge(from, to)
+          bufFrom += e
+          bufTo   += e
         }
       }
 
-    private def insertNodeBetween(ni1: Int, ni2: Int): Unit = {
+    private def insertNodeBetween(n1: Node, n2: Node): Unit = {
       val n   = mkNode()
-      val n1  = nodes(ni1)
-      val n2  = nodes(ni2)
 
       val alphaDecay = 1.0 - config.alpha
       n1.error *= alphaDecay
@@ -250,54 +237,31 @@ object SphereGNGImpl {
       val d     = centralAngle(n1, n2)
       adaptNode(n = n, n1 = n1, n2 = n2, d = d, f = 0.5)
 
-//      if (hasNaNs(n)) {
-//        println("Oh noes 3")
-//      }
-
       val numOld = numNodes
       nodes(numOld) = n
-      deleteEdgeBetween(ni1, ni2)
-      addEdge(ni1, numOld)
-      addEdge(ni2, numOld)
+      deleteEdgeBetween(n1, n2)
+      addEdge(n1, n)
+      addEdge(n2, n)
       numNodes = numOld + 1
     }
 
-    private def findEdge(i: Int, j: Int): Int = {
-      var ni = 0
-      val e  = edges
-      val n  = numEdges
-      while (ni < n) { // XXX TODO: not efficient
-        val ei = e(ni)
-        if ((ei.from == i && ei.to == j) ||
-            (ei.from == j && ei.to == i))
-          return ni
-
-        ni += 1
-      }
-      -1
-    }
-
-    private def ageEdgesOfNode(ni: Int): Unit = {
-      var i = numEdges - 1
-      while (i >= 0) { // XXX TODO: not efficient
-        val ei = edges(i)
-        if (ei.from == ni || ei.to == ni) {
-          ei.age += 1
-          if (ei.age > config.maxEdgeAge) {
-            deleteEdge(i)
-          }
+    private def ageEdgesOfNode(n: Node): Unit = {
+      val edges = edgeMap(n.id)
+      edges.foreach { e =>
+        e.age += 1
+        if (e.age > config.maxEdgeAge) {
+          deleteEdge(e)
         }
-        i -= 1
       }
     }
 
     private def deleteNode(ni: Int): Unit = {
-      val n   = nodes(ni)
-      val nNb = n.numNeighbors
+      val n     = nodes(ni)
+      val nNb   = n.numNeighbors
 
       var i = 0
       while (i < nNb) {
-        deleteEdgeBetween(ni, n.neighbor(0))
+        deleteEdgeBetween(n, n.neighbor(0))
         i += 1
       }
 
@@ -306,39 +270,42 @@ object SphereGNGImpl {
       nodes(ni)     = nodes(numNew)
       nodes(numNew) = null
 
-      i = 0
-      while (i < numNew) { // XXX TODO: not efficient
-        nodes(i).replaceNeighbor(numNew, ni)
-        i += 1
-      }
-      i = 0
-      val _numEdges = numEdges
-      while (i < _numEdges) { // XXX TODO: not efficient
-        edges(i).replace(numNew, ni)
-        i += 1
-      }
+      edgeMap.remove(n.id)
     }
 
-    private def deleteEdgeBetween(from: Int, to: Int): Unit = {
-      val i = findEdge(from, to)
-      if (i != -1) {
-        nodes(edges(i).from).removeNeighbor(edges(i).to   )
-        nodes(edges(i).to  ).removeNeighbor(edges(i).from )
-        val numNew    = numEdges - 1
-        numEdges      = numNew
-        edges(i)      = edges(numNew)
-        edges(numNew) = null
-      }
+    @inline
+    private def remove[A](xs: mutable.Buffer[A], elem: A): Unit =
+      xs.remove(xs.indexOf(elem))
+
+//    private def remove[A](xs: List[A], elem: A): List[A] = {
+//
+//      @tailrec def loop(rem: List[A], res: List[A]): List[A] = rem match {
+//        case `elem` :: tail => res.reverse ::: tail
+//        case hd     :: tail => loop(tail, hd :: res)
+//        case Nil            => res.reverse
+//      }
+//
+//      loop(xs, Nil)
+//    }
+
+    // takes care of removing neighbours as well
+    private def deleteEdge(e: Edge): Unit = {
+      import e._
+      from.removeNeighbor(to)
+      to  .removeNeighbor(from)
+      val fromId  = from.id
+      val toId    = to  .id
+      remove(edgeMap(fromId), e)
+      remove(edgeMap(toId  ), e)
     }
 
-    private def deleteEdge(ei: Int): Unit = {
-      val e = edges(ei)
-      nodes(e.from).removeNeighbor(e.to)
-      nodes(e.to  ).removeNeighbor(e.from)
-      val newNum    = numEdges - 1
-      numEdges      = newNum
-      edges(ei)     = edges(newNum)
-      edges(newNum) = null
+    // takes care of removing neighbours as well.
+    // allowed to call this when there _is_ no edge.
+    private def deleteEdgeBetween(from: Node, to: Node): Unit = {
+      val fromId  = from.id
+      val buf     = edgeMap(from.id)
+      val eOpt    = buf.find(e => e.from.id == fromId || e.to.id == fromId)
+      eOpt.foreach(deleteEdge)
     }
 
     private[this] final val PiH = math.Pi * 0.5
