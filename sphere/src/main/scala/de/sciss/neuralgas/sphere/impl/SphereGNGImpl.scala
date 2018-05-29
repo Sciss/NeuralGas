@@ -338,25 +338,76 @@ object SphereGNGImpl {
 
     private[this] final val PiH = math.Pi * 0.5
 
+    // cf. https://math.stackexchange.com/questions/2799079/interpolating-two-spherical-coordinates-theta-phi/
+    // N.B. this is actually slightly slower than the 'avform' version below based
+    // on lat/lon
+    private def adaptNode_VERSION(n: Node, n1: Loc, n2: Loc, d: Double, f: Double): Unit = {
+      import Math._
+      val x1      = n1.sinTheta * cos(n1.phi)
+      val y1      = n1.sinTheta * sin(n1.phi)
+      val z1      = n1.cosTheta
+
+      val x2      = n2.sinTheta * cos(n2.phi)
+      val y2      = n2.sinTheta * sin(n2.phi)
+      val z2      = n2.cosTheta
+
+      val kx0     = y1 * z2 - z1 * y2
+      val ky0     = z1 * x2 - x1 * z2
+      val kz0     = x1 * y2 - y1 * x2
+      val k0l     = sqrt(kx0*kx0 + ky0*ky0 + kz0*kz0)
+
+      val kx      = kx0 / k0l
+      val ky      = ky0 / k0l
+      val kz      = kz0 / k0l
+
+      val ang     = acos(x1 * x2 + y1 * y2 + z1 * z2) // == d
+
+      val psi     = ang * f
+      val cosPsi  = cos(psi)
+      val sinPsi  = sin(psi)
+      val cosPsiI = 1.0 - cosPsi
+
+      val k1d     = kx * x1 + ky * y1 + kz * z1
+      val k1cx    = ky * z1 - kz * y1
+      val k1cy    = kz * x1 - kx * z1
+      val k1cz    = kx * y1 - ky * x1
+
+      val psiX    = x1 * cosPsi + k1cx * sinPsi + kx * k1d * cosPsiI
+      val psiY    = y1 * cosPsi + k1cy * sinPsi + ky * k1d * cosPsiI
+      val psiZ    = z1 * cosPsi + k1cz * sinPsi + kz * k1d * cosPsiI
+
+      n.theta     = acos(psiZ)
+      n.phi       = atan2(psiY, psiX)
+      n.updateTri()
+    }
+
+    // cf. http://edwilliams.org/avform.htm
     private def adaptNode(n: Node, n1: Loc, n2: Loc, d: Double, f: Double): Unit = {
       import Math._
-      // http://edwilliams.org/avform.htm
-      val lat1    = PiH - n1.theta
+//      val lat1    = PiH - n1.theta
       val lon1    = n1.phi
-      val lat2    = PiH - n2.theta
+//      val lat2    = PiH - n2.theta
       val lon2    = n2.phi
 
       val sinD    = sin(d)
       val a       = sin((1 - f) * d) / sinD
-      val b       = sin( f      * d) / sinD
-      // todo: optimise to use cosTheta, sinTheta
-      val cosLat1 = cos(lat1)
+      val b       = if (f == 0.5) a else sin(f * d) / sinD
+
+//      val cosLat1 = cos(lat1)
+//      assert(abs(cosLat1 - n1.sinTheta) < 1.0e-4, s"$cosLat1 versus ${n1.sinTheta}")
+      val cosLat1 = n1.sinTheta
       val cosLon1 = cos(lon1)
-      val cosLat2 = cos(lat2)
+//      val cosLat2 = cos(lat2)
+//      assert(abs(cosLat2 - n2.sinTheta) < 1.0e-4, s"$cosLat2 versus ${n2.sinTheta}")
+      val cosLat2 = n2.sinTheta
       val cosLon2 = cos(lon2)
-      val sinLat1 = sin(lat1)
+//      val sinLat1 = sin(lat1)
+//      assert(abs(sinLat1 - n1.cosTheta) < 1.0e-4, s"$sinLat1 versus ${n1.cosTheta}")
+      val sinLat1 = n1.cosTheta
       val sinLon1 = sin(lon1)
-      val sinLat2 = sin(lat2)
+//      val sinLat2 = sin(lat2)
+//      assert(abs(sinLat2 - n2.cosTheta) < 1.0e-4, s"$sinLat2 versus ${n2.cosTheta}")
+      val sinLat2 = n2.cosTheta
       val sinLon2 = sin(lon2)
       val x       = a * cosLat1 * cosLon1 + b * cosLat2 * cosLon2
       val y       = a * cosLat1 * sinLon1 + b * cosLat2 * sinLon2
@@ -368,13 +419,6 @@ object SphereGNGImpl {
       n.phi       = lon
       n.updateTri()
     }
-
-//    // cf. https://math.stackexchange.com/questions/231221/great-arc-distance-between-two-points-on-a-unit-sphere
-//    @inline
-//    private def centralAngle(theta1: Double, phi1: Double, theta2: Double, phi2: Double): Double = {
-//      import Math._
-//      acos(cos(theta1) * cos(theta2) + sin(theta1) * sin(theta2) * cos(phi1 - phi2))
-//    }
 
     @inline
     private def centralAngle(n1: Loc, n2: Loc): Double = {
