@@ -34,6 +34,7 @@ object SphereGNGImpl {
     private[this] val decay       = 1.0 - config.beta
     private[this] val rnd         = new util.Random(config.seed)
     private[this] var _maxNodes   = config.maxNodes0
+    private[this] var nodeIdCount = 0
 
     def maxNodes: Int = _maxNodes
 
@@ -48,12 +49,16 @@ object SphereGNGImpl {
       checkConsistency()
     }
 
+    private def mkNode(): Node = {
+      val id = nodeIdCount
+      nodeIdCount += 1
+      new Node(id = id, maxNeighbors = config.maxNeighbors)
+    }
+
     private def mkRandomNode(): Node = {
-      val res   = new Node(config.maxNeighbors)
+      val res   = mkNode()
       config.pd.poll(loc)
-      res.theta = loc.theta
-      res.phi   = loc.phi
-      res.updateTri()
+      res.updateTri(loc.theta, loc.phi)
 
 //      require (!hasNaNs(res), "Oh noes 4")
 
@@ -231,9 +236,9 @@ object SphereGNGImpl {
       }
 
     private def insertNodeBetween(ni1: Int, ni2: Int): Unit = {
-      val n = new Node(config.maxNeighbors)
-      val n1 = nodes(ni1)
-      val n2 = nodes(ni2)
+      val n   = mkNode()
+      val n1  = nodes(ni1)
+      val n2  = nodes(ni2)
 
       val alphaDecay = 1.0 - config.alpha
       n1.error *= alphaDecay
@@ -376,48 +381,50 @@ object SphereGNGImpl {
       val psiY    = y1 * cosPsi + k1cy * sinPsi + ky * k1d * cosPsiI
       val psiZ    = z1 * cosPsi + k1cz * sinPsi + kz * k1d * cosPsiI
 
-      n.theta     = acos(psiZ)
-      n.phi       = atan2(psiY, psiX)
-      n.updateTri()
+      val theta   = acos(psiZ)
+      val phi     = atan2(psiY, psiX)
+      n.updateTri(theta, phi)
     }
 
     // cf. http://edwilliams.org/avform.htm
     private def adaptNode(n: Node, n1: Loc, n2: Loc, d: Double, f: Double): Unit = {
       import Math._
-//      val lat1    = PiH - n1.theta
-      val lon1    = n1.phi
-//      val lat2    = PiH - n2.theta
-      val lon2    = n2.phi
+//      val lat1      = PiH - n1.theta
+      val lon1      = n1.phi
+//      val lat2      = PiH - n2.theta
+      val lon2      = n2.phi
 
-      val sinD    = sin(d)
-      val a       = sin((1 - f) * d) / sinD
-      val b       = if (f == 0.5) a else sin(f * d) / sinD
+      val sinD      = sin(d)
+      val a         = sin((1 - f) * d) / sinD
+      val b         = if (f == 0.5) a else sin(f * d) / sinD
 
 //      val cosLat1 = cos(lat1)
 //      assert(abs(cosLat1 - n1.sinTheta) < 1.0e-4, s"$cosLat1 versus ${n1.sinTheta}")
-      val cosLat1 = n1.sinTheta
-      val cosLon1 = cos(lon1)
+      val cosLat1   = n1.sinTheta
+      val cosLon1   = cos(lon1)
 //      val cosLat2 = cos(lat2)
 //      assert(abs(cosLat2 - n2.sinTheta) < 1.0e-4, s"$cosLat2 versus ${n2.sinTheta}")
-      val cosLat2 = n2.sinTheta
-      val cosLon2 = cos(lon2)
+      val cosLat2   = n2.sinTheta
+      val cosLon2   = cos(lon2)
 //      val sinLat1 = sin(lat1)
 //      assert(abs(sinLat1 - n1.cosTheta) < 1.0e-4, s"$sinLat1 versus ${n1.cosTheta}")
-      val sinLat1 = n1.cosTheta
-      val sinLon1 = sin(lon1)
+      val sinLat1   = n1.cosTheta
+      val sinLon1   = sin(lon1)
 //      val sinLat2 = sin(lat2)
 //      assert(abs(sinLat2 - n2.cosTheta) < 1.0e-4, s"$sinLat2 versus ${n2.cosTheta}")
-      val sinLat2 = n2.cosTheta
-      val sinLon2 = sin(lon2)
-      val x       = a * cosLat1 * cosLon1 + b * cosLat2 * cosLon2
-      val y       = a * cosLat1 * sinLon1 + b * cosLat2 * sinLon2
-      val z       = a * sinLat1           + b * sinLat2
-      val lat     = atan2(z, sqrt(x * x + y * y))
-      val lon     = atan2(y, x)
+      val sinLat2   = n2.cosTheta
+      val sinLon2   = sin(lon2)
+      val aCosLat1  = a * cosLat1
+      val bCosLat2  = b * cosLat2
+      val x         = aCosLat1 * cosLon1 + bCosLat2 * cosLon2
+      val y         = aCosLat1 * sinLon1 + bCosLat2 * sinLon2
+      val z         = a * sinLat1        + b * sinLat2
+      val lat       = atan2(z, sqrt(x * x + y * y))
+      val lon       = atan2(y, x)
 
-      n.theta     = PiH - lat
-      n.phi       = lon
-      n.updateTri()
+      val theta     = PiH - lat
+      val phi       = lon
+      n.updateTri(theta, phi)
     }
 
     @inline

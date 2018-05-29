@@ -16,7 +16,7 @@ package de.sciss.neuralgas.sphere
 import de.sciss.neuralgas.sphere.SphereGNG.Config
 
 object SphereGNG {
-  final class Node(maxNeighbors: Int) extends Loc {
+  final class Node(val id: Int, maxNeighbors: Int) extends Loc {
     private[this] var _numNeighbors = 0
     private[this] val neighbors = new Array[Int](maxNeighbors)
 
@@ -29,7 +29,7 @@ object SphereGNG {
     var cosTheta  = 1.0
     var sinTheta  = 0.0
 
-    override def toString = f"Node($theta%g, $phi%g); error = $error%g, utility = $utility%g, distance = $distance%g"
+    override def toString = f"Node($id, theta = $theta%g, phi = $phi%g); error = $error%g, utility = $utility%g, distance = $distance%g"
 
     def toPolar: Polar = Polar(theta = theta, phi = phi)
 
@@ -68,9 +68,11 @@ object SphereGNG {
 
     def neighbor(idx: Int): Int = neighbors(idx)
 
-    def updateTri(): Unit = {
-      cosTheta = Math.cos(theta)
-      sinTheta = Math.sin(theta)
+    def updateTri(theta: Double, phi: Double): Unit = {
+      this.theta  = theta
+      this.phi    = phi
+      cosTheta    = Math.cos(theta)
+      sinTheta    = Math.sin(theta)
     }
 
     def numNeighbors: Int = _numNeighbors
