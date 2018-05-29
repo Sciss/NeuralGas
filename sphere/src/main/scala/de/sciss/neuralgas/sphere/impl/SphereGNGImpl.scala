@@ -54,6 +54,9 @@ object SphereGNGImpl {
       res.theta = loc.theta
       res.phi   = loc.phi
       res.updateTri()
+
+//      require (!hasNaNs(res), "Oh noes 4")
+
       res
     }
 
@@ -112,6 +115,11 @@ object SphereGNGImpl {
 
       val winner = nodes(minDistIdx)
       adaptNode(n = winner, n1 = winner, n2 = loc, d = winner.distance, f = epsilon)
+
+//      if (hasNaNs(winner)) {
+//        println("Oh noes 1")
+//      }
+
       winner.error    += minDist
       winner.utility  += nextMinDist - minDist
 
@@ -122,6 +130,11 @@ object SphereGNGImpl {
         val nb = nodes(nn)
         assert(nb != null)
         adaptNode(n = nb, n1 = nb, n2 = loc, d = nb.distance, f = epsilon2)
+
+//        if (hasNaNs(nb)) {
+//          println("Oh noes 2")
+//        }
+
         i += 1
       }
 
@@ -149,6 +162,10 @@ object SphereGNGImpl {
       // step += 1
     }
 
+//    private def hasNaNs(n: Loc): Boolean =
+//      n.theta.isNaN || n.phi.isNaN
+
+    @inline
     private def checkConsistency(): Unit = ()
 
 //    private def checkConsistency(): Unit = {
@@ -227,6 +244,10 @@ object SphereGNGImpl {
       n.utility = (n1.utility + n2.utility) / 2.0
       val d     = centralAngle(n1, n2)
       adaptNode(n = n, n1 = n1, n2 = n2, d = d, f = 0.5)
+
+//      if (hasNaNs(n)) {
+//        println("Oh noes 3")
+//      }
 
       val numOld = numNodes
       nodes(numOld) = n

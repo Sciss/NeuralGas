@@ -92,7 +92,8 @@ lazy val core = project.withId(s"$baseNameL-core").in(file("core"))
     description := s"$baseDescr - algorithms",
     libraryDependencies ++= Seq(
       "org.scala-lang" %  "scala-library" % scalaVersion.value % Test
-    )
+    ),
+    mimaPreviousArtifacts := Set("de.sciss" % s"$baseNameL-core" % mimaVersion)
   )
 
 lazy val ui = project.withId(s"$baseNameL-ui").in(file("ui"))
@@ -108,7 +109,8 @@ lazy val ui = project.withId(s"$baseNameL-ui").in(file("ui"))
       "org.scala-lang" %  "scala-library" % scalaVersion.value % Test,
       "de.sciss"       %% "fileutil"      % deps.test.fileUtil % Test,
       "de.sciss"       %% "pdflitz"       % deps.test.pdflitz  % Test
-    )
+    ),
+    mimaPreviousArtifacts := Set("de.sciss" % s"$baseNameL-ui" % mimaVersion)
   )
 
 lazy val sphere = project.withId(s"$baseNameL-sphere").in(file("sphere"))
@@ -122,4 +124,5 @@ lazy val sphere = project.withId(s"$baseNameL-sphere").in(file("sphere"))
       "org.jzy3d" %   "jzy3d-api" % deps.test.jzy3d     % Test,
       "de.sciss"  %%  "swingplus" % deps.test.swingPlus % Test
     )
+    // mimaPreviousArtifacts := Set("de.sciss" %% s"$baseNameL-sphere" % mimaVersion)
   )
