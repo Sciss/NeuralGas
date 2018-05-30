@@ -15,17 +15,19 @@ package de.sciss.neuralgas.sphere
 
 object Observer {
   object Dummy extends Observer {
-    def gngNodeMoved    (n: Node): Unit = ()
+    def gngNodeUpdated  (n: Node): Unit = ()
+    def gngEdgeUpdated  (e: Edge): Unit = ()
     def gngNodeInserted (n: Node): Unit = ()
     def gngEdgeInserted (e: Edge): Unit = ()
     def gngNodeRemoved  (n: Node): Unit = ()
-    def gngEdgeRemoved  (e: Node): Unit = ()
+    def gngEdgeRemoved  (e: Edge): Unit = ()
   }
 }
 trait Observer {
-  def gngNodeMoved    (n: Node): Unit
+  def gngNodeUpdated  (n: Node): Unit
+  def gngEdgeUpdated  (e: Edge): Unit
   def gngNodeInserted (n: Node): Unit
   def gngEdgeInserted (e: Edge): Unit
   def gngNodeRemoved  (n: Node): Unit
-  def gngEdgeRemoved  (e: Node): Unit
+  def gngEdgeRemoved  (e: Edge): Unit
 }

@@ -47,8 +47,11 @@ object SphereGNGImpl {
       nodes(0) = n1
       nodes(1) = n2
       numNodes = 2
-      addEdge(n1, n2)
-      checkConsistency()
+      import config._
+      observer.gngNodeInserted(n1)
+      observer.gngNodeInserted(n2)
+      addEdgeAndFire(n1, n2)
+//      checkConsistency()
     }
 
     private def mkNode(): NodeImpl = {
@@ -119,9 +122,9 @@ object SphereGNGImpl {
 
       val winner = minDistN // nodes(minDistIdx)
       adaptNode(n = winner, n1 = winner, n2 = loc, d = winner.distance, f = epsilon)
-
       winner.error    += minDist
       winner.utility  += nextMinDist - minDist
+      observer.gngNodeUpdated(winner)
 
       val numNb = winner.numNeighbors
       i = 0
@@ -129,30 +132,31 @@ object SphereGNGImpl {
         val nb = winner.neighbor(i)
         assert(nb != null)
         adaptNode(n = nb, n1 = nb, n2 = loc, d = nb.distance, f = epsilon2)
+        observer.gngNodeUpdated(nb)
         i += 1
       }
 
       // Connect two winning nodes
-      if (minDistN != nextMinDistN) addEdge(minDistN, nextMinDistN)
+      if (minDistN != nextMinDistN) addEdgeAndFire(minDistN, nextMinDistN)
 
       // Calculate the age of the connected edges and delete too old edges
-      ageEdgesOfNode(minDistN)
+      ageEdgesOfNodeAndFire(minDistN)
 
-      checkConsistency()
+//      checkConsistency()
 
       // Insert and delete nodes
       if (rnd.nextDouble() < lambda && numNodes < _maxNodes) {
-        insertNodeBetween(maxErrorN, maxErrorNeighbor(maxErrorN))
-        checkConsistency()
+        insertNodeBetweenAndFire(maxErrorN, maxErrorNeighbor(maxErrorN))
+//        checkConsistency()
       }
 
       if ((numNodes > 2) && (numNodes > _maxNodes || maxError > minUtility * utility)) {
 //        deleteNode(minUtilityN)
-        deleteNode(minUtilityIdx)
-        checkConsistency()
+        deleteNodeAndFire(minUtilityIdx)
+//        checkConsistency()
       }
 
-      checkConsistency()
+//      checkConsistency()
 
       // step += 1
     }
@@ -160,8 +164,8 @@ object SphereGNGImpl {
 //    private def hasNaNs(n: Loc): Boolean =
 //      n.theta.isNaN || n.phi.isNaN
 
-    @inline
-    private def checkConsistency(): Unit = ()
+//    @inline
+//    private def checkConsistency(): Unit = ()
 
 //    private def checkConsistency(): Unit = {
 //      require (numNodes >= 0 && numEdges >= 0)
@@ -204,12 +208,15 @@ object SphereGNGImpl {
       res
     }
 
-    private def addEdge(from: NodeImpl, to: NodeImpl): Unit =
+    private def addEdgeAndFire(from: NodeImpl, to: NodeImpl): Unit =
       if (from.isNeighbor(to)) {
         val fromId  = from.id
         val buf     = edgeMap(fromId)
         val e       = buf.find(e => e.from.id == fromId || e.to.id == fromId).get
-        e.age = 0
+        if (e.age != 0) {
+          e.age = 0
+          config.observer.gngEdgeUpdated(e)
+        }
 
       } else {
         if (from.canAddNeighbor && to.canAddNeighbor) {
@@ -221,10 +228,12 @@ object SphereGNGImpl {
           val e       = new EdgeImpl(from, to)
           bufFrom += e
           bufTo   += e
+
+          config.observer.gngEdgeInserted(e)
         }
       }
 
-    private def insertNodeBetween(n1: NodeImpl, n2: NodeImpl): Unit = {
+    private def insertNodeBetweenAndFire(n1: NodeImpl, n2: NodeImpl): Unit = {
       val n   = mkNode()
 
       val alphaDecay = 1.0 - config.alpha
@@ -237,31 +246,35 @@ object SphereGNGImpl {
       val d     = centralAngle(n1, n2)
       adaptNode(n = n, n1 = n1, n2 = n2, d = d, f = 0.5)
 
+      deleteEdgeBetweenAndFire(n1, n2)
+
       val numOld = numNodes
       nodes(numOld) = n
-      deleteEdgeBetween(n1, n2)
-      addEdge(n1, n)
-      addEdge(n2, n)
       numNodes = numOld + 1
+      config.observer.gngNodeInserted(n)
+      addEdgeAndFire(n1, n)
+      addEdgeAndFire(n2, n)
     }
 
-    private def ageEdgesOfNode(n: Node): Unit = {
+    private def ageEdgesOfNodeAndFire(n: Node): Unit = {
       val edges = edgeMap(n.id)
       edges.foreach { e =>
         e.age += 1
-        if (e.age > config.maxEdgeAge) {
-          deleteEdge(e)
+        if (e.age <= config.maxEdgeAge) {
+          config.observer.gngEdgeUpdated(e)
+        } else{
+          deleteEdgeAndFire(e)
         }
       }
     }
 
-    private def deleteNode(ni: Int): Unit = {
+    private def deleteNodeAndFire(ni: Int): Unit = {
       val n     = nodes(ni)
       val nNb   = n.numNeighbors
 
       var i = 0
       while (i < nNb) {
-        deleteEdgeBetween(n, n.neighbor(0))
+        deleteEdgeBetweenAndFire(n, n.neighbor(0))
         i += 1
       }
 
@@ -271,6 +284,8 @@ object SphereGNGImpl {
       nodes(numNew) = null
 
       edgeMap.remove(n.id)
+
+      config.observer.gngNodeRemoved(n)
     }
 
     @inline
@@ -289,7 +304,7 @@ object SphereGNGImpl {
 //    }
 
     // takes care of removing neighbours as well
-    private def deleteEdge(e: EdgeImpl): Unit = {
+    private def deleteEdgeAndFire(e: EdgeImpl): Unit = {
       import e._
       from.removeNeighbor(to)
       to  .removeNeighbor(from)
@@ -297,15 +312,16 @@ object SphereGNGImpl {
       val toId    = to  .id
       remove(edgeMap(fromId), e)
       remove(edgeMap(toId  ), e)
+      config.observer.gngEdgeRemoved(e)
     }
 
     // takes care of removing neighbours as well.
     // allowed to call this when there _is_ no edge.
-    private def deleteEdgeBetween(from: Node, to: Node): Unit = {
+    private def deleteEdgeBetweenAndFire(from: Node, to: Node): Unit = {
       val fromId  = from.id
       val buf     = edgeMap(from.id)
       val eOpt    = buf.find(e => e.from.id == fromId || e.to.id == fromId)
-      eOpt.foreach(deleteEdge)
+      eOpt.foreach(deleteEdgeAndFire)
     }
 
     private[this] final val PiH = math.Pi * 0.5
