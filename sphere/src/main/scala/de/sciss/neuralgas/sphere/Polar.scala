@@ -14,12 +14,12 @@
 package de.sciss.neuralgas.sphere
 
 object Polar {
-  def centralAngle(n1: Polar, n2: Polar): Double = {
+  def centralAngle(n1: Loc, n2: Loc): Double = {
     import Math._
     acos(cos(n1.theta) * cos(n2.theta) + sin(n1.theta) * sin(n2.theta) * cos(n1.phi - n2.phi))
   }
 
-  def interpolate(n1: Polar, n2: Polar, f: Double): Polar = {
+  def interpolate(n1: Loc, n2: Loc, f: Double): Polar = {
     import Math._
     val PiH     = PI * 0.5
     val d       = centralAngle(n1, n2)
@@ -54,8 +54,10 @@ object Polar {
     Polar(theta = theta, phi = phi)
   }
 }
-final case class Polar(theta: Double, phi: Double) {
+final case class Polar(theta: Double, phi: Double) extends Loc {
   import Math._
+
+  def toPolar: Polar = this
 
   def toCartesian: Pt3 = {
     val sinTheta = sin(theta)
