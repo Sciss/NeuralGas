@@ -1,5 +1,5 @@
 /*
- *  Loc.scala
+ *  Edge.scala
  *  (NeuralGas)
  *
  *  Copyright (c) 2018 Hanns Holger Rutz. All rights reserved.
@@ -13,12 +13,9 @@
 
 package de.sciss.neuralgas.sphere
 
-trait Loc {
-  def theta     : Double
-  def phi       : Double
+trait Edge {
+  def from: Node
+  def to  : Node
 
-//  def cosTheta  : Double
-//  def sinTheta  : Double
-
-  def toPolar   : Polar
+  def age : Int
 }

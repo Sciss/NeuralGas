@@ -95,7 +95,10 @@ object SphereDemo {
       new Coord3d(x, y, z)
     }
 
-    sphere.edgeIterator.foreach { case (p1, p2) =>
+    sphere.edgeIterator.foreach { e =>
+      val p1 = e.from.toPolar
+      val p2 = e.to  .toPolar
+
 //      val c1 = {
 //        import p1._
 //        val sinTheta  = sin(theta)
@@ -135,7 +138,8 @@ object SphereDemo {
 //      chart.add(new Point(c, Color.BLUE, 5f))
 //    }
 
-    sq.foreach { p =>
+    sq.foreach { n =>
+      val p = n.toPolar
       val c = mkCoord(p)
       chart.add(new Point(c, Color.RED, 5f))
     }

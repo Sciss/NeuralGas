@@ -1,5 +1,5 @@
 /*
- *  Loc.scala
+ *  Node.scala
  *  (NeuralGas)
  *
  *  Copyright (c) 2018 Hanns Holger Rutz. All rights reserved.
@@ -13,12 +13,13 @@
 
 package de.sciss.neuralgas.sphere
 
-trait Loc {
-  def theta     : Double
-  def phi       : Double
+trait Node extends Loc {
+  def id: Int
 
-//  def cosTheta  : Double
-//  def sinTheta  : Double
+  def utility: Double
+  def error  : Double
 
-  def toPolar   : Polar
+  def numNeighbors: Int
+
+  def neighbor(idx: Int): Node
 }

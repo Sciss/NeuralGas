@@ -24,8 +24,6 @@ Changes to the Java project in summary:
 - code clean up
 - image based probability distribution
 - added JFrame wrapper
-- includes `sbt` script by [Paul Phillips](https://github.com/paulp/sbt-extras), provided under BSD-style license
-- to run demo, execute `./sbt ui/run`
 
 ## building
 

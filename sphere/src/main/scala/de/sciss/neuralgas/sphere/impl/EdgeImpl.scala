@@ -1,5 +1,5 @@
 /*
- *  Loc.scala
+ *  EdgeImpl.scala
  *  (NeuralGas)
  *
  *  Copyright (c) 2018 Hanns Holger Rutz. All rights reserved.
@@ -12,13 +12,8 @@
  */
 
 package de.sciss.neuralgas.sphere
+package impl
 
-trait Loc {
-  def theta     : Double
-  def phi       : Double
-
-//  def cosTheta  : Double
-//  def sinTheta  : Double
-
-  def toPolar   : Polar
+final class EdgeImpl(val from: NodeImpl, val to: NodeImpl) extends Edge {
+  var age: Int = 0
 }

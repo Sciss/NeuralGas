@@ -13,97 +13,10 @@
 
 package de.sciss.neuralgas.sphere
 
+
 import de.sciss.neuralgas.sphere.SphereGNG.Config
 
 object SphereGNG {
-  final class Node(val id: Int, maxNeighbors: Int) extends Loc {
-    private[this] var _numNeighbors = 0
-    private[this] val neighbors = new Array[Node](maxNeighbors)
-
-    var theta     = 0.0
-    var phi       = 0.0
-    var utility   = 0.0
-    var error     = 0.0
-    var distance  = 0.0
-
-    var cosTheta  = 1.0
-    var sinTheta  = 0.0
-
-    override def toString = f"Node($id, theta = $theta%g, phi = $phi%g); error = $error%g, utility = $utility%g, distance = $distance%g"
-
-    def toPolar: Polar = Polar(theta = theta, phi = phi)
-
-    def canAddNeighbor: Boolean = _numNeighbors < neighbors.length
-
-    def addNeighbor(n: Node): Unit = {
-      neighbors(_numNeighbors) = n
-      _numNeighbors += 1
-    }
-
-    def removeNeighbor(n: Node): Unit = {
-      val ni = n.id
-      var i = 0
-      while (i < _numNeighbors) {
-        if (neighbors(i).id == ni) {
-          _numNeighbors  -= 1
-          neighbors(i)    = neighbors(_numNeighbors)
-          neighbors(_numNeighbors) = null
-          return
-        }
-        i += 1
-      }
-      // throw new IllegalArgumentException(s"No neighbor $ni found")
-    }
-
-    def replaceNeighbor(before: Node, now: Node): Unit = {
-      val ni = before.id
-      var i = 0
-      while (i < _numNeighbors) {
-        if (neighbors(i).id == ni) {
-          neighbors(i) = now
-          return
-        }
-        i += 1
-      }
-      // throw new IllegalArgumentException(s"No neighbor $before found")
-    }
-
-    def neighbor(idx: Int): Node = neighbors(idx)
-
-    def updateTri(theta: Double, phi: Double): Unit = {
-      this.theta  = theta
-      this.phi    = phi
-      cosTheta    = Math.cos(theta)
-      sinTheta    = Math.sin(theta)
-    }
-
-    def numNeighbors: Int = _numNeighbors
-
-    def isNeighbor(n: Node): Boolean = {
-      val ni = n.id
-      var i = 0
-      while (i < _numNeighbors) {
-        if (neighbors(i).id == ni) return true
-        i += 1
-      }
-      false
-    }
-  }
-
-  final class Edge(val from: Node, val to: Node) {
-    var age: Int = 0
-  }
-
-  final class EdgeOLD(var from: Int, var to: Int) {
-    var age: Int = 0
-
-    def replace(before: Int, now: Int): Unit = {
-      if      (from == before) from = now
-      else if (to   == before) to   = now
-      // else throw new IllegalArgumentException(s"No connecting node $before found")
-    }
-  }
-
   /** Configuration of the algorithm.
     *
     * @param pd         probability distribution function
@@ -123,18 +36,19 @@ object SphereGNG {
     *                   be more than `maxNodes0` nodes).
     */
   final case class Config(
-                           pd           : PD,
-                           epsilon      : Double  = 0.02,
-                           epsilon2     : Double  = 0.01,
-                           beta         : Double  = 0.001,
-                           alpha        : Double  = 0.001,
-                           lambda       : Double  = 1.0/100,
-                           utility      : Double  = 4.0,
-                           seed         : Long    = 0L,
-                           maxNodes0    : Int     = 1000,
-                           maxEdges0    : Int     = 6000,
-                           maxEdgeAge   : Int     = 80,
-                           maxNeighbors : Int     = 10
+                           pd           : PD        = PD.Uniform,
+                           epsilon      : Double    = 0.02,
+                           epsilon2     : Double    = 0.01,
+                           beta         : Double    = 0.001,
+                           alpha        : Double    = 0.001,
+                           lambda       : Double    = 1.0/100,
+                           utility      : Double    = 4.0,
+                           seed         : Long      = 0L,
+                           maxNodes0    : Int       = 1000,
+                           maxEdges0    : Int       = 6000,
+                           maxEdgeAge   : Int       = 80,
+                           maxNeighbors : Int       = 10,
+                           observer     : Observer  = Observer.Dummy
                          )
 
   def apply(config: Config): SphereGNG = impl.SphereGNGImpl(config)
@@ -152,6 +66,6 @@ trait SphereGNG {
 
   var maxNodes: Int
 
-  def nodeIterator: Iterator[Polar]
-  def edgeIterator: Iterator[(Polar, Polar)]
+  def nodeIterator: Iterator[Node]
+  def edgeIterator: Iterator[Edge]
 }
