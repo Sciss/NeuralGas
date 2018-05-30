@@ -355,6 +355,11 @@ object SphereGNGImpl {
 
     // cf. http://edwilliams.org/avform.htm
     private def adaptNode(n: Node, n1: Loc, n2: Loc, d: Double, f: Double): Unit = {
+      if (d == 0) {
+        n.updateTri(n1.theta, n1.phi)
+        return
+      }
+
       import Math._
 //      val lat1      = PiH - n1.theta
       val lon1      = n1.phi
