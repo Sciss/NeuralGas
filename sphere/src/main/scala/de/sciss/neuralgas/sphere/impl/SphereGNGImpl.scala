@@ -29,29 +29,13 @@ object SphereGNGImpl {
 
   private final val SPHERE_COOKIE = 0x53474E47 // "SGNG"
 
-  private final val CONFIG_COOKIE = 0x53474366 // "SGCf"
+//  private final val CONFIG_COOKIE = 0x53474366 // "SGCf"
 
-  def saveConfig(f: File, c: Config): Unit = {
-    ???
-//    val fOut = new FileOutputStream(f)
-//    try {
-//
-//    } finally {
-//      fOut.close()
-//    }
-  }
+//  def saveConfig(f: File, c: Config): Unit = {
+//  }
 
-  def loadConfig(f: File): Config = {
-    ???
-//    val fIn = new FileInputStream(f)
-//    try {
-//      val dIn = new DataInputStream(new BufferedInputStream(fIn))
-//
-//
-//    } finally {
-//      fIn.close()
-//    }
-  }
+//  def loadConfig(f: File): Config = {
+//  }
 
   private final class Impl(val config: Config) extends SphereGNG {
     private[this] val loc         = new LocVarImpl

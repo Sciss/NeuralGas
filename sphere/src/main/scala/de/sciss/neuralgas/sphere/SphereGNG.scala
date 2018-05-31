@@ -54,8 +54,8 @@ object SphereGNG {
                            observer     : Observer  = Observer.Dummy
                          )
   object Config {
-    def save(f: File, c: Config): Unit  = Impl.saveConfig(f, c)
-    def load(f: File)  : Config         = Impl.loadConfig(f)
+//    def save(f: File, c: Config): Unit  = Impl.saveConfig(f, c)
+//    def load(f: File)  : Config         = Impl.loadConfig(f)
   }
 
   def apply(config: Config): SphereGNG = Impl(config)
