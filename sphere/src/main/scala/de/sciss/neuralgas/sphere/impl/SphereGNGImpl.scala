@@ -215,10 +215,10 @@ object SphereGNGImpl {
       import config._
       // stepCount += 1
 
-      var maxError        = 0.0
+      var maxError        = Double.NegativeInfinity
       var maxErrorN       = null : NodeImpl
       var minUtility      = Double.PositiveInfinity
-      var minUtilityIdx   = 0
+      var minUtilityIdx   = -1
       var minDist         = Double.PositiveInfinity
       var minDistN        = null : NodeImpl
       var nextMinDist     = Double.PositiveInfinity
