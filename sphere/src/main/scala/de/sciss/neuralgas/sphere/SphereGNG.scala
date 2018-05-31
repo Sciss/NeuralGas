@@ -14,7 +14,10 @@
 package de.sciss.neuralgas.sphere
 
 
+import java.io.{File, InputStream, OutputStream}
+
 import de.sciss.neuralgas.sphere.SphereGNG.Config
+import de.sciss.neuralgas.sphere.impl.{SphereGNGImpl => Impl}
 
 object SphereGNG {
   /** Configuration of the algorithm.
@@ -50,8 +53,12 @@ object SphereGNG {
                            maxNeighbors : Int       = 10,
                            observer     : Observer  = Observer.Dummy
                          )
+  object Config {
+    def save(f: File, c: Config): Unit  = Impl.saveConfig(f, c)
+    def load(f: File)  : Config         = Impl.loadConfig(f)
+  }
 
-  def apply(config: Config): SphereGNG = impl.SphereGNGImpl(config)
+  def apply(config: Config): SphereGNG = Impl(config)
 }
 
 /** A variant of the Growing Neural Gas with Utility (GNG-U) algorithm that uses
@@ -68,4 +75,19 @@ trait SphereGNG {
 
   def nodeIterator: Iterator[Node]
   def edgeIterator: Iterator[Edge]
+
+  def writeState(out: OutputStream): Unit
+  def readState (in : InputStream ): Unit
+
+  /** Persists the state of nodes and edges to a file.
+    *
+    * Does not persist the `config`, nor the random-number-generator.
+    */
+  def saveState(f: File): Unit
+
+  /** Restores the state of nodes and edges from a file.
+    *
+    * Does not restore the `config`, nor the random-number-generator.
+    */
+  def loadState(f: File): Unit
 }

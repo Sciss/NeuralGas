@@ -14,6 +14,8 @@
 package de.sciss.neuralgas.sphere
 package impl
 
+import java.io.{BufferedInputStream, BufferedOutputStream, DataInputStream, DataOutputStream, File, FileInputStream, FileOutputStream, InputStream, OutputStream}
+
 import de.sciss.neuralgas.sphere.SphereGNG.Config
 
 import scala.collection.mutable
@@ -25,16 +27,45 @@ object SphereGNGImpl {
     res
   }
 
+  private final val SPHERE_COOKIE = 0x53474E47 // "SGNG"
+
+  private final val CONFIG_COOKIE = 0x53474366 // "SGCf"
+
+  def saveConfig(f: File, c: Config): Unit = {
+    ???
+//    val fOut = new FileOutputStream(f)
+//    try {
+//
+//    } finally {
+//      fOut.close()
+//    }
+  }
+
+  def loadConfig(f: File): Config = {
+    ???
+//    val fIn = new FileInputStream(f)
+//    try {
+//      val dIn = new DataInputStream(new BufferedInputStream(fIn))
+//
+//
+//    } finally {
+//      fIn.close()
+//    }
+  }
+
   private final class Impl(val config: Config) extends SphereGNG {
     private[this] val loc         = new LocVarImpl
 
+    // persisted
+    private[this] var nodeIdCount = 0
+    private[this] var numNodes    = 0
     private[this] val nodes       = new Array[NodeImpl](config.maxNodes0)
     private[this] val edgeMap     = mutable.Map.empty[Int, mutable.Buffer[EdgeImpl]]
-    private[this] var numNodes    = 0
+
+    // currently not persisted
     private[this] val decay       = 1.0 - config.beta
     private[this] val rnd         = new util.Random(config.seed)
     private[this] var _maxNodes   = config.maxNodes0
-    private[this] var nodeIdCount = 0
 
     def maxNodes: Int = _maxNodes
 
@@ -52,6 +83,135 @@ object SphereGNGImpl {
       observer.gngNodeInserted(n2)
       addEdgeAndFire(n1, n2)
 //      checkConsistency()
+    }
+
+    def saveState(f: File): Unit = {
+      val fOut = new FileOutputStream(f)
+      try {
+        writeState(fOut)
+      } finally {
+        fOut.close()
+      }
+    }
+
+    def loadState(f: File): Unit = {
+      val fIn = new FileInputStream(f)
+      try {
+        readState(fIn)
+      } finally {
+        fIn.close()
+      }
+    }
+
+    def writeState(out: OutputStream): Unit = {
+      val dOut = new DataOutputStream(new BufferedOutputStream(out))
+      import dOut._
+      writeInt(SPHERE_COOKIE)
+      writeInt(nodeIdCount)
+      writeInt(numNodes)
+      var i = 0
+      while (i < numNodes) {
+        val n = nodes(i)
+        writeInt    (n.id     )
+        writeDouble (n.theta  )
+        writeDouble (n.phi    )
+        writeDouble (n.utility)
+        writeDouble (n.error  )
+        writeShort  (n.numNeighbors)
+        var j = 0
+        while (j < n.numNeighbors) {
+          val nb = n.neighbor(j)
+          writeInt(nb.id)
+          j += 1
+        }
+        i += 1
+      }
+
+      writeInt(edgeMap.size)
+      edgeMap.foreach { case (id, buf) =>
+        writeInt(id)
+        writeInt(buf.size)
+        buf.foreach { e =>
+          writeInt(e.from.id)
+          writeInt(e.to  .id)
+          writeInt(e.age    )
+        }
+      }
+
+      flush()
+    }
+
+    def readState(in: InputStream): Unit = {
+      val dIn = new DataInputStream(new BufferedInputStream(in))
+      import dIn._
+      val cookie = readInt()
+      require (cookie == SPHERE_COOKIE,
+        s"Unexpected cookie, found ${cookie.toHexString} instead of ${SPHERE_COOKIE.toHexString}")
+      nodeIdCount = readInt()
+      numNodes    = readInt()
+
+      val neighborData  = new Array[Array[Int]](numNodes)
+      val nodeMap       = mutable.Map.empty[Int, NodeImpl]
+
+      var i = 0
+      while (i < numNodes) {
+        val id = readInt()
+        val n = new NodeImpl(id = id, maxNeighbors = config.maxNeighbors)
+        n.theta   = readDouble()
+        n.phi     = readDouble()
+        n.utility = readDouble()
+        n.error   = readDouble()
+        nodes(i)  = n
+        nodeMap += n.id -> n
+        val numNeighbors = readShort()
+        val neighbors = new Array[Int](numNeighbors)
+        neighborData(i) = neighbors
+        var j = 0
+        while (j < numNeighbors) {
+          val nbId = readInt()
+          neighbors(j) = nbId
+          j += 1
+        }
+        i += 1
+      }
+
+      // resolve neighbours
+      i = 0
+      while (i < numNodes) {
+        val neighbors = neighborData(i)
+        val n         = nodes(i)
+        var j = 0
+        while (j < neighbors.length) {
+          val nbId  = neighbors(j)
+          val nb    = nodeMap(nbId)
+          n.addNeighbor(nb)
+          j += 1
+        }
+        i += 1
+      }
+
+      val edgeMapSz = readInt()
+      i = 0
+      edgeMap.clear()
+      while (i < edgeMapSz) {
+        val key = readInt()
+        val numEdges = readInt()
+        val buf = mutable.Buffer.empty[EdgeImpl]
+        var j = 0
+        while (j < numEdges) {
+          val fromId  = readInt()
+          val toId    = readInt()
+          val age     = readInt()
+          val from    = nodeMap(fromId)
+          val to      = nodeMap(toId  )
+          val e       = new EdgeImpl(from, to)
+          e.age       = age
+          buf += e
+          j += 1
+        }
+        edgeMap += key -> buf
+        i += 1
+      }
     }
 
     private def mkNode(): NodeImpl = {
