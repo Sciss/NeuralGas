@@ -4,8 +4,8 @@ lazy val baseName       = "NeuralGas"
 lazy val baseNameL      = baseName.toLowerCase()
 lazy val baseDescr      = "Neural network simulator based on growing neural gas (GNG)"
 
-lazy val projectVersion = "2.3.2"
-lazy val mimaVersion    = "2.3.0"
+lazy val projectVersion = "2.4.0"
+lazy val mimaVersion    = "2.4.0"
 
 lazy val commonJavaOptions = Seq("-source", "1.6")
 
@@ -18,7 +18,8 @@ lazy val lgpl2  = "LGPL v2.1+"  -> url("https://www.gnu.org/licenses/lgpl-2.1.tx
 lazy val commonSettings = Seq(
   organization        := "de.sciss",
   version             := projectVersion,
-  scalaVersion        := "2.12.6",
+  scalaVersion        := "2.12.8",
+  crossScalaVersions  := Seq("2.12.8", "2.13.0"),
   homepage            := Some(projectURL)
 ) ++ publishSettings
 
@@ -26,15 +27,19 @@ lazy val javaSettings = Seq(
   crossPaths          := false,
   autoScalaLibrary    := false,
   javacOptions        := commonJavaOptions ++ Seq("-target", "1.6", "-g", "-Xlint:deprecation"),
-  javacOptions in doc := commonJavaOptions  // cf. sbt issue #355
+  javacOptions in doc := commonJavaOptions,  // cf. sbt issue #355
+  publishArtifact := {
+    val old = publishArtifact.value
+    old && scalaVersion.value.startsWith("2.12")  // only publish once when cross-building
+  }
 )
 
 lazy val deps = new {
   val test = new {
     val fileUtil  = "1.1.3"
     val jzy3d     = "1.0.2"
-    val pdflitz   = "1.2.2"
-    val swingPlus = "0.3.0"
+    val pdflitz   = "1.4.1"
+    val swingPlus = "0.4.2"
   }
 }
 

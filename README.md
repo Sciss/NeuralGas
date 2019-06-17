@@ -9,7 +9,7 @@ This project was originally forked from [github.com/gittar/demogng](https://gith
 It was a demonstration of various topological learning algorithms,
 most prominently the Growing Neural Gas (Fritzke). Original license was GNU GPL v1+.
 The project has since been adapted to provide a library for
-the neural gas algorithms. All changes and additions (C)opyright 2017 Hanns Holger Rutz.
+the neural gas algorithms. All changes and additions (C)opyright 2017&ndash;2019 Hanns Holger Rutz.
 The adapted Java project (modules `core` and `ui`) are released under the GNU GPL v2+.
 A new experimental Scala module `sphere` has been added that is a new implementation of GNG-U,
 using spherical coordinates. This module is released under the GNU LGPL v2.1+.
@@ -43,4 +43,4 @@ Modules:
     "de.sciss" %  "neuralgas-ui"     % v
     "de.sciss" %% "neuralgas-sphere" % v
 
-The current version `v` is `"2.3.2"`.
+The current version `v` is `"2.4.0"`.
